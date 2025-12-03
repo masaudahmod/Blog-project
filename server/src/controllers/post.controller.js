@@ -17,8 +17,26 @@ export const addPost = async (req, res) => {
 
 export const allPosts = async (req, res) => {
   try {
-    const posts = await getPosts();
-    res.status(200).json({ message: "Posts retrieved", posts: posts.rows });
+    const limit = 10;
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * limit;
+
+    const query = `SELECT * FROM posts ORDER BY id DESC LIMIT $1 OFFSET $2`;
+    const posts = await pool.query(query, [limit, offset]);
+
+    const totalQuery = "SELECT COUNT(*) FROM posts";
+    const totalResult = await pool.query(totalQuery);
+    const totalPosts = parseInt(totalResult.rows[0].count);
+    const totalPages = Math.ceil(totalPosts / limit);
+    
+    res
+      .status(200)
+      .json({
+        message: "Posts retrieved",
+        currentPage: page,
+        totalPages,
+        posts: posts.rows,
+      });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }

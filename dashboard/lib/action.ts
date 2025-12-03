@@ -45,4 +45,25 @@ async function login(formdata: FormData) {
   }
 }
 
-export { getCookies, login };
+async function getAllPosts(page = 1) {
+  try {
+    const result = await fetch(`${process.env.NEXT_SERVER_API_URL}/post?page=${page}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const { posts } = await result.json();
+    if (result.ok) {
+      return posts;
+    } else {
+      console.error("Error fetching posts");
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    return [];
+  }
+}
+
+export { getCookies, login, getAllPosts };

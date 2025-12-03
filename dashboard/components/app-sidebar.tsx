@@ -129,13 +129,13 @@ const data = {
   ],
   documents: [
     {
-      name: "Data Library",
-      url: "#",
+      name: "Add Post",
+      url: "/console/posts/add",
       icon: IconDatabase,
     },
     {
-      name: "Reports",
-      url: "#",
+      name: "Add Category",
+      url: "/console/categories/add",
       icon: IconReport,
     },
     {
