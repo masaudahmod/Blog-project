@@ -38,7 +38,11 @@ export const loginAdmin = async (req, res) => {
 
   console.log(user.rows[0].name, "- logged in");
 
-  res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "Strict" });
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "Strict",
+  });
 
   res.status(200).json({ message: "Login successful", token });
 };
@@ -51,4 +55,4 @@ export const allUsers = async (req, res) => {
 export const logoutAdmin = (req, res) => {
   res.clearCookie("token");
   res.status(200).json({ message: "Logout successful" });
-}
+};
