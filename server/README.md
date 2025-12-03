@@ -2,6 +2,7 @@
 A clean, modular and scalable backend for a Blog Application built with **Node.js**, **Express.js** and **PostgreSQL**.  
 This backend includes full admin authentication, category management, post management, SEO-friendly metadata support, and a production-grade folder structure.
 
+API Documentation: [`Here`](https://documenter.getpostman.com/view/38227871/2sB3dMyWmj)
 ---
 
 ## 🚀 Tech Stack
