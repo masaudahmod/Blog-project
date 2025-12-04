@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  IconCreditCard,
   IconDotsVertical,
   IconLogout,
   IconNotification,
@@ -28,8 +27,11 @@ import { getUser } from "@/lib/helper";
 import React, { useEffect } from "react";
 import { User } from "@/lib/type";
 import { logoutUser } from "@/lib/action";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function NavUser() {
+  const router = useRouter();
   const { isMobile } = useSidebar();
   const [user, setUser] = React.useState<User | null>(null);
 
@@ -44,7 +46,8 @@ export function NavUser() {
 
   const logoutHandler = async () => {
     await logoutUser();
-    window.location.href = "/";
+    toast.success("Logged out successfully");
+    router.push("/");
   };
 
   return (
@@ -54,7 +57,7 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 <AvatarImage

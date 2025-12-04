@@ -5,6 +5,11 @@ export interface PostType {
   title: string;
   slug: string;
   content: string;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+  };
   excerpt?: string;
 
   // Featured image
@@ -34,8 +39,8 @@ export interface PostType {
   published_at?: string; // ISO date string
 
   // Timestamps
-  created_at?: string;  // ISO date string
-  updated_at?: string;  // ISO date string
+  created_at?: string; // ISO date string
+  updated_at?: string; // ISO date string
 }
 
 // Comment type

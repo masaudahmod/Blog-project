@@ -79,9 +79,22 @@ export const allPosts = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const offset = (page - 1) * limit;
 
-    const query = `SELECT * FROM posts ORDER BY id DESC LIMIT $1 OFFSET $2`;
+    // const query = `SELECT * FROM posts ORDER BY id DESC LIMIT $1 OFFSET $2`;
+     const query = `
+      SELECT 
+        posts.*,
+        json_build_object(
+          'id', categories.id,
+          'name', categories.name,
+          'slug', categories.slug
+        ) AS category
+      FROM posts
+      LEFT JOIN categories ON posts.category_id = categories.id
+      ORDER BY posts.created_at DESC
+      LIMIT $1 OFFSET $2
+    `;
     const posts = await pool.query(query, [limit, offset]);
-
+    
     const totalQuery = "SELECT COUNT(*) FROM posts";
     const totalResult = await pool.query(totalQuery);
     const totalPosts = parseInt(totalResult.rows[0].count);

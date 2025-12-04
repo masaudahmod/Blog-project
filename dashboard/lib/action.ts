@@ -17,42 +17,51 @@ async function getCookies() {
 }
 
 async function login(formdata: FormData) {
-  const email = formdata.get("email");
-  const password = formdata.get("password");
-  const result = await fetch(`${process.env.NEXT_SERVER_API_URL}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      credentials: "include",
-    },
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await result.json();
-  if (data.token) {
-    const cookieStore = await cookies();
-    cookieStore.set("token", data.token, {
-      httpOnly: true,
-      path: "/",
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    });
-    console.log("Token cookie set successfully");
-    redirect("/console");
-  }
-  if (result.ok) {
-    console.log(data.message);
-  } else {
-    console.log(data.message);
+  try {
+    const email = formdata.get("email");
+    const password = formdata.get("password");
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/auth/login`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          credentials: "include",
+        },
+        body: JSON.stringify({ email, password }),
+      }
+    );
+    const data = await result.json();
+    if (!result.ok) {
+      return { ok: false, message: data.message || "Login failed" };
+    }
+    if (data.token) {
+      const cookieStore = await cookies();
+      cookieStore.set("token", data.token, {
+        httpOnly: true,
+        path: "/",
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+      console.log("Token cookie set successfully");
+      // redirect("/console");
+    }
+    return { ok: true, message: "Login successful" };
+  } catch (error) {
+    return { ok: false, error: "Login failed" };
   }
 }
 
 async function getAllPosts(page = 1) {
   try {
-    const result = await fetch(`${process.env.NEXT_SERVER_API_URL}/post?page=${page}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post?page=${page}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
     const { posts } = await result.json();
     if (result.ok) {
       return posts;
@@ -80,7 +89,7 @@ async function getCurrentUser() {
     if (result.ok) {
       return user;
     } else {
-      console.error("Error fetching user",);
+      console.error("Error fetching user");
       return null;
     }
   } catch (error) {
@@ -92,13 +101,16 @@ async function getCurrentUser() {
 async function logoutUser() {
   try {
     const token = await getCookies();
-    const result = await fetch(`${process.env.NEXT_SERVER_API_URL}/auth/logout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/auth/logout`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     if (result.ok) {
       const cookieStore = await cookies();
       cookieStore.delete("token");
@@ -111,4 +123,28 @@ async function logoutUser() {
   }
 }
 
-export { getCookies, login, getAllPosts, getCurrentUser, logoutUser };
+async function getCategorybyId(categoryId: number) {
+  try {
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/category/${categoryId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const { category } = await result.json();
+    if (result.ok) {
+      return category;
+    } else {
+      console.error("Error fetching category");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching category:", error);
+    return null;
+  }
+}
+
+export { getCookies, login, getAllPosts, getCurrentUser, logoutUser, getCategorybyId };

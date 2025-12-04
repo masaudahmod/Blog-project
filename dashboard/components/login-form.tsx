@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { use } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,17 +16,39 @@ import Link from "next/link";
 import Image from "next/image";
 import { login } from "@/lib/action";
 import { Eye, EyeClosed } from "lucide-react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const [showPassword, setShowPassword] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const router = useRouter();
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    setLoading(true);
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const result = await login(formData);
+    if (result.ok) {
+      toast.success("Login successful!");
+      setLoading(false);
+      router.push("/console");
+      return;
+    }
+    if (!result.ok) {
+      toast.error(result.message || "Login failed");
+      setLoading(false);
+      return;
+    }
+    setLoading(false);
+  }
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form action={login} className="p-6 md:p-8">
+          <form onSubmit={handleSubmit} className="p-6 md:p-8">
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Welcome back</h1>
@@ -75,7 +97,9 @@ export function LoginForm({
                 </div>
               </Field>
               <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Logging in..." : "Login"}
+                </Button>
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
