@@ -59,3 +59,13 @@ export interface Category {
   created_at?: string; // ISO date string
   updated_at?: string; // ISO date string
 }
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string;
+  role?: "admin" | "editor" | "author" | "subscriber";
+  created_at?: string; // ISO date string
+  updated_at?: string; // ISO date string
+}

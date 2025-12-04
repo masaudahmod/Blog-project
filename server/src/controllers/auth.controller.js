@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
 import { findUserByEmail, createUser } from "../models/user.model.js";
 import { generateToken } from "../utils/jwt.js";
-import e from "express";
+import jwt from "jsonwebtoken";
+import pool from "../config/db.js";
 
 export const registerAdmin = async (req, res) => {
   const { name, email, password } = req.body;
@@ -52,7 +53,38 @@ export const allUsers = async (req, res) => {
   res.json(users.rows);
 };
 
-export const logoutAdmin = (req, res) => {
-  res.clearCookie("token");
-  res.status(200).json({ message: "Logout successful" });
+export const currentUser = async (req, res) => {
+  try {
+    const token = req.headers.cookie?.split("=")[1] || req.headers.authorization?.split(" ")[1];
+    
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const result = await pool.query(
+      "SELECT id, name, email, role FROM users WHERE id = $1",
+      [decoded.id]
+    );
+    res.status(200).json({ message: "Current user", user: result.rows[0] });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server Error in current user", error: error.message });
+  }
+};
+
+export const logout = (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "Strict",
+    });
+    console.log(req.user.email, "- logged out");
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ message: "Server Error in logout", error: error.message });
+  }
 };

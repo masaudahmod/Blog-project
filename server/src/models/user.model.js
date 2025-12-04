@@ -22,3 +22,7 @@ export const createUser = (name, email, password) => {
     [name, email, password]
   );
 };
+
+export const getUser = () => {
+  return pool.query("SELECT id, name, email, role, created_at FROM users id = $1");
+}
