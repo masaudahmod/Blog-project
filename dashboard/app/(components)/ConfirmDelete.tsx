@@ -14,14 +14,14 @@ import { useState } from "react";
 
 interface ConfirmDeleteProps {
   onConfirm: () => void;
-  isLoading?: boolean;
+  // isLoading?: boolean;
 }
 
-export default function ConfirmDelete() {
+export default function ConfirmDelete({ onConfirm }: ConfirmDeleteProps) {
   const [open, setOpen] = useState(false);
 
   const handleConfirm = () => {
-    // onConfirm();
+    onConfirm();
     setOpen(false); // ✅ modal close
   };
 

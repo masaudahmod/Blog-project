@@ -50,7 +50,7 @@ export default async function Page() {
                 </TableCell>
                 <TableCell>{post.created_at}</TableCell>
                 <TableCell className="flex items-center gap-3">
-                  <ConfirmDelete />
+                  {/* <ConfirmDelete /> */}
 
                   <ContextMenu>
                     <ContextMenuTrigger className="flex items-center justify-center rounded-md text-base">

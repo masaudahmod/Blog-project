@@ -2,21 +2,45 @@ import pool from "../config/db.js";
 import { createCategory, getCategories } from "../models/Category.model.js";
 
 export const addCategory = async (req, res) => {
-  const { name, slug } = req.body;
+  try {
+    const { name, slug } = req.body;
 
-  const result = await createCategory(name, slug);
-  res
-    .status(201)
-    .json({ message: "Category created", category: result.rows[0] });
+    if (!name) {
+      return res.status(400).json({ message: "Category name is required" }); // return res.status(400).json({ message: "All fields are required" });
+    }
+    let category_slug = slug;
+    if (!slug) {
+      category_slug = name.replace(/[^a-z0-9_]+/gi, "-").toLowerCase();
+    }
+    const result = await createCategory(name, category_slug);
+    res
+      .status(201)
+      .json({ message: "Category created", category: result.rows[0] });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server Error in add category", error: error.message });
+  }
 };
 
 export const allCategories = async (req, res) => {
-  // const result = await getCategories();
-  const query = "SELECT * FROM categories ORDER BY id DESC";
-  const result = await pool.query(query);
-  res
-    .status(200)
-    .json({ message: "Categories retrieved", categories: result.rows });
+  try {
+    const result = await pool.query(
+      `
+        SELECT id, name, slug, created_at
+        FROM categories
+        ORDER BY id DESC;
+      `
+    );
+
+    return res.status(200).json({
+      message: "Categories retrieved",
+      categories: result.rows,
+    });
+  } catch (error) {
+    console.error("Get Categories Error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
 };
 
 export const getCategory = async (req, res) => {
@@ -48,12 +72,18 @@ export const updateCategory = async (req, res) => {
     .json({ message: "Category updated", category: result.rows[0] });
 };
 export const deleteCategory = async (req, res) => {
-  const { id } = req.params;
-  await deleteCategory(id);
+  try {
+    const { id } = req.params;
 
-  // const query = "DELETE FROM categories WHERE id = $1";
-  // const values = [id];
-  // await pool.query(query, values);
+    const query = "DELETE FROM categories WHERE id = $1";
+    const values = [id];
+    await pool.query(query, values);
 
-  res.status(200).json({ message: "Category deleted" });
+    return res.status(200).json({ message: "Category deleted" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server Error in delete category",
+      error: error.message,
+    });
+  }
 };

@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { json } from "zod";
 
 async function getCookies() {
   try {
@@ -123,6 +124,59 @@ async function logoutUser() {
   }
 }
 
+async function addCategory(formdata: FormData) {
+  try {
+    const token = await getCookies();
+    const jsonFile = JSON.stringify(Object.fromEntries(formdata));
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/category/add`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: jsonFile,
+      }
+    );
+    const data = await result.json();
+    if (result.ok) {
+      return { ok: true, data: data.category };
+    } else {
+      return { ok: false, message: "Adding category failed" };
+    }
+  } catch (error) {
+    console.log(error);
+    return { ok: false, error: "Adding category failed" };
+  }
+}
+
+async function deleteCategory(categoryId: number) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/category/${categoryId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await result.json();
+    console.log("data", data);
+    if (result.ok) {
+      return { ok: true, message: "Category deleted" };
+    } else {
+      return { ok: false, message: "Deleting category failed" };
+    }
+  } catch (error) {
+    console.log(error);
+    return { ok: false, error: "Deleting category failed" };
+  }
+}
+
 async function getAllCategories() {
   try {
     const result = await fetch(`${process.env.NEXT_SERVER_API_URL}/category`, {
@@ -177,14 +231,14 @@ async function addPost(formdata: FormData) {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      body: formdata
-    })
+      body: formdata,
+    });
     console.log("result addpost", result);
     const data = await result.json();
     return {
       ok: result.ok,
       message: data.message,
-      data: data.data
+      data: data.data,
     };
   } catch (error) {
     console.log(error);
@@ -200,5 +254,7 @@ export {
   logoutUser,
   getAllCategories,
   getCategorybyId,
-  addPost
+  addPost,
+  addCategory,
+  deleteCategory
 };
