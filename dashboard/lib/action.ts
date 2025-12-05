@@ -123,6 +123,27 @@ async function logoutUser() {
   }
 }
 
+async function getAllCategories() {
+  try {
+    const result = await fetch(`${process.env.NEXT_SERVER_API_URL}/category`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const { categories } = await result.json();
+    if (result.ok) {
+      return categories;
+    } else {
+      console.error("Error fetching categories");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return null;
+  }
+}
+
 async function getCategorybyId(categoryId: number) {
   try {
     const result = await fetch(
@@ -147,4 +168,37 @@ async function getCategorybyId(categoryId: number) {
   }
 }
 
-export { getCookies, login, getAllPosts, getCurrentUser, logoutUser, getCategorybyId };
+async function addPost(formdata: FormData) {
+  try {
+    const token = await getCookies();
+    console.log("formdata addpost", formdata);
+    const result = await fetch(`${process.env.NEXT_SERVER_API_URL}/post/add`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formdata
+    })
+    console.log("result addpost", result);
+    const data = await result.json();
+    return {
+      ok: result.ok,
+      message: data.message,
+      data: data.data
+    };
+  } catch (error) {
+    console.log(error);
+    return;
+  }
+}
+
+export {
+  getCookies,
+  login,
+  getAllPosts,
+  getCurrentUser,
+  logoutUser,
+  getAllCategories,
+  getCategorybyId,
+  addPost
+};

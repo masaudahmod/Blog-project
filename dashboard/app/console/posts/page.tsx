@@ -22,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import ConfirmDelete from "@/app/(components)/ConfirmDelete";
 
 export default async function Page() {
   const posts = await getAllPosts();
@@ -48,7 +49,9 @@ export default async function Page() {
                   {post.is_published ? "Published" : "Not Yet"}
                 </TableCell>
                 <TableCell>{post.created_at}</TableCell>
-                <TableCell>
+                <TableCell className="flex items-center gap-3">
+                  <ConfirmDelete />
+
                   <ContextMenu>
                     <ContextMenuTrigger className="flex items-center justify-center rounded-md text-base">
                       <Tooltip>
@@ -70,11 +73,6 @@ export default async function Page() {
                       <ContextMenuItem inset className="cursor-pointer">
                         View
                         <ContextMenuShortcut>⌘]</ContextMenuShortcut>
-                      </ContextMenuItem>
-                      <ContextMenuSeparator />
-                      <ContextMenuItem inset className="cursor-pointer">
-                        Delete
-                        <ContextMenuShortcut>⌘R</ContextMenuShortcut>
                       </ContextMenuItem>
                       <ContextMenuSeparator />
                       <ContextMenuItem inset className="cursor-pointer">

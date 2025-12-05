@@ -5,6 +5,8 @@ import PostRoutes from "./routes/post.routes.js";
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // form-urlencoded support
+
 
 app.use("/api/auth", AuthRoutes);
 app.use("/api/category", CategoryRoutes);
