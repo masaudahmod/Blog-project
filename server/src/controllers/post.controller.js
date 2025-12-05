@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { createPost, getPosts } from "../models/post.model.js";
+import { cloudinaryUpload } from "../service/cloudinary.js";
 
 export const addPost = async (req, res) => {
   try {
@@ -7,7 +7,6 @@ export const addPost = async (req, res) => {
       title,
       slug,
       content,
-      featured_image_url,
       featured_image_alt,
       featured_image_caption,
       meta_title,
@@ -26,6 +25,15 @@ export const addPost = async (req, res) => {
       updated_at,
     } = req.body;
 
+    const featured_image = req.file;
+    // if (featured_image) {
+    // }
+    let image_upload = await cloudinaryUpload(
+      featured_image.path,
+      title,
+      "postFeatureImage"
+    );
+
     if (!slug) {
       slug = title
         .toLowerCase()
@@ -43,7 +51,7 @@ export const addPost = async (req, res) => {
         slug,
         content,
 
-        featured_image_url,
+        image_upload.uploadResult.url,
         featured_image_alt,
         featured_image_caption,
         meta_title,
@@ -67,9 +75,11 @@ export const addPost = async (req, res) => {
       .status(201)
       .json({ message: "Post created", post: result.rows[0] });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: `Server Error in add post: ${error.message}`, error: error.message });
+    console.log("error  in add post", error.message);
+    return res.status(500).json({
+      message: `Server Error in add post: ${error.message}`,
+      error: error.message,
+    });
   }
 };
 
@@ -80,7 +90,7 @@ export const allPosts = async (req, res) => {
     const offset = (page - 1) * limit;
 
     // const query = `SELECT * FROM posts ORDER BY id DESC LIMIT $1 OFFSET $2`;
-     const query = `
+    const query = `
       SELECT 
         posts.*,
         json_build_object(
@@ -94,7 +104,7 @@ export const allPosts = async (req, res) => {
       LIMIT $1 OFFSET $2
     `;
     const posts = await pool.query(query, [limit, offset]);
-    
+
     const totalQuery = "SELECT COUNT(*) FROM posts";
     const totalResult = await pool.query(totalQuery);
     const totalPosts = parseInt(totalResult.rows[0].count);
