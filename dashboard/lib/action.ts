@@ -164,8 +164,6 @@ async function deleteCategory(categoryId: number) {
         },
       }
     );
-    const data = await result.json();
-    console.log("data", data);
     if (result.ok) {
       return { ok: true, message: "Category deleted" };
     } else {
@@ -225,7 +223,6 @@ async function getCategorybyId(categoryId: number) {
 async function addPost(formdata: FormData) {
   try {
     const token = await getCookies();
-    console.log("formdata addpost", formdata);
     const result = await fetch(`${process.env.NEXT_SERVER_API_URL}/post/add`, {
       method: "POST",
       headers: {
@@ -233,15 +230,14 @@ async function addPost(formdata: FormData) {
       },
       body: formdata,
     });
-    console.log("result addpost", result);
     const data = await result.json();
     return {
       ok: result.ok,
       message: data.message,
-      data: data.data,
+      data: data,
     };
   } catch (error) {
-    console.log(error);
+    console.log("error addpost", error);
     return;
   }
 }

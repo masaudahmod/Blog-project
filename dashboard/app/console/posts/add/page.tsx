@@ -15,15 +15,31 @@ import {
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { Footprints, X } from "lucide-react";
+import { X } from "lucide-react";
 import { addPost, getAllCategories } from "@/lib/action";
-import { Category, PostType } from "@/lib/type";
+import { Category } from "@/lib/type";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [categories, setCategories] = useState([]);
+
+  //form states
+  const [postTitle, setPostTitle] = useState<string | null>("");
+  const [postSlug, setPostSlug] = useState<string | null>("");
+  const [metaTitle, setMetaTitle] = useState<string | null>("");
+  const [metaDescription, setMetaDescription] = useState<string | null>("");
+  const [metaKeywords, setMetaKeywords] = useState<string | null>("");
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null
+  );
+  const [tags, setTags] = useState<string | null>("");
+
   const [content, setContent] = useState<string | null>("");
   const [file, setFile] = useState<File | null>(null);
-  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     async function fetchCategories() {
@@ -46,7 +62,40 @@ export default function Page() {
     setPreview(null);
     setFile(null);
   };
-  
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    setLoading(true);
+    e.preventDefault();
+    const fd = new FormData();
+    fd.append("title", postTitle || "");
+    fd.append("slug", postSlug || "");
+    fd.append("content", content || "");
+    fd.append("meta_title", metaTitle || "");
+    fd.append("meta_description", metaDescription || "");
+    fd.append("meta_keywords", metaKeywords || "");
+    fd.append(
+      "category_id",
+      selectedCategory ? selectedCategory.id.toString() : ""
+    );
+    fd.append("tags", tags || "");
+
+    if (file) {
+      fd.append("featured_image", file);
+    }
+
+    const result = await addPost(fd);
+    if (result?.ok) {
+      toast.success(`${result?.data.message} successful!`);
+      setLoading(false);
+      router.push("/console/posts");
+      return;
+    }
+    if (!result?.ok) {
+      toast.error(result?.message || "Something went wrong!");
+      setLoading(false);
+      return;
+    }
+    setLoading(false);
+  };
   return (
     <main className="flex-1 flex flex-col">
       {/* TopNavBar */}
@@ -62,7 +111,7 @@ export default function Page() {
         </div>
       </header>
 
-      <form >
+      <form onSubmit={handleSubmit}>
         <div className="flex-1 p-8 grid grid-cols-12 gap-8">
           {/* Left Column */}
           <div className="col-span-12 lg:col-span-8 flex flex-col gap-8">
@@ -74,6 +123,7 @@ export default function Page() {
                     Post Title
                   </p>
                   <Input
+                    onChange={(e) => setPostTitle(e.target.value)}
                     type="text"
                     name="title"
                     className="form-input flex w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border-none outline-none bg-white dark:bg-slate-800/50 h-11 px-3 text-sm"
@@ -85,6 +135,7 @@ export default function Page() {
                     Post Slug
                   </p>
                   <Input
+                    onChange={(e) => setPostSlug(e.target.value)}
                     type="text"
                     name="slug"
                     className="form-input flex w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border-none outline-none bg-white dark:bg-slate-800/50 h-11 px-3 text-sm"
@@ -123,6 +174,7 @@ export default function Page() {
                     Meta Title
                   </p>
                   <Input
+                    onChange={(e) => setMetaTitle(e.target.value)}
                     type="text"
                     name="meta_title"
                     className="form-input flex w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-11 px-3 text-sm"
@@ -135,6 +187,7 @@ export default function Page() {
                     Meta Description
                   </p>
                   <textarea
+                    onChange={(e) => setMetaDescription(e.target.value)}
                     name="meta_description"
                     className="form-textarea w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-24 p-3 text-sm"
                     placeholder="Enter meta description"
@@ -146,6 +199,7 @@ export default function Page() {
                     Meta Keywords
                   </p>
                   <textarea
+                    onChange={(e) => setMetaKeywords(e.target.value)}
                     name="meta_keywords"
                     className="form-textarea w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-24 p-3 text-sm"
                     placeholder="Enter meta Keywords"
@@ -185,13 +239,24 @@ export default function Page() {
                 <Label className="text-base font-medium text-slate-700 dark:text-slate-300">
                   Categories
                 </Label>
-                <Select name="category_id">
+                <Select
+                  onValueChange={(value) => {
+                    const foundCategory =
+                      categories && categories.length
+                        ? categories.find(
+                            (cat: Category) => cat.id.toString() === value
+                          )
+                        : null;
+                    setSelectedCategory(foundCategory || null);
+                  }}
+                  name="category_id"
+                >
                   <SelectTrigger className="w-[180px] cursor-pointer">
                     <SelectValue placeholder="Select a Category " />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {categories.map((category: Category) => (
+                      {categories?.map((category: Category) => (
                         <SelectItem
                           className="cursor-pointer"
                           value={category.id.toString()}
@@ -215,6 +280,7 @@ export default function Page() {
               </div>
               <div className="p-5">
                 <Input
+                  onChange={(e) => setTags(e.target.value)}
                   type="text"
                   name="tags"
                   className="form-input w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-11 px-3 text-sm text-[#111318] dark:text-white"
@@ -286,7 +352,9 @@ export default function Page() {
               </Card>
             </div>
 
-            <Button type="submit">Publish</Button>
+            <Button type="submit">
+              {loading ? "Adding..." : "Publish Post"}
+            </Button>
           </div>
         </div>
       </form>

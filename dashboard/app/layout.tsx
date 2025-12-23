@@ -28,8 +28,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My Console Dashboard",
-  description: "My Console Dashboard for my blog website | Masaud Ahmod",
+  title: "My Console",
+  description: "My Console for my blog website | Masaud Ahmod",
 };
 
 export default function RootLayout({

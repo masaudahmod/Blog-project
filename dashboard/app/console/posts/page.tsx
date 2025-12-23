@@ -22,7 +22,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import ConfirmDelete from "@/app/(components)/ConfirmDelete";
 
 export default async function Page() {
   const posts = await getAllPosts();

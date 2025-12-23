@@ -9,20 +9,30 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import { deleteCategory } from "@/lib/action";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface ConfirmDeleteProps {
-  onConfirm: () => void;
-  // isLoading?: boolean;
+  categoryId: number;
 }
 
-export default function ConfirmDelete({ onConfirm }: ConfirmDeleteProps) {
+export default function ConfirmDelete({ categoryId }: ConfirmDeleteProps) {
   const [open, setOpen] = useState(false);
 
-  const handleConfirm = () => {
-    onConfirm();
-    setOpen(false); // ✅ modal close
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await deleteCategory(id);
+      if (res.ok) {
+        toast.success("Category deleted successfully");
+        setOpen(false); // ✅ modal close
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Error deleting content:", error);
+      toast.error("Error deleting content");
+    }
   };
 
   return (
@@ -53,7 +63,7 @@ export default function ConfirmDelete({ onConfirm }: ConfirmDeleteProps) {
           </DialogClose>
           <button
             type="button"
-            onClick={handleConfirm}
+            onClick={() => handleDelete(categoryId)}
             className="bg-red-600 cursor-pointer text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-red-700 transition"
           >
             {/* {isLoading ? "Deleting..." : "Delete"} */}

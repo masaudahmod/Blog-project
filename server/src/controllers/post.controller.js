@@ -26,13 +26,22 @@ export const addPost = async (req, res) => {
     } = req.body;
 
     const featured_image = req.file;
-    // if (featured_image) {
-    // }
-    let image_upload = await cloudinaryUpload(
-      featured_image.path,
-      title,
-      "postFeatureImage"
-    );
+    let image_upload = {};
+    if (featured_image) {
+      image_upload = await cloudinaryUpload(
+        featured_image?.path,
+        title,
+        "postFeatureImage"
+      );
+    }
+
+    if (meta_keywords) {
+      meta_keywords = meta_keywords.split(",").map((keyword) => keyword.trim());
+    }
+
+    if (tags) {
+      tags = tags.split(",").map((tag) => tag.trim());
+    }
 
     if (!slug) {
       slug = title
@@ -51,9 +60,9 @@ export const addPost = async (req, res) => {
         slug,
         content,
 
-        image_upload.uploadResult.url,
-        featured_image_alt,
-        featured_image_caption,
+        image_upload?.uploadResult?.url || null,
+        featured_image_alt || null,
+        featured_image_caption || null,
         meta_title,
 
         meta_description,
