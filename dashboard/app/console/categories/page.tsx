@@ -1,4 +1,4 @@
-import ConfirmDelete from "@/app/(components)/ConfirmDelete";
+import ConfirmCategoryDelete from "@/app/(components)/ConfirmCategoryDelete";
 import {
   Table,
   TableBody,
@@ -37,7 +37,7 @@ export default async function Page() {
                     : "-"}
                 </TableCell>
                 <TableCell className="flex items-center gap-3">
-                  <ConfirmDelete categoryId={category.id} />
+                  <ConfirmCategoryDelete categoryId={category.id} />
                 </TableCell>
               </TableRow>
             ))}

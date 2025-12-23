@@ -242,6 +242,30 @@ async function addPost(formdata: FormData) {
   }
 }
 
+async function deletePost(postId: number) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/${postId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (result.ok) {
+      return { ok: true, message: "Post deleted" };
+    } else {
+      return { ok: false, message: "Deleting post failed" };
+    }
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    return { ok: false, error: "Deleting post failed" };
+  }
+}
+
 export {
   getCookies,
   login,
@@ -251,6 +275,7 @@ export {
   getAllCategories,
   getCategorybyId,
   addPost,
+  deletePost,
   addCategory,
-  deleteCategory
+  deleteCategory,
 };

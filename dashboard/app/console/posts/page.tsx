@@ -22,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import ConfirmPostDelete from "@/app/(components)/ConfirmPostDelete";
 
 export default async function Page() {
   const posts = await getAllPosts();
@@ -78,6 +79,7 @@ export default async function Page() {
                         Unpublished
                         <ContextMenuShortcut>⌘U</ContextMenuShortcut>
                       </ContextMenuItem>
+                      <ConfirmPostDelete postId={post.id} />
                     </ContextMenuContent>
                   </ContextMenu>
                 </TableCell>
