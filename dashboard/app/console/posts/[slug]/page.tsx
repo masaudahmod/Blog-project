@@ -1,5 +1,6 @@
 "use client";
 
+import PostSkeleton from "@/app/(components)/PostSkeleton";
 import { getPostBySlug } from "@/lib/action";
 import { PostType } from "@/lib/type";
 import Image from "next/image";
@@ -25,13 +26,11 @@ export default function Page() {
     fetchPost();
   }, [slug]);
 
-  if (!post) return <div>Loading...</div>;
-
-  console.log("post data by slug:", post);
+  if (!post) return <PostSkeleton />;
 
   return (
     <div className="p-5">
-      <div className="max-w-4xl mx-auto p-6 space-y-8 bg-white dark:bg-slate-900 rounded-lg ">
+      <div className="mx-auto p-6 space-y-8 rounded-lg">
         {/* Title */}
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">

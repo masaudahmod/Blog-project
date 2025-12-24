@@ -33,11 +33,6 @@ import Link from "next/link"
 const data = {
   navMain: [
     {
-      title: "My Console",
-      url: "/console",
-      icon: IconDashboard,
-    },
-    {
       title: "Posts",
       url: "/console/posts",
       icon: IconListDetails,
@@ -46,11 +41,6 @@ const data = {
       title: "Categories",
       url: "/console/categories",
       icon: IconChartBar,
-    },
-    {
-      title: "All Posts",
-      url: "/console/all-posts",
-      icon: IconFolder,
     },
   ],
   navSecondary: [
@@ -99,9 +89,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5"
             >
-              <Link href="#">
+              <Link href="/console/all-posts">
                 <IconInnerShadowTop className="size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <span className="text-base font-semibold">My Blog.</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

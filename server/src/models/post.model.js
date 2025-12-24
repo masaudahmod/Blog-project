@@ -12,6 +12,7 @@ export const createPostTable = async () => {
       excerpt VARCHAR(300),
 
       featured_image_url TEXT,
+      featured_image_public_id VARCHAR(255),
       featured_image_alt VARCHAR(255),
       featured_image_caption VARCHAR(255),
 

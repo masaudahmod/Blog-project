@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { cloudinaryUpload } from "../service/cloudinary.js";
+import { cloudinaryDelete, cloudinaryUpload } from "../service/cloudinary.js";
 
 export const addPost = async (req, res) => {
   try {
@@ -54,17 +54,18 @@ export const addPost = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
     const result = await pool.query(
-      `Insert into posts (title, slug, content, featured_image_url, featured_image_alt, featured_image_caption, meta_title, meta_description, meta_keywords, canonical_url, schema_type, category_id, tags, read_time, likes, comments, interactions, is_published, published_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) returning *`,
+      `Insert into posts (title, slug, content, featured_image_url, featured_image_public_id, featured_image_alt, featured_image_caption, meta_title, meta_description, meta_keywords, canonical_url, schema_type, category_id, tags, read_time, likes, comments, interactions, is_published, published_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) returning *`,
       [
         title,
         slug,
         content,
 
         image_upload?.uploadResult?.url || null,
+        image_upload?.uploadResult?.public_id || null,
         featured_image_alt || null,
         featured_image_caption || null,
-        meta_title,
 
+        meta_title,
         meta_description,
         meta_keywords,
         canonical_url,
@@ -163,10 +164,24 @@ export const getPostBySlug = async (req, res) => {
 export const deletePost = async (req, res) => {
   try {
     const { id } = req.params;
-    const query = "DELETE FROM posts WHERE id = $1";
-    const results = await pool.query(query, [id]);
-    if (results.rowCount === 0)
+
+    const postResult = await pool.query(
+      "SELECT featured_image_public_id FROM posts WHERE id = $1",
+      [id]
+    );
+
+    if (postResult.rows.length === 0)
       return res.status(404).json({ message: "Post not found" });
+
+    const featured_image_public_id =
+      postResult.rows[0].featured_image_public_id;
+
+    if (featured_image_public_id) {
+      await cloudinaryDelete(featured_image_public_id);
+    }
+
+    await pool.query("DELETE FROM posts WHERE id = $1", [id]);
+
     res.status(200).json({ message: "Post deleted" });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
