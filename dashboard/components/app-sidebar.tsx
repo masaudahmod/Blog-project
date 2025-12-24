@@ -48,8 +48,8 @@ const data = {
       icon: IconChartBar,
     },
     {
-      title: "Projects",
-      url: "/console/projects",
+      title: "All Posts",
+      url: "/console/all-posts",
       icon: IconFolder,
     },
   ],

@@ -145,6 +145,21 @@ export const getPost = async (req, res) => {
   }
 };
 
+export const getPostBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const query = "SELECT * FROM posts WHERE slug = $1";
+    const result = await pool.query(query, [slug]);
+    if (result.rows.length === 0)
+      return res.status(404).json({ message: "Post not found" });
+    res.status(200).json({ message: "Post retrieved", post: result.rows[0] });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server Error", error: error.message });
+  }
+};
+
 export const deletePost = async (req, res) => {
   try {
     const { id } = req.params;

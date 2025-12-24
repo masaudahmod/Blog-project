@@ -246,7 +246,7 @@ async function deletePost(postId: number) {
   try {
     const token = await getCookies();
     const result = await fetch(
-      `${process.env.NEXT_SERVER_API_URL}/post/${postId}`,
+      `${process.env.NEXT_SERVER_API_URL}/post/id/${postId}`,
       {
         method: "DELETE",
         headers: {
@@ -266,10 +266,35 @@ async function deletePost(postId: number) {
   }
 }
 
+async function getPostBySlug(slug: string) {
+  try {
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/slug/${slug}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const { post } = await result.json();
+    if (result.ok) {
+      return post;
+    } else {
+      console.error("Error fetching post by slug");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching post by slug:", error);
+    return null;
+  }
+}
+
 export {
   getCookies,
   login,
   getAllPosts,
+  getPostBySlug,
   getCurrentUser,
   logoutUser,
   getAllCategories,
