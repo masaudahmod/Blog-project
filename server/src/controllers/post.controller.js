@@ -113,7 +113,7 @@ export const allPosts = async (req, res) => {
       LIMIT $1 OFFSET $2
     `;
     const posts = await pool.query(query, [limit, offset]);
-
+    
     const totalQuery = "SELECT COUNT(*) FROM posts";
     const totalResult = await pool.query(totalQuery);
     const totalPosts = parseInt(totalResult.rows[0].count);

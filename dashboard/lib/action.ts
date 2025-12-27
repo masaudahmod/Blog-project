@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { json } from "zod";
+
 
 async function getCookies() {
   try {
@@ -64,9 +63,9 @@ async function getAllPosts(page = 1) {
         },
       }
     );
-    const { posts } = await result.json();
+    const data = await result.json();
     if (result.ok) {
-      return posts;
+      return data;
     } else {
       console.error("Error fetching posts");
       return [];

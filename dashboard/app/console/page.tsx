@@ -57,7 +57,7 @@ export default async function Page() {
               ))}
             {!Comments?.length && (
               <div className="col-span-2">
-                <p className="text-center my-3">No pending comments</p>
+                <p className="text-center my-3">No pending comments yet</p>
               </div>
             )}
           </div>

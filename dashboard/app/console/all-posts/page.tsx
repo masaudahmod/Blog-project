@@ -1,17 +1,27 @@
+import { Button } from "@/components/ui/button";
 import { getAllPosts } from "@/lib/action";
 import { PostType } from "@/lib/type";
 import Image from "next/image";
 import Link from "next/link";
 
-export default async function page() {
-  const posts = await getAllPosts();
+export default async function page({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const params = await searchParams;
+  const currentPage = Number(params.page) || 1;
+  const data = await getAllPosts();
+  const posts = data?.posts;
+
+  const totalPages = data?.totalPages;
   return (
     <>
       <div className="p-4">
         <h2 className="text-2xl font-bold mb-4 text-center">
           All Recent Posts
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-5">
           {posts?.map((post: PostType) => (
             <div
               key={post.id}
@@ -73,13 +83,48 @@ export default async function page() {
                     {new Date(post?.created_at || "").toLocaleDateString()}
                   </span>
 
-                  <Link href={`/console/posts/${post.slug}`} className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                  <Link
+                    href={`/console/posts/${post.slug}`}
+                    className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded"
+                  >
                     View Post
                   </Link>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+        <div className="flex items-center justify-between mt-6">
+          <p className="text-sm text-gray-500">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex gap-2">
+            {/* Previous Button */}
+            <Button
+              variant="outline"
+              disabled={currentPage <= 1}
+              asChild={currentPage > 1}
+            >
+              {currentPage > 1 ? (
+                <Link href={`?page=${currentPage - 1}`}>Previous</Link>
+              ) : (
+                <span>Previous</span>
+              )}
+            </Button>
+
+            {/* Next Button */}
+            <Button
+              variant="outline"
+              disabled={currentPage >= totalPages}
+              asChild={currentPage < totalPages}
+            >
+              {currentPage < totalPages ? (
+                <Link href={`?page=${currentPage + 1}`}>Next</Link>
+              ) : (
+                <span>Next</span>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </>
