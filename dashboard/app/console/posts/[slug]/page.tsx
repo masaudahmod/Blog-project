@@ -1,16 +1,24 @@
 "use client";
 
 import PostSkeleton from "@/app/(components)/PostSkeleton";
-import { getPostBySlug } from "@/lib/action";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { addComment, getPostBySlug } from "@/lib/action";
 import { PostType } from "@/lib/type";
+import { CircleUser } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
   const params = useParams();
   const slug = params?.slug as string;
   const [post, setPost] = useState<PostType | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [writeComponent, setWriteComponent] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userComment, setUserComment] = useState("");
 
   useEffect(() => {
     if (!slug) return;
@@ -26,8 +34,29 @@ export default function Page() {
     fetchPost();
   }, [slug]);
 
-  if (!post) return <PostSkeleton />;
+  const handleCommentSubmit = async () => {
+    if (!userName || !userComment) return;
+    try {
+      setLoading(true);
+      const result = await addComment({
+        id: post?.id || "",
+        userName,
+        message: userComment,
+      });
+      if (result) {
+        toast.success("Comment added successfully");
+        setWriteComponent(false);
+        setUserName("");
+        setUserComment("");
+        setLoading(false);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+    }
+  };
 
+  if (!post) return <PostSkeleton />;
   return (
     <div className="p-5">
       <div className="mx-auto p-6 space-y-8 rounded-lg">
@@ -156,13 +185,56 @@ export default function Page() {
             post.comments.map((comment: any, i: number) => (
               <div
                 key={i}
-                className="border border-slate-200 dark:border-slate-800 p-3 rounded mb-2 text-sm"
+                className="border flex items-center gap-5 border-slate-200 dark:border-slate-800 p-3 rounded mb-2 text-sm"
               >
-                {JSON.stringify(comment)}
+                <CircleUser />
+                <div className="mt-2">
+                  <p>{comment.author}</p>
+                  <p>
+                    <b>Comment:</b> {comment.message}
+                  </p>
+                </div>
               </div>
             ))
           ) : (
             <p className="text-sm text-slate-500">No comments yet</p>
+          )}
+          <Button
+            variant="outline"
+            className="mt-5"
+            onClick={() => setWriteComponent(!writeComponent)}
+          >
+            {writeComponent ? "Close Comment Form" : "Add a Comment"}
+          </Button>
+          {writeComponent && (
+            <div className="mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
+                <Input
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  type="text"
+                  className="w-full mb-2 transition duration-300 ease-in-out border border-slate-300 dark:border-slate-700 p-2 rounded"
+                  placeholder="Please enter your name"
+                />
+                <h4 className="font-semibold mb-2 text-left md:text-right">
+                  Write Comment
+                </h4>
+              </div>
+              <textarea
+                value={userComment}
+                onChange={(e) => setUserComment(e.target.value)}
+                className="w-full transition duration-300 ease-in-out border border-slate-300 dark:border-slate-700 p-2 rounded"
+                rows={4}
+                placeholder="Write your comment here..."
+              ></textarea>
+              <Button
+                variant="default"
+                className="mt-3"
+                onClick={handleCommentSubmit}
+              >
+                {loading ? "Submitting..." : "Submit Comment"}
+              </Button>
+            </div>
           )}
         </div>
 

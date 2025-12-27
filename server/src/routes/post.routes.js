@@ -1,8 +1,11 @@
 import express from "express";
 import {
+  addComment,
   addPost,
   allPosts,
+  approveComment,
   deletePost,
+  getPendingComments,
   getPost,
   getPostBySlug,
 } from "../controllers/post.controller.js";
@@ -15,5 +18,10 @@ router.post("/add", verifyAdmin, upload.single("featured_image"), addPost);
 router.get("/", allPosts);
 router.route("/id/:id").get(getPost).delete(verifyAdmin, deletePost);
 router.route("/slug/:slug").get(getPostBySlug);
+
+router.route("/comment/:id").post(addComment);
+
+router.route("/comments/pending").get(verifyAdmin, getPendingComments).post(verifyAdmin, approveComment);
+
 
 export default router;

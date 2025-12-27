@@ -34,7 +34,6 @@ export const addPost = async (req, res) => {
         "postFeatureImage"
       );
     }
-
     if (meta_keywords) {
       meta_keywords = meta_keywords.split(",").map((keyword) => keyword.trim());
     }
@@ -198,5 +197,130 @@ export const updatePost = async (req, res) => {
     res.status(200).json({ message: "Post updated" });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+export const addComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userName, message } = req.body;
+
+    function generateUniqueId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    }
+    console.log(generateUniqueId);
+
+    const newComment = {
+      id: generateUniqueId(),
+      author: userName,
+      message,
+      status: "pending",
+      created_at: new Date().toISOString(),
+    };
+
+    const postResult = await pool.query(
+      "SELECT comments FROM posts WHERE id = $1",
+      [id]
+    );
+    if (postResult.rows.length === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    const comments = postResult.rows[0].comments || [];
+    comments.push(newComment);
+    await pool.query("UPDATE posts SET comments = $1 WHERE id = $2", [
+      JSON.stringify(comments),
+      id,
+    ]);
+    res.status(200).json({ message: "Comment added" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server Error in add comment", error: error.message });
+  }
+};
+
+export const likePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const postResult = await pool.query(
+      "SELECT likes FROM posts WHERE id = $1",
+      [id]
+    );
+    if (postResult.rows.length === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    const likes = postResult.rows[0].likes || 0;
+    await pool.query("UPDATE posts SET likes = $1 WHERE id = $2", [
+      likes + 1,
+      id,
+    ]);
+    res.status(200).json({ message: "Post liked" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server Error in like post", error: error.message });
+  }
+};
+
+export const getPendingComments = async (req, res) => {
+  try {
+    //   const result = await pool.query(`
+    //   SELECT id, comments, title
+    //   FROM posts
+    //   WHERE comments::text LIKE '%pending%'
+    // `);
+    const query = `
+      SELECT 
+        id, 
+        title, 
+        jsonb_path_query_array(comments, '$[*] ? (@.status == "pending")') as pending_comments
+      FROM posts
+      WHERE comments @> '[{"status": "pending"}]'
+    `;
+
+    const result = await pool.query(query);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "No pending comments found" });
+    }
+    res
+      .status(200)
+      .json({ message: "Pending comments retrieved", comments: result.rows });
+  } catch (error) {
+    console.error("Error get pending comment:", error);
+    res.status(500).json({
+      message: "Server Error in get pending comment",
+      error: error.message,
+    });
+  }
+};
+
+export const approveComment = async (req, res) => {
+  try {
+    const { postId, commentId } = req.query;
+
+    const post = await pool.query(`SELECT comments FROM posts WHERE id=$1`, [
+      postId,
+    ]);
+
+    if (post.rows.length === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const updatedComments = post.rows[0].comments.map((comment) =>
+      comment.id === commentId ? { ...comment, status: "approved" } : comment
+    );
+
+    await pool.query(`UPDATE posts SET comments = $1 WHERE id = $2`, [
+      JSON.stringify(updatedComments),
+      postId,
+    ]);
+    res.status(200).json({ message: "Comment approved" });
+  } catch (error) {
+    console.error("Error approve comment:", error);
+    res.status(500).json({
+      message: "Server Error in approve comment",
+      error: error.message,
+    });
   }
 };

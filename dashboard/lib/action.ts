@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { json } from "zod";
@@ -290,6 +291,75 @@ async function getPostBySlug(slug: string) {
   }
 }
 
+// Exporting for public use (use for testing)
+
+async function addComment({
+  id,
+  userName,
+  message,
+}: {
+  id: number | string;
+  userName: string;
+  message: string;
+}) {
+  try {
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/comment/${id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userName, message }),
+      }
+    );
+    return result.json();
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    return null;
+  }
+}
+
+async function getPendingComments() {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/comments/pending`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return result.json();
+  } catch (error) {
+    console.error("Error getting comment:", error);
+    return null;
+  }
+}
+
+async function approveComment(PostId: number, CommentId: string) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/comments/pending?postId=${PostId}&commentId=${CommentId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    revalidatePath("/console");
+    return result.json();
+  } catch (error) {
+    console.error("Error getting comment:", error);
+  }
+}
+
 export {
   getCookies,
   login,
@@ -303,4 +373,7 @@ export {
   deletePost,
   addCategory,
   deleteCategory,
+  addComment,
+  getPendingComments,
+  approveComment,
 };
