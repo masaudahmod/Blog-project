@@ -35,7 +35,6 @@ export default async function Page({
   const currentPage = Number(params.page) || 1;
   const data = await getAllPosts(currentPage);
   const posts = data?.posts;
-  console.log("data", currentPage);
   const totalPages = data?.totalPages;
   return (
     <>

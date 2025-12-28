@@ -3,10 +3,8 @@
 import * as React from "react"
 import {
   IconChartBar,
-  IconDashboard,
   IconDatabase,
   IconFileWord,
-  IconFolder,
   IconHelp,
   IconInnerShadowTop,
   IconListDetails,
@@ -50,11 +48,6 @@ const data = {
       icon: IconSettings,
     },
     {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
       title: "Search",
       url: "#",
       icon: IconSearch,
@@ -70,11 +63,6 @@ const data = {
       name: "Add Category",
       url: "/console/categories/add",
       icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
     },
   ],
 }

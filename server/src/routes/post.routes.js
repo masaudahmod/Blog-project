@@ -5,6 +5,7 @@ import {
   allPosts,
   approveComment,
   deletePost,
+  getMonthlyPost,
   getPendingComments,
   getPost,
   getPostBySlug,
@@ -22,6 +23,8 @@ router.route("/slug/:slug").get(getPostBySlug);
 router.route("/comment/:id").post(addComment);
 
 router.route("/comments/pending").get(verifyAdmin, getPendingComments).post(verifyAdmin, approveComment);
+
+router.route('/monthly-stats').get(verifyAdmin, getMonthlyPost);
 
 
 export default router;

@@ -4,7 +4,7 @@ import PostSkeleton from "@/app/(components)/PostSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { addComment, getPostBySlug } from "@/lib/action";
-import { PostType } from "@/lib/type";
+import { CommentType, InteractionType, PostType } from "@/lib/type";
 import { CircleUser } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -131,36 +131,15 @@ export default function Page() {
 
         {/* Content */}
         <div
-          className="
-                      prose 
-                      prose-lg 
-                      prose-slate 
-                      dark:prose-invert 
-                      max-w-none
-                
-                      prose-h1:text-4xl
-                      prose-h1:font-bold
-                      prose-h1:mb-4
-                
-                      prose-h2:text-3xl
-                      prose-h2:font-semibold
-                
-                      prose-h3:text-2xl
-                      prose-h3:font-medium
-                
-                      prose-p:text-base
-                      prose-p:leading-7
-                      prose-p:text-slate-700
-                      dark:prose-p:text-slate-300
-                
-                      prose-a:text-blue-600
-                      prose-a:underline
-                
-                      prose-img:rounded-lg
-                      prose-img:shadow
-                    "
+          className="prose max-w-none dark:prose-invert 
+          prose-h1:text-4xl
+          prose-h2:text-3xl
+          prose-h3:text-2xl
+          "
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
+
+        {/* <div>{post.content}</div> */}
 
         {/* SEO Section */}
         <div className="border-t pt-6 space-y-2 text-sm text-slate-600 dark:text-slate-400">
@@ -182,7 +161,7 @@ export default function Page() {
         <div className="border-t pt-6">
           <h3 className="font-semibold mb-2">Comments</h3>
           {post.comments && post.comments?.length > 0 ? (
-            post.comments.map((comment: any, i: number) => (
+            post.comments.map((comment: CommentType, i: number) => (
               <div
                 key={i}
                 className="border flex items-center gap-5 border-slate-200 dark:border-slate-800 p-3 rounded mb-2 text-sm"
@@ -242,7 +221,7 @@ export default function Page() {
         <div className="border-t pt-6">
           <h3 className="font-semibold mb-2">Interactions</h3>
           {post.interactions && post.interactions?.length > 0 ? (
-            post.interactions.map((item: any, i: number) => (
+            post.interactions.map((item: InteractionType, i: number) => (
               <div
                 key={i}
                 className="text-sm text-slate-600 dark:text-slate-400"

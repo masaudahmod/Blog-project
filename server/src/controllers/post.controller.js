@@ -113,7 +113,7 @@ export const allPosts = async (req, res) => {
       LIMIT $1 OFFSET $2
     `;
     const posts = await pool.query(query, [limit, offset]);
-    
+
     const totalQuery = "SELECT COUNT(*) FROM posts";
     const totalResult = await pool.query(totalQuery);
     const totalPosts = parseInt(totalResult.rows[0].count);
@@ -320,6 +320,40 @@ export const approveComment = async (req, res) => {
     console.error("Error approve comment:", error);
     res.status(500).json({
       message: "Server Error in approve comment",
+      error: error.message,
+    });
+  }
+};
+
+export const getMonthlyPost = async (req, res) => {
+  try {
+    // month & year query থেকে নিবো
+    // example: ?month=1&year=2025
+    const { month, year } = req.query;
+    const result = await pool.query(
+      `
+      SELECT
+        COUNT(id) AS total_posts,
+        COALESCE(SUM(likes), 0) AS total_likes,
+        COALESCE(SUM(jsonb_array_length(comments)), 0) AS total_comments
+      FROM posts
+      WHERE
+        EXTRACT(MONTH FROM created_at) = $1
+        AND EXTRACT(YEAR FROM created_at) = $2;
+      `,
+      [month, year]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Monthly post not found" });
+    }
+
+    res.status(200).json({
+      message: "Monthly post stats retrieved",
+      data: result.rows[0],
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server Error in get monthly post",
       error: error.message,
     });
   }

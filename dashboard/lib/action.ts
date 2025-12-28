@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
-
 async function getCookies() {
   try {
     const myCookies = await cookies();
@@ -359,6 +358,26 @@ async function approveComment(PostId: number, CommentId: string) {
   }
 }
 
+async function getMonthlyPost(month: number, year: number) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/monthly-stats?month=${month}&year=${year}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return result.json();
+  } catch (error) {
+    console.error("Error getting comment:", error);
+    return null;
+  }
+}
+
 export {
   getCookies,
   login,
@@ -375,4 +394,5 @@ export {
   addComment,
   getPendingComments,
   approveComment,
+  getMonthlyPost,
 };

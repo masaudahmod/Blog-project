@@ -45,8 +45,9 @@ export interface PostType {
 
 // Comment type
 export interface CommentType {
-  user: string;
-  comment: string;
+  id: string;
+  author: string;
+  message: string;
   date: string; // ISO date string
 }
 

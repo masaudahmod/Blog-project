@@ -97,22 +97,11 @@ export function NavUser() {
                     {user?.name || "Super Admin"}
                   </span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {user?.email || "admin@mail.com"}
+                    {user?.role || "admin@mail.com"}
                   </span>
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconUserCircle />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconNotification />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logoutHandler}>
               <IconLogout />

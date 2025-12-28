@@ -1,7 +1,7 @@
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { SectionCards } from "@/components/section-cards";
 
-import { getPendingComments } from "@/lib/action";
+import { getMonthlyPost, getPendingComments } from "@/lib/action";
 import ApproveComment from "../(components)/ApproveComment";
 
 interface Comment {
