@@ -378,6 +378,24 @@ async function getMonthlyPost(month: number, year: number) {
   }
 }
 
+async function likePost(slug: string) {
+  try {
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/${slug}/like`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    revalidatePath("/");
+    return result.json();
+  } catch (error) {
+    console.error("Error getting comment:", error);
+  }
+}
+
 export {
   getCookies,
   login,
@@ -395,4 +413,5 @@ export {
   getPendingComments,
   approveComment,
   getMonthlyPost,
+  likePost,
 };

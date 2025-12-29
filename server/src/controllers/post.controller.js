@@ -239,29 +239,6 @@ export const addComment = async (req, res) => {
   }
 };
 
-export const likePost = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const postResult = await pool.query(
-      "SELECT likes FROM posts WHERE id = $1",
-      [id]
-    );
-    if (postResult.rows.length === 0) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-    const likes = postResult.rows[0].likes || 0;
-    await pool.query("UPDATE posts SET likes = $1 WHERE id = $2", [
-      likes + 1,
-      id,
-    ]);
-    res.status(200).json({ message: "Post liked" });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Server Error in like post", error: error.message });
-  }
-};
-
 export const getPendingComments = async (req, res) => {
   try {
     //   const result = await pool.query(`
@@ -354,6 +331,87 @@ export const getMonthlyPost = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server Error in get monthly post",
+      error: error.message,
+    });
+  }
+};
+
+export const likePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const postResult = await pool.query(
+      "SELECT likes FROM posts WHERE id = $1",
+      [id]
+    );
+    if (postResult.rows.length === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    const likes = postResult.rows[0].likes || 0;
+    await pool.query("UPDATE posts SET likes = $1 WHERE id = $2", [
+      likes + 1,
+      id,
+    ]);
+    res.status(200).json({ message: "Post liked" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server Error in like post", error: error.message });
+  }
+};
+
+export const likePostBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const result = await pool.query(
+      `
+      UPDATE posts
+      SET likes = likes + 1
+      WHERE slug = $1
+      RETURNING likes
+      `,
+      [slug]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.status(200).json({
+      likes: result.rows[0].likes,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Like failed",
+      error: error.message,
+    });
+  }
+};
+
+export const unlikePostBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const result = await pool.query(
+      `
+      UPDATE posts
+      SET likes = GREATEST(likes - 1, 0)
+      WHERE slug = $1
+      RETURNING likes
+      `,
+      [slug]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.status(200).json({
+      likes: result.rows[0].likes,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Unlike failed",
       error: error.message,
     });
   }

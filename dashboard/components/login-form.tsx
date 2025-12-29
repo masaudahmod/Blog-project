@@ -61,7 +61,7 @@ export function LoginForm({
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="your@mail.com"
                   required
                 />
               </Field>
@@ -89,6 +89,7 @@ export function LoginForm({
                   )}
                   <Input
                     id="password"
+                    placeholder="Password"
                     type={showPassword ? "text" : "password"}
                     name="password"
                     required
