@@ -11,6 +11,8 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import "react-quill-new/dist/quill.snow.css";
+
 
 export default function Page() {
   const params = useParams();
@@ -58,6 +60,8 @@ export default function Page() {
   };
 
   if (!post) return <PostSkeleton />;
+
+  console.log(" post", post);
   return (
     <div className="p-5">
       <div className="mx-auto p-6 space-y-8 rounded-lg">
@@ -138,14 +142,29 @@ export default function Page() {
         )}
 
         {/* Content */}
-        <div
+        {/* <div
           className="prose max-w-none dark:prose-invert 
           prose-h1:text-4xl
           prose-h2:text-3xl
           prose-h3:text-2xl
           "
           dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        /> */}
+
+        <div
+        className="
+          prose prose-slate max-w-none dark:prose-invert 
+          /* Heading Styles */
+          prose-h1:text-4xl prose-h1:font-bold
+          prose-h2:text-3xl prose-h2:font-semibold
+          prose-h3:text-2xl
+          /* List Styles (Quill er jonno lagbe) */
+          prose-ol:list-decimal prose-ul:list-disc
+          /* Quill specific class to fix alignment */
+          ql-editor
+        "
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
 
         {/* <div>{post.content}</div> */}
 

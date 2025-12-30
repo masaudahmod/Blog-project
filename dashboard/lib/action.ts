@@ -311,6 +311,7 @@ async function addComment({
         body: JSON.stringify({ userName, message }),
       }
     );
+    revalidatePath("/");
     return result.json();
   } catch (error) {
     console.error("Error adding comment:", error);
