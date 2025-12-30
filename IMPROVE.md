@@ -2,6 +2,9 @@
 
 এই README ফাইলটি একটি **professionally built, production-ready blog website** বানানোর জন্য প্রয়োজনীয় checklist হিসেবে ব্যবহার করা যাবে।
 
+add a feature that public want to posts on my blog and this will be approval system on dashboard definately and this post design will be dev.community based 
+after approve post then this post will be show on category or name or anyother categories blogs show in my blogs
+
 ---
 
 ## ✅ 1. robots.txt
