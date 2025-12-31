@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
+import path from "path";
 
 interface NavItem {
   href: string;
@@ -36,7 +37,7 @@ const NavLink = ({ href, children, active = false }: NavItem) => (
   >
     {children}
     <span
-      className={`absolute -bottom-5.5 left-0 h-0.75 rounded-t-full bg-primary transition-all duration-300 ${
+      className={`absolute -bottom-3 left-0 h-0.75 rounded-t-full bg-primary transition-all duration-300 ${
         active ? "w-full" : "w-0 group-hover:w-full"
       }`}
     ></span>
@@ -62,16 +63,9 @@ export default function Navbar() {
 
   if (!mounted) return null;
 
-  // Then, in your component, you can use NavLink like this:
-  // ...
-  <NavLink href="/" active>
-    Home
-  </NavLink>;
-  // ...
-
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md transition-all duration-300">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-15 container items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left: Logo */}
         <div className="flex items-center gap-3 shrink-0">
           <Link href="/" className="flex items-center gap-2 group">
@@ -89,17 +83,30 @@ export default function Navbar() {
           <NavLink href="/" active={pathName === "/" ? true : false}>
             Home
           </NavLink>
-          <NavLink href="/blog" active={pathName === "/blog" ? true : false}>Blog / Articles</NavLink>
+          <NavLink href="/blog" active={pathName === "/blog" ? true : false}>
+            Blog / Articles
+          </NavLink>
 
           {/* Mega Menu Trigger */}
           <div className="group relative flex h-20 items-center cursor-pointer">
-            <button className="flex items-center gap-1 text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-primary dark:group-hover:text-white outline-none">
+            <button
+              className={`flex items-center gap-1 text-sm font-medium ${
+                pathName === "/categories"
+                  ? "text-primary"
+                  : "text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white"
+              }  outline-none`}
+            >
               Categories
               <ChevronDown
                 size={18}
                 className="transition-transform duration-300 group-hover:rotate-180"
               />
             </button>
+            <span
+              className={`absolute bottom-2.5 left-0 h-0.75 rounded-t-full bg-primary transition-all duration-300 ${
+                pathName === "/categories" ? "w-full" : "w-0 group-hover:w-full"
+              }`}
+            ></span>
 
             {/* Mega Menu Dropdown */}
             <div className="absolute left-1/2 top-full w-137.5 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top -translate-y-2 group-hover:translate-y-0">
@@ -144,22 +151,35 @@ export default function Navbar() {
             </div>
           </div>
 
-          <NavLink href="/about" active={pathName === "/about" ? true : false}>About</NavLink>
+          <NavLink href="/about" active={pathName === "/about" ? true : false}>
+            About
+          </NavLink>
         </div>
 
         {/* Right: Utilities */}
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Search Bar */}
-          <div className="relative hidden sm:block">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="h-10 w-32 lg:w-48 rounded-full bg-slate-100 dark:bg-white/5 pl-10 pr-4 text-sm outline-none focus:w-64 focus:ring-2 focus:ring-primary/20 transition-all duration-300 dark:text-white"
-            />
+          <div className="relative hidden sm:block w-64 h-10">
+            <div className="absolute right-0 h-full w-32 focus-within:w-full transition-all duration-300">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                size={18}
+              />
+
+              <input
+                type="text"
+                placeholder="Search..."
+                className="
+        h-full w-full
+        rounded-full
+        bg-slate-100 dark:bg-white/5
+        pl-10 pr-4
+        text-sm outline-none
+        focus:ring-2 focus:ring-primary/20
+        dark:text-white
+      "
+              />
+            </div>
           </div>
 
           {/* Theme Toggle */}
@@ -186,33 +206,79 @@ export default function Navbar() {
 
       {/* Mobile Menu Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-slate-950 border-b border-gray-200 dark:border-white/10 p-4 space-y-4 animate-in slide-in-from-top-5">
-          <Link href="/" className="block px-4 py-2 text-primary font-medium">
-            Home
-          </Link>
-          <Link
-            href="/blog"
-            className="block px-4 py-2 text-slate-600 dark:text-slate-300"
-          >
-            Articles
-          </Link>
-          <Link
-            href="/categories"
-            className="block px-4 py-2 text-slate-600 dark:text-slate-300"
-          >
-            Categories
-          </Link>
-          <div className="pt-4 border-t border-gray-100 dark:border-white/5">
-            <div className="relative">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                type="text"
-                className="w-full bg-slate-100 dark:bg-white/5 rounded-xl py-3 pl-10 text-sm outline-none"
-                placeholder="Search articles..."
-              />
+        <div className="md:hidden bg-white dark:bg-slate-950 border-b border-gray-200 dark:border-white/10 min-h-screen w-full fixed top-0 left-0 z-50 transform translate-x-0 transition-transform duration-300 ease-in-out ">
+          {/* Logo */}
+          <div className="flex items-center justify-between gap-3 shrink-0 px-5 mt-5">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
+                <Terminal size={20} />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                DevLog
+              </span>
+            </Link>
+            <X
+              size={24}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            />
+          </div>
+          <div className="flex justify-center px-5 flex-col gap-4 min-h-[calc(100vh-5rem)]">
+            <Link
+              href="/"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`block px-4 py-2 ${
+                pathName === "/"
+                  ? "text-primary"
+                  : "text-slate-600 dark:text-slate-300"
+              } font-medium`}
+            >
+              Home
+            </Link>
+            <Link
+              href="/blog"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`block px-4 py-2 ${
+                pathName === "/blog"
+                  ? "text-primary"
+                  : "text-slate-600 dark:text-slate-300"
+              } font-medium`}
+            >
+              Articles
+            </Link>
+            <Link
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              href="/categories"
+              className={`block px-4 py-2 ${
+                pathName === "/categories"
+                  ? "text-primary"
+                  : "text-slate-600 dark:text-slate-300"
+              } font-medium`}
+            >
+              Categories
+            </Link>
+            <Link
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              href="/about"
+              className={`block px-4 py-2 ${
+                pathName === "/about"
+                  ? "text-primary"
+                  : "text-slate-600 dark:text-slate-300"
+              } font-medium`}
+            >
+              About
+            </Link>
+            <div className="pt-4 border-t border-gray-100 dark:border-white/5">
+              <div className="relative">
+                <Search
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="text"
+                  className="w-full bg-slate-100 dark:bg-white/5 rounded-xl py-3 pl-10 text-sm outline-none"
+                  placeholder="Search articles..."
+                />
+              </div>
             </div>
           </div>
         </div>
