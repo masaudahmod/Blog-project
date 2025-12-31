@@ -185,7 +185,7 @@ export default function Navbar() {
           {/* Theme Toggle */}
           <button
             onClick={() => setTheme(isDark ? "light" : "dark")}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+            className="flex h-10 cursor-pointer w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
           >
             {isDark ? (
               <Sun size={20} className="text-yellow-400" />

@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+1️⃣ ভালো Blog Homepage-এর Main Rule (সবচেয়ে important)
 
-## Getting Started
+👉 Less content, more clarity
 
-First, run the development server:
+Homepage-এ সব কিছু ঢুকাতে হবে না। Homepage-এর কাজ:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Visitor-কে বোঝানো → এই blog টা কী নিয়ে
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visitor-কে guide করা → কোথায় ক্লিক করবে
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2️⃣ Simple & Clean Homepage Structure (Best Layout)
+🔹 1. Hero Section (Top part)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Homepage খুললেই যেটা দেখা যাবে।
 
-## Learn More
+থাকবে:
 
-To learn more about Next.js, take a look at the following resources:
+Blog name
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1 লাইনের tagline (blogটা কী নিয়ে)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1টা CTA button
 
-## Deploy on Vercel
+Example:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+AMR Blog
+Writing about tech, life & learning
+[Read Latest Posts]
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+👉 বেশি লেখা না, short & clear
+
+🔹 2. Featured / Latest Posts (সবচেয়ে important)
+
+Hero section-এর নিচে
+
+Layout idea:
+
+3–6টা post card
+
+প্রতিটা card-এ:
+
+Thumbnail
+
+Title
+
+1 line excerpt
+
+👉 Grid system ব্যবহার করো (সব সমান size)
+
+🔹 3. Categories / Topics (Optional but clean)
+
+যদি blog-এ multiple topic থাকে
+
+Example:
+
+Tech
+
+Personal
+
+Tutorials
+
+Thoughts
+
+👉 Icon + text হলে আরও clean দেখাবে
+
+🔹 4. About Short Section (Very short)
+
+Full about page না, শুধু intro
+
+Example:
+
+Hi, I’m ___ . I write about things I learn and experience.
+
+👉 বেশি লেখা দিলে messy লাগে
+
+🔹 5. Newsletter / Follow Section (Optional)
+
+Email subscribe
+
+Or social links 
