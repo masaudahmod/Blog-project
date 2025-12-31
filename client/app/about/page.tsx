@@ -63,7 +63,7 @@ export default function Page() {
         <div className="w-full container px-6 flex flex-col gap-24">
           {/* Who We Are */}
           <section className="flex flex-col md:flex-row gap-12 items-center">
-            <div className="flex-1">
+            <div className="">
               <div
                 className="w-full aspect-4/3 rounded-2xl bg-cover bg-center shadow-xl"
                 style={{
@@ -204,7 +204,7 @@ export default function Page() {
           </section>
 
           {/* <!-- Call To Action --> */}
-          <section className="w-full rounded-3xl py-12 text-center shadow-lg flex flex-col items-center gap-8">
+          <section className="w-full py-12 text-center flex flex-col items-center gap-8">
             <div className="max-w-2xl">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
                 Let’s Learn and Grow Together
@@ -215,7 +215,10 @@ export default function Page() {
               </p>
             </div>
             <div className="flex flex-wrap flex-col md:flex-row justify-center gap-4 w-full">
-              <Link href={'/blog'} className="flex items-center cursor-pointer justify-center gap-2 bg-primary hover:bg-blue-700 text-white font-bold h-12 px-8 rounded-xl transition-colors min-w-40">
+              <Link
+                href={"/blog"}
+                className="flex items-center cursor-pointer justify-center gap-2 bg-primary hover:bg-blue-700 text-white font-bold h-12 px-8 rounded-xl transition-colors min-w-40"
+              >
                 <span>Read Blogs</span>
                 <ChevronRight />
               </Link>

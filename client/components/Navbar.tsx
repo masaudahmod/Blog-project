@@ -18,7 +18,6 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import path from "path";
 
 interface NavItem {
   href: string;
@@ -49,6 +48,8 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const { setTheme, resolvedTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   // Hydration error prevent korar jonno
   useEffect(() => {
@@ -59,12 +60,38 @@ export default function Navbar() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > window.innerHeight / 2) {
+        if (currentScrollY > lastScrollY) {
+          setShowNavbar(false);
+        } else {
+          setShowNavbar(true);
+        }
+      } else {
+        setShowNavbar(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   const isDark = resolvedTheme === "dark";
 
   if (!mounted) return null;
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md transition-all duration-300">
+    <nav
+      className={`sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/10 
+    bg-primary dark:bg-slate-950/80 backdrop-blur-md transition-all duration-300
+    ${showNavbar ? "translate-y-0" : "-translate-y-full"}`}
+    >
       <div className="mx-auto flex h-15 container items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left: Logo */}
         <div className="flex items-center gap-3 shrink-0">
