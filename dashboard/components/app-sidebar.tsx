@@ -48,6 +48,11 @@ const data = {
       icon: IconSettings,
     },
     {
+      title: "Newsletter Subscriber List",
+      url: "/console/newsletter-subscribe",
+      icon: IconHelp,
+    },
+    {
       title: "Search",
       url: "#",
       icon: IconSearch,

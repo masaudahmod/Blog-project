@@ -397,6 +397,35 @@ async function likePost(slug: string) {
   }
 }
 
+async function getNewsletterSubcriberPaginate({
+  page,
+  limit,
+}: {
+  page: number;
+  limit: number;
+}) {
+  try {
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/newsletter-subscribe?page=${page}&limit=${limit}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store", // ডাটা সবসময় আপডেট রাখার জন্য
+      }
+    );
+
+    if (!result.ok) throw new Error("Failed to fetch subscribers");
+
+    const data = await result.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching subscribers:", error);
+    return null;
+  }
+}
+
 export {
   getCookies,
   login,
@@ -415,4 +444,5 @@ export {
   approveComment,
   getMonthlyPost,
   likePost,
+  getNewsletterSubcriberPaginate,
 };

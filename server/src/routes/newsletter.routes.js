@@ -3,7 +3,7 @@ import {
   getAllNewsletterSubscribers,
   subscribeNewsletter,
   unsubscribeNewsletter,
-} from "../controllers/newsletter.controller";
+} from "../controllers/newsletter.controller.js";
 const router = express.Router();
 
 router

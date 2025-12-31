@@ -1,28 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { newsletterSubscribe } from "@/lib/action";
+import { useEffect, useState } from "react";
 
 export default function NewsletterSubscription({ isRow = false }) {
   // email state
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resultMessage, setResultMessage] = useState("");
 
   // form submit handler
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    try {
+      e.preventDefault();
+      setLoading(true);
 
-    // for now just log (later API call)
-    console.log("Subscribed Email:", email);
-
-    // reset input
-    setEmail("");
-    setLoading(false);
+      const result = await newsletterSubscribe({ email });
+      if (result) {
+        // reset input
+        setEmail("");
+        setLoading(false);
+        setResultMessage(result.message || "");
+      }
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (resultMessage) {
+      setTimeout(() => {
+        setResultMessage("");
+      }, 5000);
+    }
+  }, [resultMessage]);
 
   return (
     <div
-      className={`w-full border border-gray-200 dark:border-gray-700 rounded-2xl p-5 ${
+      className={`w-full border shadow-lg rounded-lg p-5 ${
         isRow
           ? "flex flex-col md:flex-row items-center justify-between gap-4"
           : "flex flex-col gap-4 justify-center items-center"
@@ -45,6 +61,12 @@ export default function NewsletterSubscription({ isRow = false }) {
             : "flex flex-col gap-3"
         }`}
       >
+        {resultMessage && (
+          <span className="mr-10 text-base font-semibold transition-all duration-200 text-green-500">
+            {resultMessage || "This Email is already subscribed!"}
+          </span>
+        )}
+
         <input
           type="email"
           required

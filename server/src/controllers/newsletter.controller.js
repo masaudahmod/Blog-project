@@ -1,3 +1,4 @@
+import pool from "../config/db.js";
 import { createSubscription, findByEmail } from "../models/newsletter.model.js";
 
 export const subscribeNewsletter = async (req, res) => {
@@ -15,14 +16,12 @@ export const subscribeNewsletter = async (req, res) => {
     const existingEmail = await findByEmail(email);
     if (existingEmail) {
       return res.status(409).json({
-        message: "Email already subscribed",
+        message: "This Email is already subscribed!",
       });
     }
 
     // save email
     const subscription = await createSubscription(email);
-
-    console.log("New Newsletter Subscription:", subscription);
 
     return res.status(201).json({
       message: "Subscribed successfully",
@@ -77,11 +76,28 @@ export const unsubscribeNewsletter = async (req, res) => {
    ========================= */
 export const getAllNewsletterSubscribers = async (req, res) => {
   try {
-    const subscribers = await getAllSubscribers();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    console.log("page, limit", page, limit);
+
+    const query = "SELECT * FROM newsletters ORDER BY created_at DESC";
+    const subscribers = await pool.query(query);
+
+    if (!subscribers) {
+      return res.status(404).json({
+        message: "Subscribers not found",
+      });
+    }
+
+    const paginatedSubscribers = subscribers.rows.slice(skip, skip + limit);
 
     return res.status(200).json({
       total: subscribers.length,
-      data: subscribers,
+      currentPage: page,
+      totalPages: Math.ceil(subscribers.rows.length / limit),
+      data: paginatedSubscribers,
     });
   } catch (error) {
     console.error("Get Subscribers Error:", error);
