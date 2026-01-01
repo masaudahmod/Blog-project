@@ -1,5 +1,7 @@
 import pool from "../config/db.js";
+import { newsletterSubscriptionMail } from "../mail/userMail.js";
 import { createSubscription, findByEmail } from "../models/newsletter.model.js";
+import { sendMail } from "../service/mailService.js";
 
 export const subscribeNewsletter = async (req, res) => {
   try {
@@ -23,8 +25,18 @@ export const subscribeNewsletter = async (req, res) => {
     // save email
     const subscription = await createSubscription(email);
 
+    
+    
+    const mail = await sendMail(
+      email,
+      "Welcome to our Blog Web App 🎉",
+      "",
+      newsletterSubscriptionMail(email)
+    );
+    
     return res.status(201).json({
-      message: "Thank you for subscribing! You will receive a confirmation email.",
+      message:
+      "Thank you for subscribing! You will receive a confirmation email.",
       data: subscription,
     });
   } catch (error) {
