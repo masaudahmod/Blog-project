@@ -8,10 +8,20 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { getNewsletterSubcriberPaginate } from "@/lib/action";
-import { Link } from "lucide-react";
+import Link from "next/link";
 
-export default async function Page() {
-  const currentPage = 1;
+interface newsLetter {
+  email: string;
+  created_at: string;
+  id: number;
+}
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const params = await searchParams;
+  const currentPage = Number(params.page) || 1;
 
   const allSubscribers = await getNewsletterSubcriberPaginate({
     page: currentPage,
@@ -20,23 +30,22 @@ export default async function Page() {
   const data = allSubscribers?.data;
 
   const totalPages = allSubscribers?.totalPages;
-  console.log("data", currentPage);
   return (
     <>
       <div className="p-5">
-        <h1 className="text-2xl font-bold mb-4">Posts</h1>
+        <h1 className="text-2xl font-bold mb-4">Newsletter Subscriber List:</h1>
         <Table className="">
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Joining Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.from({ length: 10 }).map((_, i) => (
-              <TableRow key={i}>
-                <TableCell>{"Title " + i}</TableCell>
-                <TableCell>category</TableCell>
+            {data.map((newsLetter: newsLetter) => (
+              <TableRow key={newsLetter.id}>
+                <TableCell>{newsLetter.email}</TableCell>
+                <TableCell>{new Date(newsLetter.created_at).toDateString()}</TableCell>
                 <TableCell className="flex items-center gap-3"></TableCell>
               </TableRow>
             ))}
@@ -60,7 +69,6 @@ export default async function Page() {
               )}
             </Button>
 
-
             <Button
               variant="outline"
               disabled={currentPage >= totalPages}
@@ -78,8 +86,6 @@ export default async function Page() {
     </>
   );
 }
-
-
 
 // "use client"; // এটি অবশ্যই ক্লায়েন্ট কম্পোনেন্ট হতে হবে
 
@@ -139,15 +145,15 @@ export default async function Page() {
 //         <p>Page {currentPage} of {totalPages}</p>
 //         <div className="flex gap-2">
 //           {/* বাটন দিয়ে স্টেট হ্যান্ডেল করা */}
-//           <Button 
-//             onClick={() => fetchData(currentPage - 1)} 
+//           <Button
+//             onClick={() => fetchData(currentPage - 1)}
 //             disabled={currentPage <= 1 || loading}
 //           >
 //             Previous
 //           </Button>
-          
-//           <Button 
-//             onClick={() => fetchData(currentPage + 1)} 
+
+//           <Button
+//             onClick={() => fetchData(currentPage + 1)}
 //             disabled={currentPage >= totalPages || loading}
 //           >
 //             Next

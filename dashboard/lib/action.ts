@@ -412,7 +412,7 @@ async function getNewsletterSubcriberPaginate({
         headers: {
           "Content-Type": "application/json",
         },
-        cache: "no-store", // ডাটা সবসময় আপডেট রাখার জন্য
+        cache: "no-store",
       }
     );
 

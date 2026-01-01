@@ -24,7 +24,7 @@ export const subscribeNewsletter = async (req, res) => {
     const subscription = await createSubscription(email);
 
     return res.status(201).json({
-      message: "Subscribed successfully",
+      message: "Thank you for subscribing! You will receive a confirmation email.",
       data: subscription,
     });
   } catch (error) {
@@ -79,8 +79,6 @@ export const getAllNewsletterSubscribers = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-
-    console.log("page, limit", page, limit);
 
     const query = "SELECT * FROM newsletters ORDER BY created_at DESC";
     const subscribers = await pool.query(query);
