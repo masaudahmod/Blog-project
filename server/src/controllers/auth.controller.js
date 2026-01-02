@@ -3,6 +3,7 @@ import { findUserByEmail, createUser } from "../models/user.model.js";
 import { generateToken } from "../utils/jwt.js";
 import jwt from "jsonwebtoken";
 import pool from "../config/db.js";
+import e from "express";
 
 export const registerAdmin = async (req, res) => {
   const { name, email, password } = req.body;
@@ -160,19 +161,68 @@ export const getPendingUser = async (req, res) => {
 // admin activates user
 export const activateUser = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id: userId } = req.params;
+    // 1️⃣ validate userId
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
 
-    await pool.query(
+    // 2️⃣ update user
+    const result = await pool.query(
       `
-    UPDATE users
-    SET status = 'active'
-    WHERE id = $1
-    `,
+      UPDATE users
+      SET status = 'active'
+      WHERE id = $1
+      RETURNING id, name, email, status
+      `,
       [userId]
     );
 
-    res.status(200).json({ message: "User activated successfully" });
+    // 3️⃣ check user exists
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 4️⃣ success response
+    res.status(200).json({
+      message: "User activated successfully",
+    });
   } catch (error) {
-    console.log("error activateUser", error);
+    console.error("error activateUser", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id: userId } = req.params;
+
+    // 1️⃣ validate userId
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // 2️⃣ delete user
+    const result = await pool.query(
+      `
+      DELETE FROM users
+      WHERE id = $1
+      RETURNING id, email
+      `,
+      [userId]
+    );
+
+    // 3️⃣ check user exists
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 4️⃣ success response
+    res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("error deleteUser", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

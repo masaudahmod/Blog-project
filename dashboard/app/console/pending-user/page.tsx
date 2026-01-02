@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -9,7 +11,10 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getPendingUser } from "@/lib/action";
+import { activateUser, deleteUser, getPendingUser } from "@/lib/action";
+import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface UserType {
   id: number;
@@ -18,9 +23,44 @@ export interface UserType {
   role: string;
 }
 
-export default async function Page() {
-  const pendingUser = await getPendingUser();
 
+export default function Page() {
+  const [pendingUserList, setPendingUserList] = useState<UserType[]>([]);
+  const [loadingPendingUser, setLoadingPendingUser] = useState(true);
+  
+  useEffect(() => {
+    const fetchPendingUser = async () => {
+      const result = await getPendingUser();
+      if (result) {
+        setPendingUserList(result.users);
+        setLoadingPendingUser(false);
+      }
+    };
+    fetchPendingUser();
+  }, []);
+  // const pendingUser = await getPendingUser();
+
+  const handleActivateUser = async (id: number) => {
+    try {
+      const result = await activateUser(id);
+      if (result) {
+        toast.success(result.message || "User activated successfully!");
+      }
+    } catch (error) {
+      console.error("Error activating user:", error);
+    }
+  };
+
+  const handleDeleteUser = async (id: number) => {
+    try {
+      const result = await deleteUser(id);
+      if (result) {
+        toast.success(result.message || "User deleted successfully!");
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
   return (
     <div className="p-4 md:p-8 container ">
       <Card className="shadow-lg">
@@ -29,7 +69,7 @@ export default async function Page() {
             Pending User Requests
           </CardTitle>
           <Badge variant="secondary" className="text-sm w-fit">
-            Total: {pendingUser?.users?.length || 0}
+            Total: {pendingUserList?.length || 0}
           </Badge>
         </CardHeader>
 
@@ -47,12 +87,34 @@ export default async function Page() {
               </TableHeader>
 
               <TableBody>
-                {pendingUser?.users?.length > 0 ? (
-                  pendingUser.users.map((user: UserType) => (
+                {loadingPendingUser && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="h-32 text-center space-y-4 text-muted-foreground"
+                    >
+                      {[...Array(6)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="grid grid-cols-5 gap-4 items-center"
+                        >
+                          <Skeleton className="h-5 w-10" />
+                          <Skeleton className="h-5 w-32" />
+                          <Skeleton className="h-5 w-48" />
+                          <Skeleton className="h-5 w-24" />
+                          <div className="flex justify-end gap-2">
+                            <Skeleton className="h-8 w-20" />
+                            <Skeleton className="h-8 w-20" />
+                          </div>
+                        </div>
+                      ))}
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!loadingPendingUser &&
+                  pendingUserList.map((user: UserType) => (
                     <TableRow key={user.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">
-                        #{user.id}
-                      </TableCell>
+                      <TableCell className="font-medium">#{user.id}</TableCell>
                       <TableCell>{user.name}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {user.email}
@@ -62,21 +124,30 @@ export default async function Page() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button size="sm">Approve</Button>
-                          <Button size="sm" variant="destructive">
+                          <Button
+                            onClick={() => handleActivateUser(user.id)}
+                            size="sm"
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteUser(user.id)}
+                            size="sm"
+                            variant="destructive"
+                          >
                             Delete
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
+                  ))}
+                {!loadingPendingUser && pendingUserList.length === 0 && (
                   <TableRow>
                     <TableCell
                       colSpan={5}
                       className="h-32 text-center text-muted-foreground"
                     >
-                      No pending users found
+                      No Pending User Found
                     </TableCell>
                   </TableRow>
                 )}

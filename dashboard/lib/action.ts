@@ -147,6 +147,56 @@ async function getPendingUser() {
   }
 }
 
+async function activateUser(id: number) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/auth/pending-user/${id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await result.json();
+    if (result.ok) {
+      return data;
+    } else {
+      console.error("Error activating pending user");
+    }
+    revalidatePath("/console/pending-user");
+  } catch (error) {
+    console.error("Error activating pending user:", error);
+  }
+}
+
+async function deleteUser(id: number) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/auth/pending-user/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await result.json();
+    if (result.ok) {
+      return data;
+    } else {
+      console.error("Error deleting user");
+    }
+    revalidatePath("/console/pending-user");
+  } catch (error) {
+    console.error("Error deleting user:", error);
+  }
+}
+
 async function logoutUser() {
   try {
     const token = await getCookies();
@@ -338,8 +388,6 @@ async function getPostBySlug(slug: string) {
   }
 }
 
-// Exporting for public use (use for testing)
-
 async function addComment({
   id,
   userName,
@@ -483,6 +531,8 @@ export {
   getPostBySlug,
   getCurrentUser,
   getPendingUser,
+  activateUser,
+  deleteUser,
   logoutUser,
   getAllCategories,
   getCategorybyId,
