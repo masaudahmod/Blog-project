@@ -123,6 +123,30 @@ async function getCurrentUser() {
   }
 }
 
+async function getPendingUser() {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/auth/pending-user`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await result.json();
+    if (result.ok) {
+      return data;
+    } else {
+      console.error("Error fetching pending user");
+    }
+  } catch (error) {
+    console.error("Error fetching pending user:", error);
+  }
+}
+
 async function logoutUser() {
   try {
     const token = await getCookies();
@@ -458,6 +482,7 @@ export {
   getAllPosts,
   getPostBySlug,
   getCurrentUser,
+  getPendingUser,
   logoutUser,
   getAllCategories,
   getCategorybyId,

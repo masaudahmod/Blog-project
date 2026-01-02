@@ -19,3 +19,24 @@ export const verifyAdmin = (req, res, next) => {
     return res.status(401).json({ message: "Invalid Token" });
   }
 };
+
+export const verifyUserByRole = (req, res, next, role) => {
+  const token =
+    req.headers.cookie?.split("=")[1] ||
+    req.headers.authorization?.split(" ")[1];
+
+  if (!token) return res.status(401).json({ message: "Unauthorized Token" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    req.user = decoded;
+
+    if (decoded.role !== role)
+      return res.status(403).json({ message: `Forbidden Access for this role: ${role}` });
+
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid Token" });
+  }
+};

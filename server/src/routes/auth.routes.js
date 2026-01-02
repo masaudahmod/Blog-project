@@ -1,6 +1,7 @@
 import express from "express";
 import {
   currentUser,
+  getPendingUser,
   login,
   logout,
   registerAdmin,
@@ -12,7 +13,7 @@ const router = express.Router();
 router.post("/register", registerAdmin);
 router.post("/register-user", registerUser);
 router.post("/login", login);
-
+router.get("/pending-user", verifyAdmin, getPendingUser);
 router.get("/me", verifyAdmin, currentUser);
 router.post("/logout", verifyAdmin, logout);
 

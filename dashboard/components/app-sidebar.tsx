@@ -53,8 +53,8 @@ const data = {
       icon: IconHelp,
     },
     {
-      title: "Search",
-      url: "#",
+      title: "Pending User",
+      url: "/console/pending-user",
       icon: IconSearch,
     },
   ],

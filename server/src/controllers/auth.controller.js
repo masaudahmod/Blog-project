@@ -142,6 +142,21 @@ export const logout = (req, res) => {
   }
 };
 
+export const getPendingUser = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+    SELECT id, name, email, role
+    FROM users
+    WHERE status = 'pending'
+    `
+    );
+    res.status(200).json({ message: "Pending users", users: result.rows });
+  } catch (error) {
+    console.log("error getPendingUser", error);
+  }
+};
+
 // admin activates user
 export const activateUser = async (req, res) => {
   try {
