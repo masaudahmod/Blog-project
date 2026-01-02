@@ -13,7 +13,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import "react-quill-new/dist/quill.snow.css";
 
-
 export default function Page() {
   const params = useParams();
   const slug = params?.slug as string;
@@ -60,8 +59,6 @@ export default function Page() {
   };
 
   if (!post) return <PostSkeleton />;
-
-  console.log(" post", post);
   return (
     <div className="p-5">
       <div className="mx-auto p-6 space-y-8 rounded-lg">
@@ -152,7 +149,7 @@ export default function Page() {
         /> */}
 
         <div
-        className="
+          className="
           prose prose-slate max-w-none dark:prose-invert 
           /* Heading Styles */
           prose-h1:text-4xl prose-h1:font-bold
@@ -163,8 +160,8 @@ export default function Page() {
           /* Quill specific class to fix alignment */
           ql-editor
         "
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
 
         {/* <div>{post.content}</div> */}
 

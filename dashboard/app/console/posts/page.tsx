@@ -80,10 +80,12 @@ export default async function Page({
                       </ContextMenuItem>
                       <ContextMenuSeparator />
 
-                      <ContextMenuItem inset className="cursor-pointer">
-                        View
-                        <ContextMenuShortcut>⌘]</ContextMenuShortcut>
-                      </ContextMenuItem>
+                      <Link href={`/console/posts/${post.slug}`}>
+                        <ContextMenuItem inset className="cursor-pointer">
+                          View
+                          <ContextMenuShortcut>⌘]</ContextMenuShortcut>
+                        </ContextMenuItem>
+                      </Link>
                       <ContextMenuSeparator />
                       <ContextMenuItem inset className="cursor-pointer">
                         Unpublished

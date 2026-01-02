@@ -120,6 +120,9 @@ export function LoginForm({
         By clicking continue, you agree to our <Link href="#">Terms of Service</Link>{" "}
         and <Link href="#">Privacy Policy</Link>.
       </FieldDescription>
+      <FieldDescription className="px-6 text-center">
+        Register an account : <Link href="/register">Register</Link>{" "}
+      </FieldDescription>
     </div>
   );
 }

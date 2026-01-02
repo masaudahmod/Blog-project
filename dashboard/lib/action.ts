@@ -51,6 +51,31 @@ async function login(formdata: FormData) {
   }
 }
 
+async function registerUser(formdata: FormData) {
+  try {
+    const data = Object.fromEntries(formdata);
+    const response = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/auth/register-user`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+    const result = await response.json();
+    console.log("result", result);
+    if (!response.ok) {
+      return { ok: false, message: result.message || "Registration failed" };
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error registering user:", error);
+  }
+}
+
 async function getAllPosts(page = 1) {
   try {
     const result = await fetch(
@@ -429,6 +454,7 @@ async function getNewsletterSubcriberPaginate({
 export {
   getCookies,
   login,
+  registerUser,
   getAllPosts,
   getPostBySlug,
   getCurrentUser,
