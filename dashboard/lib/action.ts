@@ -388,6 +388,7 @@ async function getPostBySlug(slug: string) {
   }
 }
 
+// Legacy comment function - kept for backward compatibility
 async function addComment({
   id,
   userName,
@@ -413,6 +414,101 @@ async function addComment({
   } catch (error) {
     console.error("Error adding comment:", error);
     return null;
+  }
+}
+
+// New comment functions using the normalized table
+async function getComments(status?: string) {
+  try {
+    const token = await getCookies();
+    const url = status
+      ? `${process.env.NEXT_SERVER_API_URL}/comments?status=${status}`
+      : `${process.env.NEXT_SERVER_API_URL}/comments`;
+    const result = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await result.json();
+    if (result.ok) {
+      return data;
+    } else {
+      console.error("Error fetching comments");
+      return { comments: [], count: 0 };
+    }
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    return { comments: [], count: 0 };
+  }
+}
+
+async function updateCommentStatus(commentId: number, status: string) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/comments/${commentId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      }
+    );
+    const data = await result.json();
+    revalidatePath("/console");
+    return data;
+  } catch (error) {
+    console.error("Error updating comment:", error);
+    return { success: false, message: "Failed to update comment" };
+  }
+}
+
+async function updateCommentMessage(commentId: number, message: string) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/comments/${commentId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message }),
+      }
+    );
+    const data = await result.json();
+    revalidatePath("/console");
+    return data;
+  } catch (error) {
+    console.error("Error updating comment:", error);
+    return { success: false, message: "Failed to update comment" };
+  }
+}
+
+async function deleteCommentById(commentId: number) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/comments/${commentId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await result.json();
+    revalidatePath("/console");
+    return data;
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    return { success: false, message: "Failed to delete comment" };
   }
 }
 
@@ -546,4 +642,8 @@ export {
   getMonthlyPost,
   likePost,
   getNewsletterSubcriberPaginate,
+  getComments,
+  updateCommentStatus,
+  updateCommentMessage,
+  deleteCommentById,
 };

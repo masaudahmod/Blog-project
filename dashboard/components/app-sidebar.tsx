@@ -8,6 +8,7 @@ import {
   IconHelp,
   IconInnerShadowTop,
   IconListDetails,
+  IconMessageCircle,
   IconReport,
   IconSearch,
   IconSettings,
@@ -39,6 +40,11 @@ const data = {
       title: "Categories",
       url: "/console/categories",
       icon: IconChartBar,
+    },
+    {
+      title: "Comments",
+      url: "/console/comments",
+      icon: IconMessageCircle,
     },
   ],
   navSecondary: [

@@ -24,6 +24,7 @@ export const createPostTable = async () => {
       schema_type VARCHAR(100) DEFAULT 'Article',
 
       category_id INTEGER REFERENCES categories(id),
+      author_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
 
       tags TEXT[],
 
@@ -31,7 +32,7 @@ export const createPostTable = async () => {
 
       -- 👉 সব ইন্টারঅ্যাকশন এক পোস্টে
       likes INTEGER DEFAULT 0,
-      comments JSONB DEFAULT '[]',       -- comment array
+      comments JSONB DEFAULT '[]',       -- comment array (legacy, kept for backward compatibility)
       interactions JSONB DEFAULT '[]',   -- view, share, reaction ট্র্যাকিং
 
       is_published BOOLEAN DEFAULT FALSE,
@@ -43,6 +44,16 @@ export const createPostTable = async () => {
   `);
 };
 
+/**
+ * Add author_id column to existing posts table (migration)
+ */
+export const alterPostTableAddAuthorId = async () => {
+  await pool.query(`
+    ALTER TABLE posts
+    ADD COLUMN IF NOT EXISTS author_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+  `);
+};
+
 export const createPost = (data) => {
   return pool.query(
     `INSERT INTO posts 
@@ -50,7 +61,7 @@ export const createPost = (data) => {
       featured_image_url, featured_image_alt, featured_image_caption,
       meta_title, meta_description, meta_keywords,
       canonical_url, schema_type,
-      category_id, tags, read_time,
+      category_id, author_id, tags, read_time,
       likes, comments, interactions,
       is_published, published_at)
      VALUES 
@@ -58,9 +69,9 @@ export const createPost = (data) => {
       $5,$6,$7,
       $8,$9,$10,
       $11,$12,
-      $13,$14,$15,
-      $16,$17,$18,
-      $19,$20)
+      $13,$14,$15,$16,
+      $17,$18,$19,
+      $20,$21)
      RETURNING *`,
     [
       data.title,
@@ -80,6 +91,7 @@ export const createPost = (data) => {
       data.schema_type,
 
       data.category_id,
+      data.author_id || null,
       data.tags,
       data.read_time,
 
@@ -104,11 +116,11 @@ export const updatePost = (id, data) => {
       featured_image_url = $5, featured_image_alt = $6, featured_image_caption = $7,
       meta_title = $8, meta_description = $9, meta_keywords = $10,
       canonical_url = $11, schema_type = $12,
-      category_id = $13, tags = $14, read_time = $15,
-      likes = $16, comments = $17, interactions = $18,
-      is_published = $19, published_at = $20,
+      category_id = $13, author_id = $14, tags = $15, read_time = $16,
+      likes = $17, comments = $18, interactions = $19,
+      is_published = $20, published_at = $21,
       updated_at = NOW()
-     WHERE id = $21
+     WHERE id = $22
      RETURNING *`,
     [
       data.title,
@@ -128,6 +140,7 @@ export const updatePost = (id, data) => {
       data.schema_type,
 
       data.category_id,
+      data.author_id || null,
       data.tags,
       data.read_time,
 

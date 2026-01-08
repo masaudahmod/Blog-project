@@ -1,96 +1,96 @@
 import pool from "../config/db.js";
 import { cloudinaryDelete, cloudinaryUpload } from "../service/cloudinary.js";
+import { asyncHandler, AppError } from "../middlewares/error.middleware.js";
+import { updatePost as updatePostModel } from "../models/post.model.js";
 
-export const addPost = async (req, res) => {
-  try {
-    let {
+export const addPost = asyncHandler(async (req, res) => {
+  let {
+    title,
+    slug,
+    content,
+    featured_image_alt,
+    featured_image_caption,
+    meta_title,
+    meta_description,
+    meta_keywords,
+    canonical_url,
+    schema_type,
+    category_id,
+    tags,
+    read_time,
+    likes,
+    comments,
+    interactions,
+    is_published,
+    published_at,
+    updated_at,
+  } = req.body;
+
+  // Get author_id from authenticated user
+  const author_id = req.user?.id || null;
+
+  const featured_image = req.file;
+  let image_upload = {};
+  if (featured_image) {
+    image_upload = await cloudinaryUpload(
+      featured_image?.path,
+      title,
+      "postFeatureImage"
+    );
+  }
+  if (meta_keywords) {
+    meta_keywords = meta_keywords.split(",").map((keyword) => keyword.trim());
+  }
+
+  if (tags) {
+    tags = tags.split(",").map((tag) => tag.trim());
+  }
+
+  if (!slug) {
+    slug = title
+      .toLowerCase()
+      .replace(/ /g, "-")
+      .replace(/[^\w-]+/g, "");
+  }
+
+  if (!title || !content || !category_id) {
+    throw new AppError("Missing required fields: title, content, and category_id are required", 400);
+  }
+
+  const result = await pool.query(
+    `Insert into posts (title, slug, content, featured_image_url, featured_image_public_id, featured_image_alt, featured_image_caption, meta_title, meta_description, meta_keywords, canonical_url, schema_type, category_id, author_id, tags, read_time, likes, comments, interactions, is_published, published_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) returning *`,
+    [
       title,
       slug,
       content,
-      featured_image_alt,
-      featured_image_caption,
+
+      image_upload?.uploadResult?.url || null,
+      image_upload?.uploadResult?.public_id || null,
+      featured_image_alt || null,
+      featured_image_caption || null,
+
       meta_title,
       meta_description,
       meta_keywords,
       canonical_url,
       schema_type,
       category_id,
+      author_id,
       tags,
       read_time,
-      likes,
-      comments,
-      interactions,
-      is_published,
-      published_at,
-      updated_at,
-    } = req.body;
-
-    const featured_image = req.file;
-    let image_upload = {};
-    if (featured_image) {
-      image_upload = await cloudinaryUpload(
-        featured_image?.path,
-        title,
-        "postFeatureImage"
-      );
-    }
-    if (meta_keywords) {
-      meta_keywords = meta_keywords.split(",").map((keyword) => keyword.trim());
-    }
-
-    if (tags) {
-      tags = tags.split(",").map((tag) => tag.trim());
-    }
-
-    if (!slug) {
-      slug = title
-        .toLowerCase()
-        .replace(/ /g, "-")
-        .replace(/[^\w-]+/g, "");
-    }
-
-    if (!title || !content || !category_id) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-    const result = await pool.query(
-      `Insert into posts (title, slug, content, featured_image_url, featured_image_public_id, featured_image_alt, featured_image_caption, meta_title, meta_description, meta_keywords, canonical_url, schema_type, category_id, tags, read_time, likes, comments, interactions, is_published, published_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) returning *`,
-      [
-        title,
-        slug,
-        content,
-
-        image_upload?.uploadResult?.url || null,
-        image_upload?.uploadResult?.public_id || null,
-        featured_image_alt || null,
-        featured_image_caption || null,
-
-        meta_title,
-        meta_description,
-        meta_keywords,
-        canonical_url,
-        schema_type,
-        category_id,
-        tags,
-        read_time,
-        likes || 0,
-        JSON.stringify(comments || []),
-        JSON.stringify(interactions || []),
-        is_published || false,
-        published_at || null,
-        updated_at || null,
-      ]
-    );
-    return res
-      .status(201)
-      .json({ message: "Post created", post: result.rows[0] });
-  } catch (error) {
-    console.log("error  in add post", error.message);
-    return res.status(500).json({
-      message: `Server Error in add post: ${error.message}`,
-      error: error.message,
-    });
-  }
-};
+      likes || 0,
+      JSON.stringify(comments || []),
+      JSON.stringify(interactions || []),
+      is_published || false,
+      published_at || null,
+      updated_at || null,
+    ]
+  );
+  
+  return res
+    .status(201)
+    .json({ success: true, message: "Post created", post: result.rows[0] });
+});
 
 export const allPosts = async (req, res) => {
   try {
@@ -187,18 +187,26 @@ export const deletePost = async (req, res) => {
   }
 };
 
-export const updatePost = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const data = req.body;
-    const result = await updatePost(id, data);
-    if (result.rowCount === 0)
-      return res.status(404).json({ message: "Post not found" });
-    res.status(200).json({ message: "Post updated" });
-  } catch (error) {
-    res.status(500).json({ message: "Server Error", error: error.message });
+export const updatePost = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const data = req.body;
+
+  // Include author_id if user is authenticated
+  if (req.user?.id) {
+    data.author_id = req.user.id;
   }
-};
+
+  const result = await updatePostModel(id, data);
+  if (result.rowCount === 0) {
+    throw new AppError("Post not found", 404);
+  }
+  
+  res.status(200).json({ 
+    success: true,
+    message: "Post updated successfully",
+    post: result.rows[0]
+  });
+});
 
 export const addComment = async (req, res) => {
   try {
