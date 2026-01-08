@@ -2,6 +2,7 @@ import express from "express";
 import {
   addComment,
   getPostComments,
+  getAllPostComments,
   getComments,
   updateComment,
   removeComment,
@@ -16,6 +17,7 @@ router.get("/post/:postId", getPostComments); // Get approved comments for a pos
 
 // Protected routes (admin/moderator only)
 router.get("/", verifyAuth, allowRoles("admin", "moderator"), getComments); // Get all comments for moderation
+router.get("/post/:postId/all", verifyAuth, allowRoles("admin", "moderator"), getAllPostComments); // Get all comments for a post (including pending)
 router.patch("/:id", verifyAuth, allowRoles("admin", "moderator"), updateComment); // Update comment (approve/reject/edit)
 router.delete("/:id", verifyAuth, allowRoles("admin", "moderator"), removeComment); // Delete comment
 

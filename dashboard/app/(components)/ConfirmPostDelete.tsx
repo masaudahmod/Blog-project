@@ -12,6 +12,7 @@ import {
 import { deletePost } from "@/lib/action";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 interface PostConfirmDeleteProps {
   postId: number;
@@ -44,9 +45,10 @@ export default function ConfirmPostDelete({ postId }: PostConfirmDeleteProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button
-          className="flex cursor-pointer items-center px-8  justify-center text-red-600 dark:hover:text-red-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
+          className="flex cursor-pointer items-center w-full px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
           title="Delete"
         >
+          <Trash2 className="mr-2 h-4 w-4" />
           Delete
         </button>
       </DialogTrigger>

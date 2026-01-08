@@ -4,23 +4,53 @@ import LikedComponent from "@/app/(components)/LikedComponent";
 import PostSkeleton from "@/app/(components)/PostSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { addComment, getPostBySlug } from "@/lib/action";
+import { Badge } from "@/components/ui/badge";
+import {
+  addComment,
+  getPostBySlug,
+  getAllPostComments,
+  updateCommentStatus,
+  updateCommentMessage,
+  deleteCommentById,
+} from "@/lib/action";
 import { CommentType, InteractionType, PostType } from "@/lib/type";
-import { CircleUser } from "lucide-react";
+import { CircleUser, Check, X, Edit, Trash2, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import "react-quill-new/dist/quill.snow.css";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+interface Comment {
+  id: number;
+  post_id: number;
+  user_identifier: string;
+  message: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+}
 
 export default function Page() {
   const params = useParams();
   const slug = params?.slug as string;
   const [post, setPost] = useState<PostType | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [writeComponent, setWriteComponent] = useState(false);
   const [userName, setUserName] = useState("");
   const [userComment, setUserComment] = useState("");
+  const [editingComment, setEditingComment] = useState<Comment | null>(null);
+  const [editMessage, setEditMessage] = useState("");
 
   useEffect(() => {
     if (!slug) return;
@@ -28,6 +58,9 @@ export default function Page() {
       try {
         const data = await getPostBySlug(slug);
         setPost(data);
+        if (data?.id) {
+          fetchComments(data.id);
+        }
       } catch (error) {
         console.error("Error fetching post data:", error);
       }
@@ -35,6 +68,20 @@ export default function Page() {
 
     fetchPost();
   }, [slug]);
+
+  const fetchComments = async (postId: number) => {
+    try {
+      setCommentsLoading(true);
+      const data = await getAllPostComments(postId);
+      if (data && data.comments) {
+        setComments(data.comments);
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
 
   const handleCommentSubmit = async () => {
     if (!userName || !userComment) return;
@@ -50,11 +97,94 @@ export default function Page() {
         setWriteComponent(false);
         setUserName("");
         setUserComment("");
-        setLoading(false);
+        if (post?.id) {
+          fetchComments(post.id);
+        }
       }
       setLoading(false);
     } catch (error) {
       console.error("Error submitting comment:", error);
+    }
+  };
+
+  const handleApprove = async (commentId: number) => {
+    try {
+      const result = await updateCommentStatus(commentId, "approved");
+      if (result.success) {
+        toast.success("Comment approved");
+        if (post?.id) {
+          fetchComments(post.id);
+        }
+      } else {
+        toast.error(result.message || "Failed to approve comment");
+      }
+    } catch (error) {
+      toast.error("Failed to approve comment");
+    }
+  };
+
+  const handleReject = async (commentId: number) => {
+    try {
+      const result = await updateCommentStatus(commentId, "rejected");
+      if (result.success) {
+        toast.success("Comment rejected");
+        if (post?.id) {
+          fetchComments(post.id);
+        }
+      } else {
+        toast.error(result.message || "Failed to reject comment");
+      }
+    } catch (error) {
+      toast.error("Failed to reject comment");
+    }
+  };
+
+  const handleDelete = async (commentId: number) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+
+    try {
+      const result = await deleteCommentById(commentId);
+      if (result.success) {
+        toast.success("Comment deleted");
+        if (post?.id) {
+          fetchComments(post.id);
+        }
+      } else {
+        toast.error(result.message || "Failed to delete comment");
+      }
+    } catch (error) {
+      toast.error("Failed to delete comment");
+    }
+  };
+
+  const handleEdit = async () => {
+    if (!editingComment || !editMessage.trim()) return;
+
+    try {
+      const result = await updateCommentMessage(editingComment.id, editMessage.trim());
+      if (result.success) {
+        toast.success("Comment updated");
+        setEditingComment(null);
+        setEditMessage("");
+        if (post?.id) {
+          fetchComments(post.id);
+        }
+      } else {
+        toast.error(result.message || "Failed to update comment");
+      }
+    } catch (error) {
+      toast.error("Failed to update comment");
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return <Badge className="bg-green-500">Approved</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-500">Rejected</Badge>;
+      default:
+        return <Badge className="bg-yellow-500">Pending</Badge>;
     }
   };
 
@@ -224,22 +354,201 @@ export default function Page() {
         </div>
         {/* Comments */}
         <div className="border-t pt-6">
-          <h3 className="font-semibold mb-2">Comments</h3>
-          {post.comments && post.comments?.length > 0 ? (
-            post.comments.map((comment: CommentType, i: number) => (
-              <div
-                key={i}
-                className="border flex items-center gap-5 border-slate-200 dark:border-slate-800 p-3 rounded mb-2 text-sm"
-              >
-                <CircleUser />
-                <div className="mt-2">
-                  <p>{comment.author}</p>
-                  <p>
-                    <b>Comment:</b> {comment.message}
-                  </p>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-xl">Comments</h3>
+            {comments.length > 0 && (
+              <Badge variant="outline">
+                {comments.length} total ({comments.filter((c) => c.status === "pending").length} pending)
+              </Badge>
+            )}
+          </div>
+
+          {commentsLoading ? (
+            <p className="text-sm text-slate-500">Loading comments...</p>
+          ) : comments.length > 0 ? (
+            <div className="space-y-4">
+              {/* Pending Comments Section */}
+              {comments.filter((c) => c.status === "pending").length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Pending Comments ({comments.filter((c) => c.status === "pending").length})
+                  </h4>
+                  {comments
+                    .filter((c) => c.status === "pending")
+                    .map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 border border-slate-200 dark:border-slate-800 p-4 rounded-lg"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <CircleUser className="text-slate-400" size={20} />
+                            <span className="text-sm font-medium">Anonymous User</span>
+                            {getStatusBadge(comment.status)}
+                          </div>
+                          <span className="text-xs text-slate-500">
+                            {new Date(comment.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-slate-900 dark:text-white mb-3">{comment.message}</p>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleApprove(comment.id)}
+                            className="flex items-center gap-1"
+                          >
+                            <Check size={14} />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReject(comment.id)}
+                            className="flex items-center gap-1"
+                          >
+                            <X size={14} />
+                            Reject
+                          </Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingComment(comment);
+                                  setEditMessage(comment.message);
+                                }}
+                                className="flex items-center gap-1"
+                              >
+                                <Edit size={14} />
+                                Edit
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Edit Comment</DialogTitle>
+                                <DialogDescription>Modify the comment message below.</DialogDescription>
+                              </DialogHeader>
+                              <textarea
+                                value={editMessage}
+                                onChange={(e) => setEditMessage(e.target.value)}
+                                className="min-h-[100px] w-full p-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                                placeholder="Enter comment message..."
+                                rows={4}
+                              />
+                              <DialogFooter>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingComment(null);
+                                    setEditMessage("");
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button onClick={handleEdit}>Save Changes</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(comment.id)}
+                            className="flex items-center gap-1"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                 </div>
-              </div>
-            ))
+              )}
+
+              {/* Approved Comments Section */}
+              {comments.filter((c) => c.status === "approved").length > 0 && (
+                <div className="space-y-3 mt-6">
+                  <h4 className="text-sm font-semibold text-green-600 dark:text-green-400 flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Approved Comments ({comments.filter((c) => c.status === "approved").length})
+                  </h4>
+                  {comments
+                    .filter((c) => c.status === "approved")
+                    .map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="border border-slate-200 dark:border-slate-800 p-4 rounded-lg"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <CircleUser className="text-slate-400" size={20} />
+                            <span className="text-sm font-medium">Anonymous User</span>
+                            {getStatusBadge(comment.status)}
+                          </div>
+                          <span className="text-xs text-slate-500">
+                            {new Date(comment.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-slate-900 dark:text-white mb-3">{comment.message}</p>
+                        <div className="flex items-center gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingComment(comment);
+                                  setEditMessage(comment.message);
+                                }}
+                                className="flex items-center gap-1"
+                              >
+                                <Edit size={14} />
+                                Edit
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Edit Comment</DialogTitle>
+                                <DialogDescription>Modify the comment message below.</DialogDescription>
+                              </DialogHeader>
+                              <textarea
+                                value={editMessage}
+                                onChange={(e) => setEditMessage(e.target.value)}
+                                className="min-h-[100px] w-full p-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                                placeholder="Enter comment message..."
+                                rows={4}
+                              />
+                              <DialogFooter>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingComment(null);
+                                    setEditMessage("");
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button onClick={handleEdit}>Save Changes</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(comment.id)}
+                            className="flex items-center gap-1"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
           ) : (
             <p className="text-sm text-slate-500">No comments yet</p>
           )}

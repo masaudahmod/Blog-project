@@ -1,11 +1,13 @@
 import {
   createComment,
   getCommentsByPostId,
+  getAllCommentsByPostId,
   getAllComments,
   getCommentById,
   updateCommentStatus,
   updateCommentMessage,
   deleteComment,
+  getCommentCountByPostId,
 } from "../models/comment.model.js";
 import { asyncHandler, AppError } from "../middlewares/error.middleware.js";
 import pool from "../config/db.js";
@@ -48,7 +50,7 @@ export const addComment = asyncHandler(async (req, res) => {
 });
 
 /**
- * Get all approved comments for a post
+ * Get all approved comments for a post (public)
  * GET /api/comments/post/:postId
  */
 export const getPostComments = asyncHandler(async (req, res) => {
@@ -59,6 +61,28 @@ export const getPostComments = asyncHandler(async (req, res) => {
   }
 
   const result = await getCommentsByPostId(parseInt(postId));
+
+  res.status(200).json({
+    success: true,
+    message: "Comments retrieved successfully",
+    comments: result.rows,
+    count: result.rows.length,
+  });
+});
+
+/**
+ * Get all comments for a post (including pending - for dashboard)
+ * GET /api/comments/post/:postId/all
+ * Requires: admin or moderator role
+ */
+export const getAllPostComments = asyncHandler(async (req, res) => {
+  const { postId } = req.params;
+
+  if (!postId || isNaN(parseInt(postId))) {
+    throw new AppError("Valid post ID is required", 400);
+  }
+
+  const result = await getAllCommentsByPostId(parseInt(postId));
 
   res.status(200).json({
     success: true,

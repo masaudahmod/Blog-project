@@ -92,43 +92,71 @@ export const addPost = asyncHandler(async (req, res) => {
     .json({ success: true, message: "Post created", post: result.rows[0] });
 });
 
-export const allPosts = async (req, res) => {
-  try {
-    const limit = 10;
-    const page = parseInt(req.query.page) || 1;
-    const offset = (page - 1) * limit;
+export const allPosts = asyncHandler(async (req, res) => {
+  const limit = 10;
+  const page = parseInt(req.query.page) || 1;
+  const offset = (page - 1) * limit;
+  const filter = req.query.filter || "all"; // all, published, draft
 
-    // const query = `SELECT * FROM posts ORDER BY id DESC LIMIT $1 OFFSET $2`;
-    const query = `
-      SELECT 
-        posts.*,
-        json_build_object(
-          'id', categories.id,
-          'name', categories.name,
-          'slug', categories.slug
-        ) AS category
-      FROM posts
-      LEFT JOIN categories ON posts.category_id = categories.id
-      ORDER BY posts.created_at DESC
-      LIMIT $1 OFFSET $2
-    `;
-    const posts = await pool.query(query, [limit, offset]);
-
-    const totalQuery = "SELECT COUNT(*) FROM posts";
-    const totalResult = await pool.query(totalQuery);
-    const totalPosts = parseInt(totalResult.rows[0].count);
-    const totalPages = Math.ceil(totalPosts / limit);
-
-    res.status(200).json({
-      message: "Posts retrieved",
-      currentPage: page,
-      totalPages,
-      posts: posts.rows,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server Error", error: error.message });
+  // Build WHERE clause based on filter
+  let whereClause = "";
+  if (filter === "published") {
+    whereClause = "WHERE posts.is_published = true";
+  } else if (filter === "draft") {
+    whereClause = "WHERE posts.is_published = false";
   }
-};
+
+  const query = `
+    SELECT 
+      posts.*,
+      json_build_object(
+        'id', categories.id,
+        'name', categories.name,
+        'slug', categories.slug
+      ) AS category,
+      json_build_object(
+        'id', users.id,
+        'name', users.name,
+        'email', users.email
+      ) AS author,
+      COALESCE(comment_counts.total, 0) as comment_count,
+      COALESCE(comment_counts.pending, 0) as pending_comment_count
+    FROM posts
+    LEFT JOIN categories ON posts.category_id = categories.id
+    LEFT JOIN users ON posts.author_id = users.id
+    LEFT JOIN (
+      SELECT 
+        post_id,
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending
+      FROM comments
+      GROUP BY post_id
+    ) comment_counts ON posts.id = comment_counts.post_id
+    ${whereClause}
+    ORDER BY posts.created_at DESC
+    LIMIT $1 OFFSET $2
+  `;
+
+  const params = filter === "all" ? [limit, offset] : [limit, offset];
+  const posts = await pool.query(query, params);
+
+  // Get total count with filter
+  let countQuery = "SELECT COUNT(*) FROM posts";
+  if (filter !== "all") {
+    countQuery += filter === "published" ? " WHERE is_published = true" : " WHERE is_published = false";
+  }
+  const totalResult = await pool.query(countQuery);
+  const totalPosts = parseInt(totalResult.rows[0].count);
+  const totalPages = Math.ceil(totalPosts / limit);
+
+  res.status(200).json({
+    success: true,
+    message: "Posts retrieved",
+    currentPage: page,
+    totalPages,
+    posts: posts.rows,
+  });
+});
 
 export const getPost = async (req, res) => {
   try {
@@ -205,6 +233,42 @@ export const updatePost = asyncHandler(async (req, res) => {
     success: true,
     message: "Post updated successfully",
     post: result.rows[0]
+  });
+});
+
+/**
+ * Update publish status of a post
+ * PATCH /api/post/:id/publish
+ * Body: { is_published: true/false }
+ */
+export const updatePublishStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { is_published } = req.body;
+
+  if (typeof is_published !== "boolean") {
+    throw new AppError("is_published must be a boolean", 400);
+  }
+
+  // Check if post exists
+  const postCheck = await pool.query("SELECT id FROM posts WHERE id = $1", [id]);
+  if (postCheck.rows.length === 0) {
+    throw new AppError("Post not found", 404);
+  }
+
+  // Update publish status
+  const published_at = is_published ? new Date().toISOString() : null;
+  const result = await pool.query(
+    `UPDATE posts 
+     SET is_published = $1, published_at = $2, updated_at = NOW()
+     WHERE id = $3
+     RETURNING *`,
+    [is_published, published_at, id]
+  );
+
+  res.status(200).json({
+    success: true,
+    message: is_published ? "Post published successfully" : "Post unpublished successfully",
+    post: result.rows[0],
   });
 });
 

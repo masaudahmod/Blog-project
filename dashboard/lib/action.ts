@@ -76,10 +76,10 @@ async function registerUser(formdata: FormData) {
   }
 }
 
-async function getAllPosts(page = 1) {
+async function getAllPosts(page = 1, filter = "all") {
   try {
     const result = await fetch(
-      `${process.env.NEXT_SERVER_API_URL}/post?page=${page}`,
+      `${process.env.NEXT_SERVER_API_URL}/post?page=${page}&filter=${filter}`,
       {
         method: "GET",
         headers: {
@@ -92,11 +92,63 @@ async function getAllPosts(page = 1) {
       return data;
     } else {
       console.error("Error fetching posts");
-      return [];
+      return { posts: [], currentPage: 1, totalPages: 1 };
     }
   } catch (error) {
     console.error("Error fetching posts:", error);
-    return [];
+    return { posts: [], currentPage: 1, totalPages: 1 };
+  }
+}
+
+async function updatePostPublishStatus(postId: number, isPublished: boolean) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/${postId}/publish`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ is_published: isPublished }),
+      }
+    );
+    const data = await result.json();
+    if (result.ok) {
+      return { success: true, data };
+    } else {
+      return { success: false, message: data.message || "Failed to update publish status" };
+    }
+  } catch (error) {
+    console.error("Error updating publish status:", error);
+    return { success: false, message: "Failed to update publish status" };
+  }
+}
+
+async function getAllPostComments(postId: number) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/comments/post/${postId}/all`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await result.json();
+    if (result.ok) {
+      return data;
+    } else {
+      console.error("Error fetching post comments");
+      return { comments: [], count: 0 };
+    }
+  } catch (error) {
+    console.error("Error fetching post comments:", error);
+    return { comments: [], count: 0 };
   }
 }
 
@@ -646,4 +698,6 @@ export {
   updateCommentStatus,
   updateCommentMessage,
   deleteCommentById,
+  updatePostPublishStatus,
+  getAllPostComments,
 };

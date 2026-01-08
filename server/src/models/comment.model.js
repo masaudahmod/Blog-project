@@ -47,6 +47,35 @@ export const getCommentsByPostId = (postId) => {
 };
 
 /**
+ * Get all comments for a post (including pending - for dashboard)
+ */
+export const getAllCommentsByPostId = (postId) => {
+  return pool.query(
+    `SELECT * FROM comments 
+     WHERE post_id = $1
+     ORDER BY 
+       CASE WHEN status = 'pending' THEN 0 ELSE 1 END,
+       created_at DESC`,
+    [postId]
+  );
+};
+
+/**
+ * Get comment count for a post
+ */
+export const getCommentCountByPostId = (postId) => {
+  return pool.query(
+    `SELECT 
+      COUNT(*) as total,
+      COUNT(*) FILTER (WHERE status = 'pending') as pending,
+      COUNT(*) FILTER (WHERE status = 'approved') as approved
+     FROM comments 
+     WHERE post_id = $1`,
+    [postId]
+  );
+};
+
+/**
  * Get all comments (for moderation - admin/moderator only)
  */
 export const getAllComments = (status = null) => {
