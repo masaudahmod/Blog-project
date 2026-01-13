@@ -1,8 +1,14 @@
 export default function Loading() {
   return (
     <div className="p-4">
-      {/* Title Skeleton */}
-      <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-md animate-pulse mx-auto mb-4" />
+      {/* Header with Title and Filters Skeleton */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-md animate-pulse" />
+        <div className="flex gap-2 items-center">
+          <div className="h-9 w-[200px] bg-slate-200 dark:bg-slate-800 rounded-md animate-pulse" />
+          <div className="h-9 w-[150px] bg-slate-200 dark:bg-slate-800 rounded-md animate-pulse" />
+        </div>
+      </div>
 
       {/* Grid Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-5">

@@ -158,6 +158,197 @@ export const allPosts = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * Get posts filtered by category with aggregation
+ * Supports filtering by category ID or slug
+ * Returns paginated posts with category statistics
+ * 
+ * Query Parameters:
+ * - categoryId: Filter by category ID (integer)
+ * - categorySlug: Filter by category slug (string)
+ * - page: Page number (default: 1)
+ * - limit: Posts per page (default: 10, max: 50)
+ * - filter: Post status filter - 'all', 'published', 'draft' (default: 'all')
+ * - includeStats: Include category statistics (default: false)
+ * 
+ * Response includes:
+ * - posts: Array of filtered posts with category and author info
+ * - pagination: Current page, total pages, total posts
+ * - categoryStats: (optional) Total post count per category, latest 5 posts per category
+ * 
+ * Example: GET /api/post/filter?categorySlug=technology&page=1&limit=10&filter=published
+ */
+export const getPostsByFilter = asyncHandler(async (req, res) => {
+  const { categoryId, categorySlug, page = 1, limit = 10, filter = "all", includeStats = "false" } = req.query;
+  
+  // Validate pagination parameters
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 10));
+  const offset = (pageNum - 1) * limitNum;
+  const includeStatsFlag = includeStats === "true";
+
+  // Validate filter parameter
+  const validFilters = ["all", "published", "draft"];
+  const statusFilter = validFilters.includes(filter) ? filter : "all";
+
+  // Validate that at least one category identifier is provided
+  if (!categoryId && !categorySlug) {
+    throw new AppError("Either categoryId or categorySlug must be provided", 400);
+  }
+
+  // First, verify the category exists
+  let categoryQuery;
+  let categoryParams;
+  
+  if (categoryId) {
+    categoryQuery = "SELECT id, name, slug FROM categories WHERE id = $1 AND active = TRUE";
+    categoryParams = [categoryId];
+  } else {
+    categoryQuery = "SELECT id, name, slug FROM categories WHERE slug = $1 AND active = TRUE";
+    categoryParams = [categorySlug];
+  }
+
+  const categoryResult = await pool.query(categoryQuery, categoryParams);
+  
+  if (categoryResult.rows.length === 0) {
+    throw new AppError("Category not found or inactive", 404);
+  }
+
+  const category = categoryResult.rows[0];
+  const resolvedCategoryId = category.id;
+
+  // Build WHERE clause for post status filter
+  let statusWhereClause = "";
+  if (statusFilter === "published") {
+    statusWhereClause = "AND posts.is_published = true";
+  } else if (statusFilter === "draft") {
+    statusWhereClause = "AND posts.is_published = false";
+  }
+
+  // Main query: Get filtered posts with category and author info, comment counts
+  const postsQuery = `
+    SELECT 
+      posts.*,
+      json_build_object(
+        'id', categories.id,
+        'name', categories.name,
+        'slug', categories.slug
+      ) AS category,
+      json_build_object(
+        'id', users.id,
+        'name', users.name,
+        'email', users.email
+      ) AS author,
+      COALESCE(comment_counts.total, 0) as comment_count,
+      COALESCE(comment_counts.pending, 0) as pending_comment_count
+    FROM posts
+    LEFT JOIN categories ON posts.category_id = categories.id
+    LEFT JOIN users ON posts.author_id = users.id
+    LEFT JOIN (
+      SELECT 
+        post_id,
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending
+      FROM comments
+      GROUP BY post_id
+    ) comment_counts ON posts.id = comment_counts.post_id
+    WHERE posts.category_id = $1
+    ${statusWhereClause}
+    ORDER BY posts.created_at DESC
+    LIMIT $2 OFFSET $3
+  `;
+
+  const postsParams = [resolvedCategoryId, limitNum, offset];
+  const postsResult = await pool.query(postsQuery, postsParams);
+
+  // Get total count for pagination
+  const countQuery = `
+    SELECT COUNT(*) as total
+    FROM posts
+    WHERE category_id = $1
+    ${statusWhereClause}
+  `;
+  const countParams = [resolvedCategoryId];
+  const countResult = await pool.query(countQuery, countParams);
+  const totalPosts = parseInt(countResult.rows[0].total);
+  const totalPages = Math.ceil(totalPosts / limitNum);
+
+  // Prepare response
+  const response = {
+    success: true,
+    message: "Posts retrieved successfully",
+    category: {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+    },
+    pagination: {
+      currentPage: pageNum,
+      totalPages,
+      totalPosts,
+      limit: limitNum,
+      hasNextPage: pageNum < totalPages,
+      hasPrevPage: pageNum > 1,
+    },
+    posts: postsResult.rows,
+  };
+
+  // Optional: Include category statistics (total post count per category, latest 5 posts per category)
+  if (includeStatsFlag) {
+    // Get total post count per category (all categories with their post counts)
+    const categoryStatsQuery = `
+      SELECT 
+        c.id,
+        c.name,
+        c.slug,
+        COUNT(p.id) as post_count,
+        COUNT(p.id) FILTER (WHERE p.is_published = true) as published_count,
+        COUNT(p.id) FILTER (WHERE p.is_published = false) as draft_count
+      FROM categories c
+      LEFT JOIN posts p ON c.id = p.category_id
+      WHERE c.active = TRUE
+      GROUP BY c.id, c.name, c.slug
+      ORDER BY post_count DESC
+    `;
+    const categoryStatsResult = await pool.query(categoryStatsQuery);
+
+    // Get latest 5 posts per category (for the requested category)
+    const latestPostsQuery = `
+      SELECT 
+        posts.id,
+        posts.title,
+        posts.slug,
+        posts.featured_image_url,
+        posts.created_at,
+        posts.is_published,
+        json_build_object(
+          'id', categories.id,
+          'name', categories.name,
+          'slug', categories.slug
+        ) AS category
+      FROM posts
+      LEFT JOIN categories ON posts.category_id = categories.id
+      WHERE posts.category_id = $1
+      ${statusWhereClause}
+      ORDER BY posts.created_at DESC
+      LIMIT 5
+    `;
+    const latestPostsResult = await pool.query(latestPostsQuery, [resolvedCategoryId]);
+
+    response.categoryStats = {
+      allCategories: categoryStatsResult.rows,
+      latestPosts: latestPostsResult.rows,
+    };
+  }
+
+  // Handle empty results
+  if (postsResult.rows.length === 0) {
+    response.message = `No posts found for category "${category.name}"`;
+  }
+
+  res.status(200).json(response);
+});
+
 export const getPost = async (req, res) => {
   try {
     const { id } = req.params;

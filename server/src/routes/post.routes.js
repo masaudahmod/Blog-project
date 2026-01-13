@@ -9,6 +9,7 @@ import {
   getPendingComments,
   getPost,
   getPostBySlug,
+  getPostsByFilter,
   likePostBySlug,
   unlikePostBySlug,
   updatePublishStatus,
@@ -20,6 +21,7 @@ const router = express.Router();
 
 router.post("/add", verifyAuth, allowRoles("admin"), upload.single("featured_image"), addPost);
 router.get("/", allPosts);
+router.get("/filter", getPostsByFilter); // Category filtering endpoint
 router.route("/id/:id").get(getPost).delete(verifyAuth, allowRoles("admin"), deletePost);
 router.route("/slug/:slug").get(getPostBySlug);
 router.patch("/:id/publish", verifyAuth, allowRoles("admin", "moderator"), updatePublishStatus);

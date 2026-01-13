@@ -100,6 +100,106 @@ async function getAllPosts(page = 1, filter = "all") {
   }
 }
 
+/**
+ * Get posts filtered by category with pagination
+ * @param categoryId - Category ID (optional if categorySlug is provided)
+ * @param categorySlug - Category slug (optional if categoryId is provided)
+ * @param page - Page number (default: 1)
+ * @param limit - Posts per page (default: 10, max: 50)
+ * @param filter - Post status filter: 'all', 'published', 'draft' (default: 'all')
+ * @param includeStats - Include category statistics (default: false)
+ * @returns Promise with posts, pagination info, and optional category stats
+ */
+async function getPostsByCategory({
+  categoryId,
+  categorySlug,
+  page = 1,
+  limit = 10,
+  filter = "all",
+  includeStats = false,
+}: {
+  categoryId?: number;
+  categorySlug?: string;
+  page?: number;
+  limit?: number;
+  filter?: "all" | "published" | "draft";
+  includeStats?: boolean;
+}) {
+  try {
+    if (!categoryId && !categorySlug) {
+      console.error("Either categoryId or categorySlug must be provided");
+      return {
+        success: false,
+        posts: [],
+        pagination: { currentPage: 1, totalPages: 1, totalPosts: 0 },
+        category: null,
+      };
+    }
+
+    const params = new URLSearchParams();
+    if (categoryId) params.append("categoryId", categoryId.toString());
+    if (categorySlug) params.append("categorySlug", categorySlug);
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
+    params.append("filter", filter);
+    if (includeStats) params.append("includeStats", "true");
+
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/filter?${params.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store", // Ensure fresh data for filtering
+      }
+    );
+
+    const data = await result.json();
+
+    if (result.ok) {
+      return {
+        success: true,
+        ...data,
+      };
+    } else {
+      // Don't log errors for empty results (404) - this is a valid state
+      // Only log actual server errors (500, etc.)
+      if (result.status >= 500) {
+        console.error("Error fetching filtered posts:", data.message);
+      }
+      
+      // If category not found (404), return empty but with category info if available
+      if (result.status === 404) {
+        return {
+          success: false,
+          message: data.message || "Category not found",
+          posts: [],
+          pagination: { currentPage: 1, totalPages: 1, totalPosts: 0 },
+          category: null,
+        };
+      }
+      
+      return {
+        success: false,
+        message: data.message || "Failed to fetch filtered posts",
+        posts: [],
+        pagination: { currentPage: 1, totalPages: 1, totalPosts: 0 },
+        category: null,
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching filtered posts:", error);
+    return {
+      success: false,
+      message: "Network error while fetching posts",
+      posts: [],
+      pagination: { currentPage: 1, totalPages: 1, totalPosts: 0 },
+      category: null,
+    };
+  }
+}
+
 async function updatePostPublishStatus(postId: number, isPublished: boolean) {
   try {
     const token = await getCookies();
@@ -676,6 +776,7 @@ export {
   login,
   registerUser,
   getAllPosts,
+  getPostsByCategory,
   getPostBySlug,
   getCurrentUser,
   getPendingUser,

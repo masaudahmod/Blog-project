@@ -154,3 +154,29 @@ export const updatePost = (id, data) => {
     ]
   );
 };
+
+/**
+ * Create indexes for optimal query performance
+ * Run this after table creation for better performance
+ */
+export const createPostIndexes = async () => {
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_posts_category_id 
+    ON posts(category_id);
+  `);
+  
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_posts_is_published 
+    ON posts(is_published);
+  `);
+  
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_posts_category_published 
+    ON posts(category_id, is_published);
+  `);
+  
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_posts_created_at 
+    ON posts(created_at DESC);
+  `);
+};
