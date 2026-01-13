@@ -1,9 +1,25 @@
 "use client";
 
+import { useRef } from "react";
 import dynamic from "next/dynamic";
-import "react-quill-new/dist/quill.snow.css";
 
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+// Dynamically import TinyMCE React wrapper (SSR disabled)
+const Editor = dynamic(
+  () => import("@tinymce/tinymce-react").then((mod) => mod.Editor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-[400px] border border-zinc-200 dark:border-zinc-800 rounded-xl">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Loading editor...
+          </p>
+        </div>
+      </div>
+    ),
+  }
+);
 
 interface EditorProps {
   value: string | undefined | null;
@@ -12,51 +28,115 @@ interface EditorProps {
   placeholder?: string;
 }
 
-export default function Editor({ value, onChange, className, placeholder }: EditorProps) {
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }], // Headings like Dev.to
-      ["bold", "italic", "underline", "strike"], 
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["blockquote", "code-block"], // Important for Dev blogs
-      ["link", "image"],
-      ["clean"], // Clear formatting button
-    ],
+export default function RichTextEditor({
+  value,
+  onChange,
+  className,
+  placeholder = "Write your content here...",
+}: EditorProps) {
+  const editorRef = useRef<{ getContent: () => string } | null>(null);
+
+  // Get API key from environment variable (client-side)
+  // If no API key is set, TinyMCE will show a warning but still work in read-only mode
+  // For production, get a free API key from: https://www.tiny.cloud/auth/signup/
+  const apiKey = process.env.NEXT_PUBLIC_TINYMCE_API_KEY || "";
+
+  // Handle editor change - this is called whenever content changes
+  const handleEditorChange = (content: string) => {
+    // Call the onChange callback with the updated content
+    onChange(content);
   };
 
   return (
-    <div className="bg-white dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-      <style jsx global>{`
-        /* Quill-er default border remove kora professional look er jonno */
-        .ql-toolbar.ql-snow {
-          border: none !important;
-          border-bottom: 1px solid #27272a !important; /* zinc-800 */
-          background: #fafafa;
-        }
-        .dark .ql-toolbar.ql-snow {
-          background: #09090b;
-          border-bottom: 1px solid #27272a !important;
-        }
-        .ql-container.ql-snow {
-          border: none !important;
-          font-size: 16px;
-        }
-        .ql-editor {
-          min-height: 300px;
-        }
-        .ql-editor.ql-blank::before {
-          color: #71717a;
-          font-style: normal;
-        }
-      `}</style>
-      
-      <ReactQuill
-        theme="snow"
+    <div
+      className={`bg-white dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden ${
+        className || ""
+      }`}
+    >
+      <Editor
+        apiKey={apiKey}
+        licenseKey={apiKey ? undefined : "gpl"}
+        onInit={(evt, editor) => {
+          editorRef.current = editor;
+        }}
         value={value || ""}
-        onChange={onChange}
-        modules={modules}
-        placeholder={placeholder || "Write your story..."}
-        className={className}
+        onEditorChange={handleEditorChange}
+        init={{
+          height: 400,
+          menubar: false,
+          placeholder: placeholder,
+          plugins: [
+            "lists",
+            "link",
+            "image",
+            "code",
+            "blockquote",
+            "paste",
+            "help",
+            "wordcount",
+            "autoresize",
+          ],
+          toolbar:
+            "undo redo | blocks | " +
+            "bold italic underline strikethrough | " +
+            "bullist numlist blockquote code | " +
+            "link image | removeformat | help",
+          content_style: `
+            body {
+              font-family: Inter, system-ui, -apple-system, sans-serif;
+              font-size: 16px;
+              line-height: 1.6;
+              background: transparent;
+              color: inherit;
+              margin: 16px;
+              height: 400px;
+            }
+            p {
+              margin: 0 0 12px 0;
+            }
+            h1, h2, h3, h4, h5, h6 {
+              margin: 16px 0 8px 0;
+              font-weight: 600;
+            }
+            ul, ol {
+              margin: 8px 0;
+              padding-left: 24px;
+            }
+            blockquote {
+              margin: 16px 0;
+              padding-left: 16px;
+              border-left: 4px solid #e5e7eb;
+            }
+            code {
+              background: #f3f4f6;
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-family: 'Courier New', monospace;
+            }
+          `,
+          skin: "oxide",
+          content_css: "default",
+          branding: false,
+          promotion: false,
+          // Auto-resize to content
+          autoresize_bottom_margin: 16,
+          autoresize_overflow_padding: 16,
+          // Paste settings
+          paste_as_text: false,
+          paste_auto_cleanup_on_paste: true,
+          paste_remove_styles: true,
+          paste_remove_styles_if_webkit: true,
+          paste_strip_class_attributes: "all",
+          // Image settings
+          image_advtab: true,
+          image_caption: true,
+          // Link settings
+          link_title: false,
+          // Accessibility
+          accessibility_focus: true,
+          // Word count
+          wordcount_countregex: /[\w\u2019\'-]+/g,
+        } as Record<string, unknown>}
       />
     </div>
   );
