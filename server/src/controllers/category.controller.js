@@ -1,5 +1,6 @@
 import pool from "../config/db.js";
-import { createCategory, getCategories } from "../models/Category.model.js";
+import { createCategory, deleteCategoryById, getCategories, deactivateCategory } from "../models/Category.model.js";
+import { asyncHandler, AppError } from "../middlewares/error.middleware.js";
 
 export const addCategory = async (req, res) => {
   try {
@@ -25,13 +26,14 @@ export const addCategory = async (req, res) => {
 
 export const allCategories = async (req, res) => {
   try {
-    const result = await pool.query(
-      `
-        SELECT id, name, slug, created_at
-        FROM categories
-        ORDER BY id DESC;
-      `
-    );
+    // Get query parameter to show all categories (including inactive) for admin
+    const showAll = req.query.showAll === "true";
+    
+    const query = showAll
+      ? `SELECT id, name, slug, created_at, active FROM categories ORDER BY id DESC`
+      : `SELECT id, name, slug, created_at, active FROM categories WHERE active = TRUE ORDER BY id DESC`;
+    
+    const result = await pool.query(query);
 
     return res.status(200).json({
       message: "Categories retrieved",
@@ -71,19 +73,52 @@ export const updateCategory = async (req, res) => {
     .status(200)
     .json({ message: "Category updated", category: result.rows[0] });
 };
-export const deleteCategory = async (req, res) => {
-  try {
-    const { id } = req.params;
 
-    const query = "DELETE FROM categories WHERE id = $1";
-    const values = [id];
-    await pool.query(query, values);
+/**
+ * Soft delete: Set category as inactive instead of hard deleting
+ * DELETE /api/category/:id
+ * Requires: admin role
+ * 
+ * This sets the category's active status to false, preserving data integrity
+ * and allowing for potential reactivation in the future.
+ */
+export const deleteCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-    return res.status(200).json({ message: "Category deleted" });
-  } catch (error) {
-    res.status(500).json({
-      message: "Server Error in delete category",
-      error: error.message,
-    });
+  // Validate ID
+  if (!id || isNaN(parseInt(id))) {
+    throw new AppError("Valid category ID is required", 400);
   }
-};
+
+  const categoryId = parseInt(id);
+
+  // Check if category exists
+  const categoryCheck = await pool.query(
+    "SELECT id, name, active FROM categories WHERE id = $1",
+    [categoryId]
+  );
+
+  if (categoryCheck.rows.length === 0) {
+    throw new AppError("Category not found", 404);
+  }
+
+  const category = categoryCheck.rows[0];
+
+  // Check if already inactive
+  if (!category.active) {
+    throw new AppError("Category is already inactive", 400);
+  }
+
+  // Set category as inactive (soft delete)
+  const result = await deactivateCategory(categoryId);
+
+  if (result.rowCount === 0) {
+    throw new AppError("Failed to deactivate category", 500);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Category deactivated successfully",
+    category: result.rows[0],
+  });
+});

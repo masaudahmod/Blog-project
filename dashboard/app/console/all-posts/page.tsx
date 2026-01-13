@@ -11,9 +11,8 @@ export default async function page({
 }) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
-  const data = await getAllPosts();
+  const data = await getAllPosts(currentPage);
   const posts = data?.posts;
-
   const totalPages = data?.totalPages;
   return (
     <>

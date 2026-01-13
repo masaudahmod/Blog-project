@@ -6,13 +6,17 @@ import {
   getCategory,
   updateCategory,
 } from "../controllers/category.controller.js";
-import { verifyAdmin } from "../middlewares/auth.middleware.js";
+import { verifyAuth, allowRoles } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-router.post("/add", verifyAdmin, addCategory);
+// Public routes
 router.get("/", allCategories);
-router.route("/:id").get(getCategory).delete(verifyAdmin, deleteCategory);
-router.put("/update/:id", verifyAdmin, updateCategory);
+router.get("/:id", getCategory);
+
+// Protected routes (admin only)
+router.post("/add", verifyAuth, allowRoles("admin"), addCategory);
+router.delete("/:id", verifyAuth, allowRoles("admin"), deleteCategory);
+router.put("/update/:id", verifyAuth, allowRoles("admin"), updateCategory);
 
 export default router;

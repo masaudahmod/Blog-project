@@ -14,12 +14,18 @@ import {
   deleteCommentById,
 } from "@/lib/action";
 import { CommentType, InteractionType, PostType } from "@/lib/type";
-import { CircleUser, Check, X, Edit, Trash2, MessageSquare } from "lucide-react";
+import {
+  CircleUser,
+  Check,
+  X,
+  Edit,
+  Trash2,
+  MessageSquare,
+} from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import "react-quill-new/dist/quill.snow.css";
 import {
   Dialog,
   DialogContent,
@@ -161,7 +167,10 @@ export default function Page() {
     if (!editingComment || !editMessage.trim()) return;
 
     try {
-      const result = await updateCommentMessage(editingComment.id, editMessage.trim());
+      const result = await updateCommentMessage(
+        editingComment.id,
+        editMessage.trim()
+      );
       if (result.success) {
         toast.success("Comment updated");
         setEditingComment(null);
@@ -278,20 +287,20 @@ export default function Page() {
           dangerouslySetInnerHTML={{ __html: post.content }}
         /> */}
 
-        <div
-          className="
-          prose prose-slate max-w-none dark:prose-invert 
-          /* Heading Styles */
-          prose-h1:text-4xl prose-h1:font-bold
-          prose-h2:text-3xl prose-h2:font-semibold
-          prose-h3:text-2xl
-          /* List Styles (Quill er jonno lagbe) */
-          prose-ol:list-decimal prose-ul:list-disc
-          /* Quill specific class to fix alignment */
-          ql-editor
-        "
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        <div>
+          <span className="text-sm font-medium px-3 pb-2 text-slate-700 dark:text-slate-300">
+            Content:
+          </span>
+          <div
+            className="prose prose-slate max-w-none dark:prose-invert 
+    prose-h1:text-4xl prose-h1:font-bold
+    prose-h2:text-3xl prose-h2:font-semibold
+    prose-h3:text-2xl
+    prose-ol:list-decimal prose-ul:list-disc
+    ql-editor"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+        </div>
 
         {/* <div>{post.content}</div> */}
 
@@ -358,7 +367,8 @@ export default function Page() {
             <h3 className="font-semibold text-xl">Comments</h3>
             {comments.length > 0 && (
               <Badge variant="outline">
-                {comments.length} total ({comments.filter((c) => c.status === "pending").length} pending)
+                {comments.length} total (
+                {comments.filter((c) => c.status === "pending").length} pending)
               </Badge>
             )}
           </div>
@@ -372,7 +382,8 @@ export default function Page() {
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    Pending Comments ({comments.filter((c) => c.status === "pending").length})
+                    Pending Comments (
+                    {comments.filter((c) => c.status === "pending").length})
                   </h4>
                   {comments
                     .filter((c) => c.status === "pending")
@@ -384,14 +395,18 @@ export default function Page() {
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <CircleUser className="text-slate-400" size={20} />
-                            <span className="text-sm font-medium">Anonymous User</span>
+                            <span className="text-sm font-medium">
+                              Anonymous User
+                            </span>
                             {getStatusBadge(comment.status)}
                           </div>
                           <span className="text-xs text-slate-500">
                             {new Date(comment.created_at).toLocaleString()}
                           </span>
                         </div>
-                        <p className="text-slate-900 dark:text-white mb-3">{comment.message}</p>
+                        <p className="text-slate-900 dark:text-white mb-3">
+                          {comment.message}
+                        </p>
                         <div className="flex items-center gap-2">
                           <Button
                             size="sm"
@@ -429,7 +444,9 @@ export default function Page() {
                             <DialogContent>
                               <DialogHeader>
                                 <DialogTitle>Edit Comment</DialogTitle>
-                                <DialogDescription>Modify the comment message below.</DialogDescription>
+                                <DialogDescription>
+                                  Modify the comment message below.
+                                </DialogDescription>
                               </DialogHeader>
                               <textarea
                                 value={editMessage}
@@ -448,7 +465,9 @@ export default function Page() {
                                 >
                                   Cancel
                                 </Button>
-                                <Button onClick={handleEdit}>Save Changes</Button>
+                                <Button onClick={handleEdit}>
+                                  Save Changes
+                                </Button>
                               </DialogFooter>
                             </DialogContent>
                           </Dialog>
@@ -472,7 +491,8 @@ export default function Page() {
                 <div className="space-y-3 mt-6">
                   <h4 className="text-sm font-semibold text-green-600 dark:text-green-400 flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    Approved Comments ({comments.filter((c) => c.status === "approved").length})
+                    Approved Comments (
+                    {comments.filter((c) => c.status === "approved").length})
                   </h4>
                   {comments
                     .filter((c) => c.status === "approved")
@@ -484,14 +504,18 @@ export default function Page() {
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <CircleUser className="text-slate-400" size={20} />
-                            <span className="text-sm font-medium">Anonymous User</span>
+                            <span className="text-sm font-medium">
+                              Anonymous User
+                            </span>
                             {getStatusBadge(comment.status)}
                           </div>
                           <span className="text-xs text-slate-500">
                             {new Date(comment.created_at).toLocaleString()}
                           </span>
                         </div>
-                        <p className="text-slate-900 dark:text-white mb-3">{comment.message}</p>
+                        <p className="text-slate-900 dark:text-white mb-3">
+                          {comment.message}
+                        </p>
                         <div className="flex items-center gap-2">
                           <Dialog>
                             <DialogTrigger asChild>
@@ -511,7 +535,9 @@ export default function Page() {
                             <DialogContent>
                               <DialogHeader>
                                 <DialogTitle>Edit Comment</DialogTitle>
-                                <DialogDescription>Modify the comment message below.</DialogDescription>
+                                <DialogDescription>
+                                  Modify the comment message below.
+                                </DialogDescription>
                               </DialogHeader>
                               <textarea
                                 value={editMessage}
@@ -530,7 +556,9 @@ export default function Page() {
                                 >
                                   Cancel
                                 </Button>
-                                <Button onClick={handleEdit}>Save Changes</Button>
+                                <Button onClick={handleEdit}>
+                                  Save Changes
+                                </Button>
                               </DialogFooter>
                             </DialogContent>
                           </Dialog>
