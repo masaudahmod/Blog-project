@@ -31,6 +31,20 @@ export const errorHandler = (err, req, res, next) => {
     // PostgreSQL foreign key constraint violation
     status = 400;
     message = "Invalid reference: Related record does not exist";
+  } else if (err.code === "ETIMEDOUT" || err.code === "ECONNREFUSED" || err.code === "ENOTFOUND") {
+    // Database connection errors
+    status = 503;
+    message = "Database connection unavailable. Please try again later.";
+    console.error("Database connection error:", {
+      code: err.code,
+      message: err.message,
+      address: err.address,
+      port: err.port,
+    });
+  } else if (err.code === "57014" || err.message?.includes("timeout")) {
+    // Query timeout errors
+    status = 504;
+    message = "Database query timed out. Please try again.";
   }
 
   // Send error response

@@ -40,8 +40,40 @@ export const allCategories = async (req, res) => {
       categories: result.rows,
     });
   } catch (error) {
-    console.error("Get Categories Error:", error);
-    return res.status(500).json({ message: "Server error" });
+    // Handle specific database connection errors
+    if (error.code === "ETIMEDOUT" || error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
+      console.error("Database connection timeout/refused:", {
+        code: error.code,
+        message: error.message,
+        address: error.address,
+        port: error.port,
+      });
+      return res.status(503).json({ 
+        message: "Database connection unavailable. Please try again later.",
+        error: "Service temporarily unavailable"
+      });
+    }
+    
+    // Handle query timeout errors
+    if (error.code === "57014" || error.message?.includes("timeout")) {
+      console.error("Database query timeout:", error.message);
+      return res.status(504).json({ 
+        message: "Database query timed out. Please try again.",
+        error: "Gateway timeout"
+      });
+    }
+    
+    // Generic database errors
+    console.error("Get Categories Error:", {
+      code: error.code,
+      message: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+    
+    return res.status(500).json({ 
+      message: "Server error while fetching categories",
+      error: process.env.NODE_ENV === "development" ? error.message : "Internal server error"
+    });
   }
 };
 
