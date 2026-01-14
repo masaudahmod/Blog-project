@@ -26,6 +26,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [categories, setCategories] = useState([]);
+  const [submitAction, setSubmitAction] = useState<"draft" | "publish" | null>(null); // Track which button was clicked
 
   //form states
   const [postTitle, setPostTitle] = useState<string | null>("");
@@ -40,6 +41,8 @@ export default function Page() {
 
   const [content, setContent] = useState<string | null>("");
   const [file, setFile] = useState<File | null>(null);
+  const [featuredImageAlt, setFeaturedImageAlt] = useState<string | null>("");
+  const [featuredImageCaption, setFeaturedImageCaption] = useState<string | null>("");
 
   useEffect(() => {
     async function fetchCategories() {
@@ -48,6 +51,8 @@ export default function Page() {
     }
     fetchCategories();
   }, []);
+
+  
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
@@ -62,9 +67,32 @@ export default function Page() {
     setPreview(null);
     setFile(null);
   };
+
+  // Calculate read_time from content (strip HTML, count words, 200 words = 1 minute)
+  const calculateReadTime = (htmlContent: string | null): number => {
+    if (!htmlContent) return 1;
+    
+    // Create a temporary div to strip HTML tags
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = htmlContent;
+    const textContent = tempDiv.textContent || tempDiv.innerText || "";
+    
+    // Count words (split by whitespace and filter empty strings)
+    const words = textContent.trim().split(/\s+/).filter(word => word.length > 0);
+    const wordCount = words.length;
+    
+    // Calculate minutes: 200 words = 1 minute
+    const minutes = Math.max(1, Math.ceil(wordCount / 200));
+    
+    return minutes;
+  };
+
+  // Handle form submission (used for both draft and publish)
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     setLoading(true);
     e.preventDefault();
+    
+    
     const fd = new FormData();
     fd.append("title", postTitle || "");
     fd.append("slug", postSlug || "");
@@ -78,6 +106,28 @@ export default function Page() {
     );
     fd.append("tags", tags || "");
 
+    // Add is_published field explicitly
+    fd.append("is_published", "false");
+
+    // Calculate and add read_time
+    const readTime = calculateReadTime(content);
+    fd.append("read_time", readTime.toString());
+
+    // Generate and add canonical_url
+    if (postSlug) {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+      const canonicalUrl = `${siteUrl}/posts/${postSlug}`;
+      fd.append("canonical_url", canonicalUrl);
+    }
+
+    // Add featured image alt and caption if provided
+    if (featuredImageAlt) {
+      fd.append("featured_image_alt", featuredImageAlt);
+    }
+    if (featuredImageCaption) {
+      fd.append("featured_image_caption", featuredImageCaption);
+    }
+
     if (file) {
       fd.append("featured_image", file);
     }
@@ -86,15 +136,40 @@ export default function Page() {
     if (result?.ok) {
       toast.success(`${result?.data.message} successful!`);
       setLoading(false);
+      setSubmitAction(null); // Reset action
       router.push("/console/posts");
       return;
     }
     if (!result?.ok) {
       toast.error(result?.message || "Something went wrong!");
       setLoading(false);
+      setSubmitAction(null); // Reset action
       return;
     }
     setLoading(false);
+    setSubmitAction(null); // Reset action
+  };
+
+  // Handle save draft button click
+  const handleSaveDraft = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setSubmitAction("draft");
+    // Trigger form submission
+    const form = e.currentTarget.closest("form");
+    if (form) {
+      form.requestSubmit();
+    }
+  };
+
+  // Handle publish button click
+  const handlePublish = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setSubmitAction("publish");
+    // Trigger form submission
+    const form = e.currentTarget.closest("form");
+    if (form) {
+      form.requestSubmit();
+    }
   };
   return (
     <main className="flex-1 flex flex-col">
@@ -107,7 +182,14 @@ export default function Page() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button>Save Draft</Button>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleSaveDraft}
+            disabled={loading}
+          >
+            {loading && submitAction === "draft" ? "Saving..." : "Save Draft"}
+          </Button>
         </div>
       </header>
 
@@ -126,6 +208,7 @@ export default function Page() {
                     onChange={(e) => setPostTitle(e.target.value)}
                     type="text"
                     name="title"
+                    value={postTitle || ""}
                     className="form-input flex w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border-none outline-none bg-white dark:bg-slate-800/50 h-11 px-3 text-sm"
                     placeholder="Post Title"
                   />
@@ -135,9 +218,12 @@ export default function Page() {
                     Post Slug
                   </p>
                   <Input
-                    onChange={(e) => setPostSlug(e.target.value)}
+                    onChange={(e) => {
+                      setPostSlug(e.target.value);
+                    }}
                     type="text"
                     name="slug"
+                    value={postSlug || ""}
                     className="form-input flex w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border-none outline-none bg-white dark:bg-slate-800/50 h-11 px-3 text-sm"
                     placeholder="Post Slug"
                   />
@@ -329,31 +415,68 @@ export default function Page() {
 
                   {/* Preview Box */}
                   {preview && (
-                    <div className="relative w-full h-60 overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700 shadow-sm">
-                      <Image
-                        src={preview}
-                        alt="Featured Preview"
-                        fill
-                        className="object-cover rounded-lg"
-                      />
+                    <div className="space-y-4">
+                      <div className="relative w-full h-60 overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700 shadow-sm">
+                        <Image
+                          src={preview}
+                          alt="Featured Preview"
+                          fill
+                          className="object-cover rounded-lg"
+                        />
 
-                      {/* Remove Button */}
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="absolute top-3 right-3"
-                        onClick={removeImage}
-                      >
-                        <X className="" />
-                      </Button>
+                        {/* Remove Button */}
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-3 right-3"
+                          onClick={removeImage}
+                          type="button"
+                        >
+                          <X className="" />
+                        </Button>
+                      </div>
+
+                      {/* Featured Image Alt and Caption Inputs */}
+                      <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Image Alt Text
+                          </p>
+                          <Input
+                            onChange={(e) => setFeaturedImageAlt(e.target.value)}
+                            type="text"
+                            name="featured_image_alt"
+                            value={featuredImageAlt || ""}
+                            className="form-input w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-11 px-3 text-sm text-[#111318] dark:text-white"
+                            placeholder="Alt text for the featured image"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Image Caption
+                          </p>
+                          <Input
+                            onChange={(e) => setFeaturedImageCaption(e.target.value)}
+                            type="text"
+                            name="featured_image_caption"
+                            value={featuredImageCaption || ""}
+                            className="form-input w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-11 px-3 text-sm text-[#111318] dark:text-white"
+                            placeholder="Caption for the featured image"
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
             </div>
 
-            <Button type="submit">
-              {loading ? "Adding..." : "Publish Post"}
+            <Button 
+              type="button"
+              onClick={handlePublish}
+              disabled={loading}
+            >
+              {loading && submitAction === "publish" ? "Publishing..." : "Publish Post"}
             </Button>
           </div>
         </div>
