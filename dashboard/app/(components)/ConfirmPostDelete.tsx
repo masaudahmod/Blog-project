@@ -16,9 +16,11 @@ import { Trash2 } from "lucide-react";
 
 interface PostConfirmDeleteProps {
   postId: number;
+  onDelete?: () => void;
+  trigger?: React.ReactNode;
 }
 
-export default function ConfirmPostDelete({ postId }: PostConfirmDeleteProps) {
+export default function ConfirmPostDelete({ postId, onDelete, trigger }: PostConfirmDeleteProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +32,12 @@ export default function ConfirmPostDelete({ postId }: PostConfirmDeleteProps) {
         toast.success("Post deleted successfully");
         setLoading(false);
         setOpen(false); // ✅ modal close
-        window.location.reload();
+        // Call onDelete callback if provided, otherwise reload page
+        if (onDelete) {
+          onDelete();
+        } else {
+          window.location.reload();
+        }
       } else {
         toast.error("Error deleting post");
         setLoading(false);
@@ -38,19 +45,22 @@ export default function ConfirmPostDelete({ postId }: PostConfirmDeleteProps) {
     } catch (error) {
       console.error("Error deleting content:", error);
       toast.error("Error deleting content");
+      setLoading(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button
-          className="flex cursor-pointer items-center w-full px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-          title="Delete"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-        </button>
+        {trigger || (
+          <button
+            className="flex cursor-pointer items-center w-full px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+            title="Delete"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

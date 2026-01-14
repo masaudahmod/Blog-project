@@ -1,6 +1,6 @@
 "use client";
 
-import { getAllPosts, updatePostPublishStatus, deletePost } from "@/lib/action";
+import { getAllPosts, updatePostPublishStatus } from "@/lib/action";
 import { PostType } from "@/lib/type";
 import {
   Table,
@@ -22,9 +22,19 @@ import {
 import { MoreVertical, Edit, Trash2, Eye, EyeOff, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import ConfirmPostDelete from "@/app/(components)/ConfirmPostDelete";
+
+interface PostWithMetadata extends PostType {
+  author?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  comment_count?: number;
+  pending_comment_count?: number;
+}
 
 export default function Page() {
   const searchParams = useSearchParams();
@@ -32,16 +42,12 @@ export default function Page() {
   const currentPage = Number(searchParams.get("page")) || 1;
   const currentFilter = searchParams.get("filter") || "all";
 
-  const [posts, setPosts] = useState<PostType[]>([]);
+  const [posts, setPosts] = useState<PostWithMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [updating, setUpdating] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchPosts();
-  }, [currentPage, currentFilter]);
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAllPosts(currentPage, currentFilter);
@@ -55,7 +61,11 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, currentFilter]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   const handlePublishToggle = async (postId: number, currentStatus: boolean) => {
     try {
@@ -147,7 +157,7 @@ export default function Page() {
                 </TableCell>
               </TableRow>
             ) : (
-              posts.map((post: PostType & { author?: any; comment_count?: number; pending_comment_count?: number }) => (
+              posts.map((post: PostWithMetadata) => (
                 <TableRow key={post.id}>
                   <TableCell className="font-medium">
                     <Link
@@ -175,7 +185,7 @@ export default function Page() {
                     <div className="flex items-center gap-2">
                       <MessageSquare className="h-4 w-4" />
                       <span>{post.comment_count || 0}</span>
-                      {post.pending_comment_count > 0 && (
+                      {(post.pending_comment_count || 0) > 0 && (
                         <Badge variant="destructive" className="text-xs">
                           {post.pending_comment_count} pending
                         </Badge>
@@ -213,7 +223,7 @@ export default function Page() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => handlePublishToggle(post.id, post.is_published)}
+                          onClick={() => handlePublishToggle(post.id, post.is_published ?? false)}
                           disabled={updating === post.id}
                         >
                           {post.is_published ? (
@@ -229,32 +239,20 @@ export default function Page() {
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={async () => {
-                            if (confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
-                              try {
-                                setUpdating(post.id);
-                                const result = await deletePost(post.id);
-                                if (result.ok) {
-                                  toast.success("Post deleted successfully");
-                                  fetchPosts();
-                                } else {
-                                  toast.error("Failed to delete post");
-                                }
-                              } catch (error) {
-                                toast.error("Failed to delete post");
-                                console.error(error);
-                              } finally {
-                                setUpdating(null);
-                              }
-                            }
-                          }}
-                          disabled={updating === post.id}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
+                        <ConfirmPostDelete
+                          postId={post.id}
+                          onDelete={fetchPosts}
+                          trigger={
+                            <DropdownMenuItem
+                              disabled={updating === post.id}
+                              className="text-red-600 focus:text-red-600"
+                              onSelect={(e) => e.preventDefault()}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          }
+                        />
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
