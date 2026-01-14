@@ -428,6 +428,179 @@ export const updatePost = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Update post by slug (handles FormData with file upload)
+ * PUT/PATCH /api/post/slug/:slug
+ */
+export const updatePostBySlug = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  
+  // First, get the post by slug to get the ID and existing data
+  const postResult = await pool.query("SELECT id, featured_image_url, featured_image_public_id, likes, comments, interactions FROM posts WHERE slug = $1", [slug]);
+  
+  if (postResult.rows.length === 0) {
+    throw new AppError("Post not found", 404);
+  }
+  
+  const postId = postResult.rows[0].id;
+  const existingImageUrl = postResult.rows[0].featured_image_url;
+  const existingPublicId = postResult.rows[0].featured_image_public_id;
+  const existingLikes = postResult.rows[0].likes;
+  const existingComments = postResult.rows[0].comments;
+  const existingInteractions = postResult.rows[0].interactions;
+
+  let {
+    title,
+    new_slug,
+    content,
+    featured_image_alt,
+    featured_image_caption,
+    meta_title,
+    meta_description,
+    meta_keywords,
+    canonical_url,
+    schema_type,
+    category_id,
+    tags,
+    read_time,
+    is_published,
+    published_at,
+    remove_image,
+  } = req.body;
+
+  // Get author_id from authenticated user (keep existing author_id)
+  const author_id = req.user?.id || null;
+
+  const featured_image = req.file;
+  let image_upload = {};
+  let new_image_url = null;
+  let new_image_public_id = null;
+
+  // Handle image upload/replacement
+  if (featured_image) {
+    // Delete old image if it exists
+    if (existingPublicId) {
+      await cloudinaryDelete(existingPublicId);
+    }
+    
+    // Upload new image
+    image_upload = await cloudinaryUpload(
+      featured_image?.path,
+      title || "post",
+      "postFeatureImage"
+    );
+    new_image_url = image_upload?.uploadResult?.url || null;
+    new_image_public_id = image_upload?.uploadResult?.public_id || null;
+  } else if (remove_image === "true") {
+    // Remove image if requested
+    if (existingPublicId) {
+      await cloudinaryDelete(existingPublicId);
+    }
+    new_image_url = null;
+    new_image_public_id = null;
+  } else {
+    // Keep existing image
+    new_image_url = existingImageUrl;
+    new_image_public_id = existingPublicId;
+  }
+
+  // Process meta_keywords and tags
+  if (meta_keywords) {
+    if (typeof meta_keywords === "string") {
+      meta_keywords = meta_keywords.split(",").map((keyword) => keyword.trim());
+    }
+  }
+
+  if (tags) {
+    if (typeof tags === "string") {
+      tags = tags.split(",").map((tag) => tag.trim());
+    }
+  }
+
+  // Use new_slug if provided, otherwise keep existing slug
+  const finalSlug = new_slug || slug;
+
+  // Validate required fields
+  if (!title || !content || !category_id) {
+    throw new AppError("Missing required fields: title, content, and category_id are required", 400);
+  }
+
+  // Prepare update data
+  const updateData = {
+    title,
+    slug: finalSlug,
+    content,
+    excerpt: null, // Can be added later if needed
+    featured_image_url: new_image_url,
+    featured_image_alt: featured_image_alt || null,
+    featured_image_caption: featured_image_caption || null,
+    meta_title: meta_title || null,
+    meta_description: meta_description || null,
+    meta_keywords: meta_keywords || null,
+    canonical_url: canonical_url || null,
+    schema_type: schema_type || "Article",
+    category_id: parseInt(category_id),
+    author_id: author_id,
+    tags: tags || null,
+    read_time: read_time ? parseInt(read_time) : 1,
+    likes: existingLikes || 0,
+    comments: existingComments || [],
+    interactions: existingInteractions || [],
+    is_published: is_published === "true" || is_published === true,
+    published_at: published_at || null,
+  };
+
+  // Update the post
+  const result = await pool.query(
+    `UPDATE posts SET 
+      title = $1, slug = $2, content = $3, excerpt = $4,
+      featured_image_url = $5, featured_image_public_id = $6, featured_image_alt = $7, featured_image_caption = $8,
+      meta_title = $9, meta_description = $10, meta_keywords = $11,
+      canonical_url = $12, schema_type = $13,
+      category_id = $14, author_id = $15, tags = $16, read_time = $17,
+      likes = $18, comments = $19, interactions = $20,
+      is_published = $21, published_at = $22,
+      updated_at = NOW()
+     WHERE id = $23
+     RETURNING *`,
+    [
+      updateData.title,
+      updateData.slug,
+      updateData.content,
+      updateData.excerpt,
+      updateData.featured_image_url,
+      new_image_public_id,
+      updateData.featured_image_alt,
+      updateData.featured_image_caption,
+      updateData.meta_title,
+      updateData.meta_description,
+      updateData.meta_keywords,
+      updateData.canonical_url,
+      updateData.schema_type,
+      updateData.category_id,
+      updateData.author_id,
+      updateData.tags,
+      updateData.read_time,
+      updateData.likes,
+      JSON.stringify(updateData.comments),
+      JSON.stringify(updateData.interactions),
+      updateData.is_published,
+      updateData.published_at,
+      postId,
+    ]
+  );
+
+  if (result.rows.length === 0) {
+    throw new AppError("Failed to update post", 500);
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Post updated successfully",
+    post: result.rows[0],
+  });
+});
+
+/**
  * Update publish status of a post
  * PATCH /api/post/:id/publish
  * Body: { is_published: true/false }

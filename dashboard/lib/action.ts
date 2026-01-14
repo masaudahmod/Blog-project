@@ -492,6 +492,31 @@ async function addPost(formdata: FormData) {
   }
 }
 
+async function updatePost(slug: string, formdata: FormData) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(`${process.env.NEXT_SERVER_API_URL}/post/slug/${slug}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formdata,
+    });
+    const data = await result.json();
+    return {
+      ok: result.ok,
+      message: data.message || data.success ? "Post updated successfully" : "Failed to update post",
+      data: data,
+    };
+  } catch (error) {
+    console.log("error updatePost", error);
+    return {
+      ok: false,
+      message: "Failed to update post",
+    };
+  }
+}
+
 async function deletePost(postId: number) {
   try {
     const token = await getCookies();
@@ -786,6 +811,7 @@ export {
   getAllCategories,
   getCategorybyId,
   addPost,
+  updatePost,
   deletePost,
   addCategory,
   deleteCategory,
