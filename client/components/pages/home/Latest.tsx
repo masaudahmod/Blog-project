@@ -1,0 +1,305 @@
+"use client";
+
+import Link from "next/link";
+import { ArrowRight, TrendingUp, Calendar } from "lucide-react";
+
+interface Article {
+  id: string;
+  image: string;
+  category: string;
+  readTime: string;
+  title: string;
+  excerpt: string;
+}
+
+interface TrendingArticle {
+  id: string;
+  title: string;
+  timeAgo: string;
+}
+
+interface LatestProps {
+  articles?: Article[];
+  trendingArticles?: TrendingArticle[];
+}
+
+// Default data - can be replaced with API data later
+const defaultArticles: Article[] = [
+  {
+    id: "4",
+    image: "/api/placeholder/400/250",
+    category: "Ethics",
+    readTime: "5 min read",
+    title: "The Ethics of Autonomous Agents in 2024",
+    excerpt:
+      "As agents become more autonomous, questions of liability and decision-making frameworks become critical...",
+  },
+  {
+    id: "5",
+    image: "/api/placeholder/400/250",
+    category: "Tech",
+    readTime: "4 min read",
+    title: "Spatial Computing Meets Generative AI",
+    excerpt:
+      "How the convergence of Apple Vision Pro and broad LLMs creates immersive learning environments never seen...",
+  },
+  {
+    id: "6",
+    image: "/api/placeholder/400/250",
+    category: "Security",
+    readTime: "5 min read",
+    title: "Prompt Injections: The New Cyber Threat",
+    excerpt:
+      "Understanding how malicious actors are exploiting LLM inputs and how to safeguard your applications.",
+  },
+  {
+    id: "7",
+    image: "/api/placeholder/400/250",
+    category: "Robotics",
+    readTime: "5 min read",
+    title: "Humanoid Robots: Are We There Yet?",
+    excerpt:
+      "A deep dive into the latest prototypes from Tesla and Figure AI, showing impressive dexterity.",
+  },
+];
+
+const defaultTrendingArticles: TrendingArticle[] = [
+  { id: "1", title: "Google released Gemini 1.0 Pro with 1M token context window", timeAgo: "2 hours ago" },
+  { id: "2", title: "Mistral AI announces partnership with Microsoft Azure", timeAgo: "5 hours ago" },
+  { id: "3", title: "Regulatory talks in EU finalize the new AI Act draft", timeAgo: "1 day ago" },
+  { id: "4", title: "OpenAI releases GPT-4 Turbo with improved reasoning", timeAgo: "2 days ago" },
+  { id: "5", title: "Anthropic introduces Claude 3.5 Sonnet with enhanced capabilities", timeAgo: "3 days ago" },
+];
+
+export default function Latest({
+  articles = defaultArticles,
+  trendingArticles = defaultTrendingArticles,
+}: LatestProps) {
+  return (
+    <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content - Left Column */}
+        <div className="lg:col-span-2">
+          {/* Section Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white">
+              Latest News
+            </h2>
+            <Link
+              href="/blog"
+              className="flex items-center gap-1 text-sm font-medium text-primary hover:gap-2 transition-all"
+            >
+              View all
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          {/* Articles Grid */}
+          <div className="space-y-8">
+            {/* First Row - Two Articles */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {articles.slice(0, 2).map((article) => (
+                <Link
+                  key={article.id}
+                  href={`/blog/${article.id}`}
+                  className="group"
+                >
+                  <article className="h-full">
+                    {/* Image */}
+                    <div className="relative h-48 md:h-56 rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800">
+                      <div className="absolute inset-0 bg-black/10 dark:bg-black/20 group-hover:bg-black/5 dark:group-hover:bg-black/10 transition-colors" />
+                      {/* Placeholder pattern */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-24 h-24 bg-blue-500/20 dark:bg-blue-400/30 rounded-full blur-2xl" />
+                      </div>
+                    </div>
+
+                    {/* Meta */}
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                      <span className="font-medium">{article.category}</span>
+                      <span>·</span>
+                      <span>{article.readTime}</span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                      {article.title}
+                    </h3>
+
+                    {/* Excerpt */}
+                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                      {article.excerpt}
+                    </p>
+                  </article>
+                </Link>
+              ))}
+            </div>
+
+            {/* AI Daily Digest Section */}
+            <div className="bg-purple-50 dark:bg-purple-950/30 rounded-xl p-6 md:p-8 shadow-sm dark:shadow-purple-900/20 border border-purple-100 dark:border-purple-800/50">
+              <div className="flex items-start gap-4">
+                {/* Icon */}
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-purple-500 dark:bg-purple-600 flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
+                  </svg>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                    AI Daily Digest
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                    Key takeaways generated by our model from 50+ sources today.
+                  </p>
+
+                  {/* Bullet Points */}
+                  <ul className="space-y-2">
+                    {trendingArticles.slice(0, 3).map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+                      >
+                        <span className="text-purple-500 dark:text-purple-400 mt-1">•</span>
+                        <span>{item.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Second Row - Two Articles */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {articles.slice(2, 4).map((article) => (
+                <Link
+                  key={article.id}
+                  href={`/blog/${article.id}`}
+                  className="group"
+                >
+                  <article className="h-full">
+                    {/* Image */}
+                    <div className="relative h-48 md:h-56 rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800">
+                      <div className="absolute inset-0 bg-black/10 dark:bg-black/20 group-hover:bg-black/5 dark:group-hover:bg-black/10 transition-colors" />
+                      {/* Placeholder pattern */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-24 h-24 bg-blue-500/20 dark:bg-blue-400/30 rounded-full blur-2xl" />
+                      </div>
+                    </div>
+
+                    {/* Meta */}
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                      <span className="font-medium">{article.category}</span>
+                      <span>·</span>
+                      <span>{article.readTime}</span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                      {article.title}
+                    </h3>
+
+                    {/* Excerpt */}
+                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                      {article.excerpt}
+                    </p>
+                  </article>
+                </Link>
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            <div className="flex justify-center pt-4">
+              <Link
+                href="/blog"
+                className="px-6 py-3 border border-slate-300 dark:border-slate-700 rounded-lg font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              >
+                Load More Articles
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar - Right Column */}
+        <div className="space-y-6">
+          {/* Trending Now */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-slate-900/50">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                Trending Now
+              </h3>
+            </div>
+
+            <ol className="space-y-4">
+              {trendingArticles.map((article, index) => (
+                <li key={article.id}>
+                  <Link
+                    href={`/blog/${article.id}`}
+                    className="flex items-start gap-3 group"
+                  >
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-semibold flex items-center justify-center mt-0.5">
+                      {index + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors line-clamp-2">
+                        {article.title}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {article.timeAgo}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* AI World Summit Event Card */}
+          <div className="relative bg-gradient-to-br from-blue-900 to-indigo-900 dark:from-blue-950 dark:to-indigo-950 rounded-xl p-6 border-2 border-white/20 dark:border-white/10 overflow-hidden">
+            {/* Advertisement Label */}
+            <div className="absolute top-3 left-3">
+              <span className="text-xs font-semibold text-white/70 dark:text-white/60 uppercase tracking-wide">
+                Advertisement
+              </span>
+            </div>
+
+            {/* Pattern Overlay */}
+            <div className="absolute inset-0 opacity-10 dark:opacity-15">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full blur-2xl" />
+            </div>
+
+            {/* Content */}
+            <div className="relative z-10 pt-6">
+              <h3 className="text-xl font-bold text-white dark:text-white mb-2">
+                AI World Summit 2024
+              </h3>
+              <p className="text-sm text-slate-300 dark:text-slate-200 mb-4">
+                Join 5,000+ researchers in San Francisco this October.
+              </p>
+              <Link
+                href="#"
+                className="inline-block px-4 py-2 bg-white dark:bg-slate-100 text-blue-900 dark:text-blue-950 rounded-lg font-semibold text-sm hover:bg-slate-100 dark:hover:bg-white transition-colors"
+              >
+                Get Tickets
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

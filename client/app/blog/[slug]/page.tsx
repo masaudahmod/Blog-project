@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   getPostBySlug,
   getPostComments,
@@ -17,8 +15,6 @@ import { CircleUser, Heart } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import "react-quill-new/dist/quill.snow.css";
 
 interface Comment {
   id: number;
@@ -74,7 +70,6 @@ export default function BlogPostPage() {
         }
       } catch (error) {
         console.error("Error fetching post data:", error);
-        toast.error("Failed to load post");
       } finally {
         setLoading(false);
       }
@@ -130,7 +125,7 @@ export default function BlogPostPage() {
 
   const handleCommentSubmit = async () => {
     if (!userComment.trim() || !post?.id || !userIdentifier) {
-      toast.error("Please enter a comment");
+      alert("Please enter a comment");
       return;
     }
 
@@ -143,7 +138,7 @@ export default function BlogPostPage() {
       });
 
       if (result.success) {
-        toast.success(result.message || "Comment submitted! It will be reviewed before being published.");
+        alert(result.message || "Comment submitted! It will be reviewed before being published.");
         setWriteComponent(false);
         setUserComment("");
 
@@ -159,11 +154,11 @@ export default function BlogPostPage() {
           device_info: getDeviceInfo(),
         });
       } else {
-        toast.error(result.message || "Failed to submit comment");
+        alert(result.message || "Failed to submit comment");
       }
     } catch (error) {
       console.error("Error submitting comment:", error);
-      toast.error("Failed to submit comment");
+      alert("Failed to submit comment");
     } finally {
       setCommentLoading(false);
     }
@@ -210,7 +205,7 @@ export default function BlogPostPage() {
       // Rollback
       setLiked(prevLiked);
       setLikeCount(prevCount);
-      toast.error("Failed to update like");
+      alert("Failed to update like");
       console.error(error);
     } finally {
       setLikeLoading(false);
@@ -304,15 +299,14 @@ export default function BlogPostPage() {
 
         {/* Like Section */}
         <div className="border-t pt-6">
-          <Button
-            variant={liked ? "default" : "outline"}
+            <button
             onClick={handleLikeToggle}
             disabled={likeLoading}
             className="flex items-center gap-2"
           >
             <Heart className={liked ? "fill-red-500 text-red-500" : ""} size={20} />
             {liked ? "Liked" : "Like"}
-          </Button>
+          </button>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
             {likeCount} {likeCount === 1 ? "person" : "people"} liked this post
           </p>
@@ -347,13 +341,12 @@ export default function BlogPostPage() {
           )}
 
           {/* Comment Form */}
-          <Button
-            variant="outline"
+          <button
             className="mb-4"
             onClick={() => setWriteComponent(!writeComponent)}
           >
             {writeComponent ? "Close Comment Form" : "Add a Comment"}
-          </Button>
+          </button>
 
           {writeComponent && (
             <div className="border border-slate-200 dark:border-slate-800 p-4 rounded-lg space-y-4">
@@ -368,12 +361,12 @@ export default function BlogPostPage() {
                 <p className="text-xs text-slate-500">
                   Your comment will be reviewed before being published.
                 </p>
-                <Button
+                <button
                   onClick={handleCommentSubmit}
                   disabled={commentLoading || !userComment.trim()}
                 >
                   {commentLoading ? "Submitting..." : "Submit Comment"}
-                </Button>
+                </button>
               </div>
             </div>
           )}

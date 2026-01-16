@@ -3,7 +3,15 @@
 import { newsletterSubscribe } from "@/lib/action";
 import { useEffect, useState } from "react";
 
-export default function NewsletterSubscription({ isRow = false }) {
+interface NewsletterSubscriptionProps {
+  isRow?: boolean;
+  variant?: "default" | "banner";
+}
+
+export default function NewsletterSubscription({
+  isRow = false,
+  variant = "default",
+}: NewsletterSubscriptionProps) {
   // email state
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,6 +43,37 @@ export default function NewsletterSubscription({ isRow = false }) {
       }, 5000);
     }
   }, [resultMessage]);
+
+  if (variant === "banner") {
+    return (
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md mx-auto flex flex-col sm:flex-row gap-3"
+      >
+        {resultMessage && (
+          <span className="absolute -top-8 left-0 text-sm font-semibold text-green-300 dark:text-green-400">
+            {resultMessage || "This Email is already subscribed!"}
+          </span>
+        )}
+
+        <input
+          type="email"
+          required
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="flex-1 px-4 py-3 rounded-lg bg-slate-800/50 dark:bg-slate-900/60 border border-white/20 dark:border-white/30 text-white placeholder:text-white/60 dark:placeholder:text-white/50 outline-none focus:border-white/40 dark:focus:border-white/50 focus:ring-2 focus:ring-white/20 dark:focus:ring-white/30"
+        />
+
+        <button
+          type="submit"
+          className="px-6 py-3 bg-blue-500 dark:bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors whitespace-nowrap"
+        >
+          {loading ? "Subscribing..." : "Subscribe"}
+        </button>
+      </form>
+    );
+  }
 
   return (
     <div
