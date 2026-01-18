@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { getAllPosts } from "@/lib/action";
 
 const heroPost = {
@@ -130,6 +131,13 @@ export default async function Page() {
       <div className="container mx-auto">
       <div className="w-full px-4 pb-16 pt-10 lg:px-8">
         <header className="space-y-4">
+          <Breadcrumbs
+            items={[
+              { label: "Home", href: "/" },
+              { label: "Categories", href: "/categories" },
+              { label: "Artificial Intelligence" },
+            ]}
+          />
           <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
             Insights
           </p>

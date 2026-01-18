@@ -5,6 +5,7 @@ import { getLikeCount, getPostBySlug, getPostComments } from "@/lib/action";
 import CommentsSection from "./CommentsSection";
 import LikeSection from "./LikeSection";
 import NewsletterSubscription from "@/components/NewsletterSubscription";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 interface TocItem {
   id: string;
@@ -69,12 +70,24 @@ export default async function BlogPostPage({
 
   const { html: contentHtml, toc } = buildContentWithToc(post.content || "");
   const relatedPosts = Array.isArray(post.related_posts) ? post.related_posts : [];
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    ...(post.category?.name
+      ? [
+          { label: "Blog", href: "/blog" },
+          { label: post.category.name, href: "/categories" },
+        ]
+      : []),
+    { label: post.title },
+  ];
+  const readTimeLabel = post.read_time ? `${post.read_time} min read` : undefined;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 lg:px-8">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
           <main className="space-y-10">
+            <Breadcrumbs items={breadcrumbItems} readTime={readTimeLabel} />
             <article className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
               <div className="space-y-6">
                 <div className="space-y-4">
