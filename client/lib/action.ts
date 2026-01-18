@@ -9,9 +9,9 @@ const API_URL = process.env.NEXT_SERVER_API_URL || process.env.NEXT_PUBLIC_API_U
 /**
  * Get all posts with pagination
  */
-export async function getAllPosts(page = 1) {
+export async function getAllPosts(page = 1, filter: "all" | "published" | "draft" = "all") {
   try {
-    const result = await fetch(`${API_URL}/post?page=${page}`, {
+    const result = await fetch(`${API_URL}/post?page=${page}&filter=${filter}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -28,6 +28,77 @@ export async function getAllPosts(page = 1) {
   } catch (error) {
     console.error("Error fetching posts:", error);
     return { posts: [], currentPage: 1, totalPages: 1 };
+  }
+}
+
+/**
+ * Get a post by id
+ */
+export async function getPostById(id: number) {
+  try {
+    const result = await fetch(`${API_URL}/post/id/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+    const { post } = await result.json();
+    if (result.ok) {
+      return post;
+    } else {
+      console.error("Error fetching post by id");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching post by id:", error);
+    return null;
+  }
+}
+
+/**
+ * Get posts by category (id or slug)
+ */
+export async function getPostsByCategory({
+  categoryId,
+  categorySlug,
+  page = 1,
+  limit = 10,
+  filter = "published",
+  includeStats = false,
+}: {
+  categoryId?: number;
+  categorySlug?: string;
+  page?: number;
+  limit?: number;
+  filter?: "all" | "published" | "draft";
+  includeStats?: boolean;
+}) {
+  try {
+    const params = new URLSearchParams();
+    if (categoryId !== undefined) params.set("categoryId", String(categoryId));
+    if (categorySlug) params.set("categorySlug", categorySlug);
+    params.set("page", String(page));
+    params.set("limit", String(limit));
+    params.set("filter", filter);
+    params.set("includeStats", includeStats ? "true" : "false");
+
+    const result = await fetch(`${API_URL}/post/filter?${params.toString()}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+    const data = await result.json();
+    if (result.ok) {
+      return data;
+    }
+    console.error("Error fetching posts by category");
+    return { posts: [], pagination: { currentPage: 1, totalPages: 1 }, category: null };
+  } catch (error) {
+    console.error("Error fetching posts by category:", error);
+    return { posts: [], pagination: { currentPage: 1, totalPages: 1 }, category: null };
   }
 }
 
@@ -110,6 +181,34 @@ export async function addComment({
 }
 
 /**
+ * Add a comment to a post (legacy route)
+ */
+export async function addPostComment({
+  post_id,
+  user_identifier,
+  message,
+}: {
+  post_id: number;
+  user_identifier: string;
+  message: string;
+}) {
+  try {
+    const result = await fetch(`${API_URL}/post/comment/${post_id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ post_id, user_identifier, message }),
+    });
+    const data = await result.json();
+    return data;
+  } catch (error) {
+    console.error("Error adding comment via post route:", error);
+    return { success: false, message: "Failed to add comment" };
+  }
+}
+
+/**
  * Like a post
  */
 export async function likePost({
@@ -136,6 +235,25 @@ export async function likePost({
 }
 
 /**
+ * Like a post by slug (legacy route)
+ */
+export async function likePostBySlug(slug: string) {
+  try {
+    const result = await fetch(`${API_URL}/post/${slug}/like`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await result.json();
+    return data;
+  } catch (error) {
+    console.error("Error liking post by slug:", error);
+    return { success: false, message: "Failed to like post" };
+  }
+}
+
+/**
  * Unlike a post
  */
 export async function unlikePost({
@@ -157,6 +275,25 @@ export async function unlikePost({
     return data;
   } catch (error) {
     console.error("Error unliking post:", error);
+    return { success: false, message: "Failed to unlike post" };
+  }
+}
+
+/**
+ * Unlike a post by slug (legacy route)
+ */
+export async function unlikePostBySlug(slug: string) {
+  try {
+    const result = await fetch(`${API_URL}/post/${slug}/unlike`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await result.json();
+    return data;
+  } catch (error) {
+    console.error("Error unliking post by slug:", error);
     return { success: false, message: "Failed to unlike post" };
   }
 }
@@ -217,6 +354,54 @@ export async function getLikeCount(postId: number) {
 }
 
 /**
+ * Get all categories
+ */
+export async function getCategories() {
+  try {
+    const result = await fetch(`${API_URL}/category`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+    const data = await result.json();
+    if (result.ok) {
+      return data.categories || [];
+    }
+    console.error("Error fetching categories");
+    return [];
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return [];
+  }
+}
+
+/**
+ * Get category by id
+ */
+export async function getCategoryById(id: number) {
+  try {
+    const result = await fetch(`${API_URL}/category/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+    const data = await result.json();
+    if (result.ok) {
+      return data.category || null;
+    }
+    console.error("Error fetching category by id");
+    return null;
+  } catch (error) {
+    console.error("Error fetching category by id:", error);
+    return null;
+  }
+}
+
+/**
  * Log user activity
  */
 export async function logActivity({
@@ -231,7 +416,7 @@ export async function logActivity({
   device_info?: string;
 }) {
   try {
-    const result = await fetch(`${API_URL}/activity`, {
+    await fetch(`${API_URL}/activity`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -240,7 +425,7 @@ export async function logActivity({
     });
     // Don't wait for response, just fire and forget
     return { success: true };
-  } catch (error) {
+  } catch {
     // Silently fail - activity logging is not critical
     return { success: false };
   }
@@ -263,5 +448,25 @@ export async function newsletterSubscribe({ email }: { email: string }) {
   } catch (error) {
     console.error("Error subscribing to newsletter:", error);
     return { success: false, message: "Failed to subscribe" };
+  }
+}
+
+/**
+ * Newsletter unsubscribe
+ */
+export async function newsletterUnsubscribe({ email }: { email: string }) {
+  try {
+    const result = await fetch(`${API_URL}/newsletter-unsubscribe`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+    const data = await result.json();
+    return data;
+  } catch (error) {
+    console.error("Error unsubscribing from newsletter:", error);
+    return { success: false, message: "Failed to unsubscribe" };
   }
 }

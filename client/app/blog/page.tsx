@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getAllPosts } from "@/lib/action";
 
 const heroPost = {
   title: "The Rise of Multimodal Models: How AI Learned to See, Hear, and Speak",
@@ -121,10 +122,13 @@ function PostCard({
   );
 }
 
-export default function Page() {
+export default async function Page() {
+  const allPosts = await getAllPosts();
+  console.log(allPosts);
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 lg:px-8">
+      <div className="container mx-auto">
+      <div className="w-full px-4 pb-16 pt-10 lg:px-8">
         <header className="space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
             Insights
@@ -252,8 +256,9 @@ export default function Page() {
               <button className="mt-4 w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 dark:bg-white dark:text-slate-900">
                 Subscribe
               </button>
-            </div>
-          </aside>
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
     </div>
