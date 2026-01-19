@@ -13,6 +13,12 @@ const heroPost = {
     "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80",
 };
 
+const heroAuthor = {
+  name: "Sarah Jenkins",
+  avatar:
+    "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=200&q=80",
+};
+
 const posts = [
   {
     id: 1,
@@ -153,30 +159,47 @@ export default async function Page() {
         <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
           <main className="space-y-10">
             <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_220px]">
-                <div className="relative h-64 w-full lg:h-full">
+              <div className="relative">
+                <div className="relative h-56 w-full sm:h-72 lg:h-80">
                   <Image
                     src={heroPost.image}
                     alt={heroPost.title}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 700px"
+                    sizes="(max-width: 1024px) 100vw, 900px"
                   />
+                  <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm">
+                    Feature story
+                  </span>
                 </div>
-                <div className="space-y-4 p-6 lg:p-8">
+                <div className="space-y-4 p-6 sm:p-8">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
-                      {heroPost.category}
-                    </span>
-                    <span>{heroPost.date}</span>
+                    <span className="font-semibold text-primary">{heroPost.category}</span>
+                    <span className="text-slate-300">•</span>
                     <span>{heroPost.readTime}</span>
+                    <span className="text-slate-300">•</span>
+                    <span>Just now</span>
                   </div>
-                  <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                  <h2 className="text-2xl font-semibold text-slate-900 dark:text-white sm:text-3xl">
                     {heroPost.title}
                   </h2>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-slate-600 dark:text-slate-300 sm:text-base">
                     {heroPost.excerpt}
                   </p>
+                  <div className="flex items-center gap-3 pt-2">
+                    <div className="relative h-8 w-8 overflow-hidden rounded-full bg-slate-200">
+                      <Image
+                        src={heroAuthor.avatar}
+                        alt={heroAuthor.name}
+                        fill
+                        className="object-cover"
+                        sizes="32px"
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      {heroAuthor.name}
+                    </span>
+                  </div>
                 </div>
               </div>
             </section>

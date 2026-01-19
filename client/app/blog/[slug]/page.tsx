@@ -6,6 +6,8 @@ import CommentsSection from "./CommentsSection";
 import LikeSection from "./LikeSection";
 import NewsletterSubscription from "@/components/NewsletterSubscription";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { PostType } from "@/types";
+
 
 interface TocItem {
   id: string;
@@ -176,7 +178,7 @@ export default async function BlogPostPage({
                   </h2>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {relatedPosts.slice(0, 4).map((related: any) => (
+                  {relatedPosts.slice(0, 4).map((related: PostType) => (
                     <Link
                       key={related.id || related.slug}
                       href={`/blog/${related.slug}`}
