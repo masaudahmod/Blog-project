@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { getAllPosts } from "@/lib/action";
+import { PostType } from "@/types";
+import Pagination from "@/components/Pagination";
 
 const heroPost = {
   title: "The Rise of Multimodal Models: How AI Learned to See, Hear, and Speak",
@@ -98,29 +100,31 @@ export function PostCard({
   date,
   image,
 }: {
-  title: string;
-  excerpt: string;
-  category: string;
-  date: string;
-  image: string;
+  title?: string;
+  excerpt?: string;
+  category?: string;
+  date?: string;
+  image?: string;
 }) {
   return (
     <article className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:bg-slate-900">
       <div className="relative h-40 w-full overflow-hidden">
-        <Image
-          src={image}
-          alt={title}
-          fill
-          className="object-cover transition duration-300 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, 380px"
-        />
+        {image && (
+          <Image
+            src={image}
+            alt={title || ""}
+            fill
+            className="object-cover transition duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 380px"
+          />
+        )}
       </div>
       <div className="space-y-2 p-4">
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
           <span className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
-            {category}
+            {category || ""}
           </span>
-          <span>{date}</span>
+          <span>{date || ""}</span>
         </div>
         <h3 className="text-base font-semibold text-slate-900 dark:text-white">{title}</h3>
         <p className="text-sm text-slate-600 dark:text-slate-300">{excerpt}</p>
@@ -129,166 +133,181 @@ export function PostCard({
   );
 }
 
-export default async function Page() {
-  const allPosts = await getAllPosts();
-  console.log(allPosts);
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; filter?: string }>;
+}) {
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const filter = params.filter || "all";
+  const allPosts = await getAllPosts(page, filter as "all" | "published" | "draft");
+  console.log(allPosts?.posts);
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-white">
       <div className="container mx-auto">
-      <div className="w-full px-4 pb-16 pt-10 lg:px-8">
-        <header className="space-y-4">
-          <Breadcrumbs
-            items={[
-              { label: "Home", href: "/" },
-              { label: "Categories", href: "/categories" },
-              { label: "Artificial Intelligence" },
-            ]}
-          />
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-600 dark:text-slate-300">
-            Insights
-          </p>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
-            Artificial Intelligence
-          </h1>
-          <p className="max-w-2xl text-base text-slate-600 dark:text-slate-300">
-            Explore the latest research, product design stories, and practical guidance on
-            building with AI.
-          </p>
-        </header>
+        <div className="w-full px-4 pb-16 pt-10 lg:px-8">
+          <header className="space-y-4">
+            <Breadcrumbs
+              items={[
+                { label: "Home", href: "/" },
+                { label: "Categories", href: "/categories" },
+                { label: "Artificial Intelligence" },
+              ]}
+            />
+            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-600 dark:text-slate-300">
+              Insights
+            </p>
+            <h1 className="text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
+              Artificial Intelligence
+            </h1>
+            <p className="max-w-2xl text-base text-slate-600 dark:text-slate-300">
+              Explore the latest research, product design stories, and practical guidance on
+              building with AI.
+            </p>
+          </header>
 
-        <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <main className="space-y-10">
-            <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
-              <div className="relative">
-                <div className="relative h-56 w-full sm:h-72 lg:h-80">
-                  <Image
-                    src={heroPost.image}
-                    alt={heroPost.title}
-                    fill
-                    loading="eager"
-                    
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 900px"
-                  />
-                  <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm dark:bg-slate-900/80 dark:text-white">
-                    Feature story
-                  </span>
-                </div>
-                <div className="space-y-4 p-6 sm:p-8">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                    <span className="font-semibold text-primary">{heroPost.category}</span>
-                    <span className="text-slate-300 dark:text-white/20">•</span>
-                    <span>{heroPost.readTime}</span>
-                    <span className="text-slate-300 dark:text-white/20">•</span>
-                    <span>Just now</span>
-                  </div>
-                  <h2 className="text-2xl font-semibold text-slate-900 dark:text-white sm:text-3xl">
-                    {heroPost.title}
-                  </h2>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 sm:text-base">
-                    {heroPost.excerpt}
-                  </p>
-                  <div className="flex items-center gap-3 pt-2">
-                    <div className="relative h-8 w-8 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
-                      <Image
-                        src={heroAuthor.avatar}
-                        alt={heroAuthor.name}
-                        fill
-                        className="object-cover"
-                        sizes="32px"
-                      />
-                    </div>
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                      {heroAuthor.name}
+          <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <main className="space-y-10">
+              <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
+                <div className="relative">
+                  <div className="relative h-56 w-full sm:h-72 lg:h-80">
+                    <Image
+                      src={heroPost.image}
+                      alt={heroPost.title}
+                      fill
+                      loading="eager"
+
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 900px"
+                    />
+                    <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm dark:bg-slate-900/80 dark:text-white">
+                      Feature story
                     </span>
                   </div>
+                  <div className="space-y-4 p-6 sm:p-8">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                      <span className="font-semibold text-primary">{heroPost.category}</span>
+                      <span className="text-slate-300 dark:text-white/20">•</span>
+                      <span>{heroPost.readTime}</span>
+                      <span className="text-slate-300 dark:text-white/20">•</span>
+                      <span>Just now</span>
+                    </div>
+                    <h2 className="text-2xl font-semibold text-slate-900 dark:text-white sm:text-3xl">
+                      {heroPost.title}
+                    </h2>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 sm:text-base">
+                      {heroPost.excerpt}
+                    </p>
+                    <div className="flex items-center gap-3 pt-2">
+                      <div className="relative h-8 w-8 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
+                        <Image
+                          src={heroAuthor.avatar}
+                          alt={heroAuthor.name}
+                          fill
+                          className="object-cover"
+                          sizes="32px"
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        {heroAuthor.name}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                  Latest posts
-                </h2>
-                <button className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300 dark:border-white/10 dark:text-slate-300">
-                  View all
-                </button>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2">
-                {posts.map((post) => (
-                  <PostCard key={post.id} {...post} />
-                ))}
-              </div>
-            </section>
-          </main>
-
-          <aside className="space-y-6 lg:sticky lg:top-24">
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
-              <div className="flex items-center gap-4">
-                <div className="relative h-14 w-14 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
-                  <Image
-                    src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=200&q=80"
-                    alt="Author profile"
-                    fill
-                    className="object-cover"
-                    sizes="56px"
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                    Latest posts
+                  </h2>
+                  <button className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300 dark:border-white/10 dark:text-slate-300">
+                    View all
+                  </button>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {allPosts?.posts?.map((post: PostType) => (
+                    <PostCard key={post.id} title={post.title} excerpt={post.excerpt || undefined} category={post.category?.name || undefined} date={post.published_at || undefined} image={post.featured_image_url || undefined} />
+                  ))}
+                </div>
+                <div className="flex justify-center">
+                  <Pagination
+                    currentPage={page}
+                    totalPages={allPosts?.totalPages || 1}
+                    query={{ filter }}
                   />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                    Maya L. Chen
-                  </p>
-                  <p className="text-xs text-slate-600 dark:text-slate-300">AI Research Lead</p>
+              </section>
+            </main>
+
+            <aside className="space-y-6 lg:sticky lg:top-24">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
+                <div className="flex items-center gap-4">
+                  <div className="relative h-14 w-14 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
+                    <Image
+                      src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=200&q=80"
+                      alt="Author profile"
+                      fill
+                      loading="eager"
+                      className="object-cover"
+                      sizes="56px"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                      Maya L. Chen
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">AI Research Lead</p>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+                  Writing about human-centered AI, product strategy, and how to build with
+                  responsibility.
+                </p>
+                <button className="mt-4 w-full rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+                  Follow
+                </button>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
+                  Search
+                </h3>
+                <input
+                  type="text"
+                  placeholder="Search articles"
+                  className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-900 outline-none focus:border-primary dark:border-white/10 dark:bg-white/5 dark:text-white"
+                />
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
+                  Categories
+                </h3>
+                <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  {categories.map((category) => (
+                    <div
+                      key={category}
+                      className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 dark:border-white/10"
+                    >
+                      <span>{category}</span>
+                      <span className="text-xs text-slate-400 dark:text-slate-500">12</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
-                Writing about human-centered AI, product strategy, and how to build with
-                responsibility.
-              </p>
-              <button className="mt-4 w-full rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
-                Follow
-              </button>
-            </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-                Search
-              </h3>
-              <input
-                type="text"
-                placeholder="Search articles"
-                className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-900 outline-none focus:border-primary dark:border-white/10 dark:bg-white/5 dark:text-white"
-              />
-            </div>
-
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-                Categories
-              </h3>
-              <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
-                {categories.map((category) => (
-                  <div
-                    key={category}
-                    className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 dark:border-white/10"
-                  >
-                    <span>{category}</span>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">12</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-                Newsletter
-              </h3>
-              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-                Get new posts and deep dives delivered weekly.
-              </p>
-              <button className="mt-4 w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 dark:bg-white dark:text-slate-900">
-                Subscribe
-              </button>
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
+                  Newsletter
+                </h3>
+                <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                  Get new posts and deep dives delivered weekly.
+                </p>
+                <button className="mt-4 w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 dark:bg-white dark:text-slate-900">
+                  Subscribe
+                </button>
               </div>
             </aside>
           </div>

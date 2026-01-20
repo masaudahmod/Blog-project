@@ -38,7 +38,7 @@ export default function Page() {
     null
   );
   const [tags, setTags] = useState<string | null>("");
-
+  const [excerpt, setExcerpt] = useState<string | null>("");
   const [content, setContent] = useState<string | null>("");
   const [file, setFile] = useState<File | null>(null);
   const [featuredImageAlt, setFeaturedImageAlt] = useState<string | null>("");
@@ -100,6 +100,7 @@ export default function Page() {
     fd.append("meta_title", metaTitle || "");
     fd.append("meta_description", metaDescription || "");
     fd.append("meta_keywords", metaKeywords || "");
+    fd.append("excerpt", excerpt || "");
     fd.append(
       "category_id",
       selectedCategory ? selectedCategory.id.toString() : ""
@@ -355,6 +356,16 @@ export default function Page() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Excerpt */}
+            <div className="">
+              <textarea
+                onChange={(e) => setExcerpt(e.target.value)}
+                name="excerpt"
+                className="form-textarea w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-24 p-3 text-sm"
+                placeholder="Enter excerpt"
+              ></textarea>
             </div>
 
             {/* Tags */}

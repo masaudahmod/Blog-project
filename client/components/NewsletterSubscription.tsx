@@ -46,42 +46,44 @@ export default function NewsletterSubscription({
 
   if (variant === "banner") {
     return (
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md mx-auto flex flex-col sm:flex-row gap-3"
-      >
+      <>
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-md mx-auto flex flex-col sm:flex-row gap-3"
+        >
+
+
+          <input
+            type="email"
+            required
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="flex-1 px-4 py-3 rounded-lg bg-slate-800/50 dark:bg-slate-900/60 border border-white/20 dark:border-white/30 text-white placeholder:text-white/60 dark:placeholder:text-white/50 outline-none focus:border-white/40 dark:focus:border-white/50 focus:ring-2 focus:ring-white/20 dark:focus:ring-white/30"
+          />
+
+          <button
+            type="submit"
+            className="px-6 py-3 bg-blue-500 dark:bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors whitespace-nowrap"
+          >
+            {loading ? "Subscribing..." : "Subscribe"}
+          </button>
+        </form>
         {resultMessage && (
-          <span className="absolute -top-8 left-0 text-sm font-semibold text-green-300 dark:text-green-400">
+          <span className="text-sm mt-10 font-semibold text-green-600 dark:text-green-400">
             {resultMessage || "This Email is already subscribed!"}
           </span>
         )}
-
-        <input
-          type="email"
-          required
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 px-4 py-3 rounded-lg bg-slate-800/50 dark:bg-slate-900/60 border border-white/20 dark:border-white/30 text-white placeholder:text-white/60 dark:placeholder:text-white/50 outline-none focus:border-white/40 dark:focus:border-white/50 focus:ring-2 focus:ring-white/20 dark:focus:ring-white/30"
-        />
-
-        <button
-          type="submit"
-          className="px-6 py-3 bg-blue-500 dark:bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors whitespace-nowrap"
-        >
-          {loading ? "Subscribing..." : "Subscribe"}
-        </button>
-      </form>
+      </>
     );
   }
 
   return (
     <div
-      className={`w-full border shadow-lg rounded-lg p-5 ${
-        isRow
+      className={`w-full border shadow-lg rounded-lg p-5 ${isRow
           ? "flex flex-col md:flex-row items-center justify-between gap-4"
           : "flex flex-col gap-4 justify-center items-center"
-      }`}
+        }`}
     >
       {/* Text Content */}
       <div className={`${isRow ? "md:max-w-md" : ""}`}>
@@ -94,17 +96,11 @@ export default function NewsletterSubscription({
       {/* Form */}
       <form
         onSubmit={handleSubmit}
-        className={`w-full ${
-          isRow
+        className={`w-full ${isRow
             ? "md:w-auto flex flex-col md:flex-row items-center gap-3"
             : "flex flex-col gap-3"
-        }`}
+          }`}
       >
-        {resultMessage && (
-          <span className="mr-10 text-base font-semibold transition-all duration-200 text-green-500">
-            {resultMessage || "This Email is already subscribed!"}
-          </span>
-        )}
 
         <input
           type="email"
@@ -122,6 +118,11 @@ export default function NewsletterSubscription({
           {loading ? "Subscribing..." : "Subscribe"}
         </button>
       </form>
+      {resultMessage && (
+        <span className="mr-10 text-base font-semibold transition-all duration-200 text-green-500">
+          {resultMessage || "This Email is already subscribed!"}
+        </span>
+      )}
     </div>
   );
 }

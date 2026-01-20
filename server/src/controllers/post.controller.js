@@ -8,6 +8,7 @@ export const addPost = asyncHandler(async (req, res) => {
     title,
     slug,
     content,
+    excerpt,
     featured_image_alt,
     featured_image_caption,
     meta_title,
@@ -58,12 +59,12 @@ export const addPost = asyncHandler(async (req, res) => {
   }
 
   const result = await pool.query(
-    `Insert into posts (title, slug, content, featured_image_url, featured_image_public_id, featured_image_alt, featured_image_caption, meta_title, meta_description, meta_keywords, canonical_url, schema_type, category_id, author_id, tags, read_time, likes, comments, interactions, is_published, published_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) returning *`,
+    `Insert into posts (title, slug, content, excerpt, featured_image_url, featured_image_public_id, featured_image_alt, featured_image_caption, meta_title, meta_description, meta_keywords, canonical_url, schema_type, category_id, author_id, tags, read_time, likes, comments, interactions, is_published, published_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) returning *`,
     [
       title,
       slug,
       content,
-
+      excerpt || null,
       image_upload?.uploadResult?.url || null,
       image_upload?.uploadResult?.public_id || null,
       featured_image_alt || null,
@@ -86,7 +87,7 @@ export const addPost = asyncHandler(async (req, res) => {
       updated_at || null,
     ]
   );
-  
+  console.log(result.rows[0]);
   return res
     .status(201)
     .json({ success: true, message: "Post created", post: result.rows[0] });
