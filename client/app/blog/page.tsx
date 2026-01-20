@@ -91,7 +91,7 @@ const categories = [
   "Research",
 ];
 
-function PostCard({
+export function PostCard({
   title,
   excerpt,
   category,
@@ -105,7 +105,7 @@ function PostCard({
   image: string;
 }) {
   return (
-    <article className="group overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
+    <article className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:bg-slate-900">
       <div className="relative h-40 w-full overflow-hidden">
         <Image
           src={image}
@@ -116,7 +116,7 @@ function PostCard({
         />
       </div>
       <div className="space-y-2 p-4">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
           <span className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
             {category}
           </span>
@@ -133,7 +133,7 @@ export default async function Page() {
   const allPosts = await getAllPosts();
   console.log(allPosts);
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-white">
       <div className="container mx-auto">
       <div className="w-full px-4 pb-16 pt-10 lg:px-8">
         <header className="space-y-4">
@@ -144,7 +144,7 @@ export default async function Page() {
               { label: "Artificial Intelligence" },
             ]}
           />
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-600 dark:text-slate-300">
             Insights
           </p>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
@@ -158,26 +158,28 @@ export default async function Page() {
 
         <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
           <main className="space-y-10">
-            <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
               <div className="relative">
                 <div className="relative h-56 w-full sm:h-72 lg:h-80">
                   <Image
                     src={heroPost.image}
                     alt={heroPost.title}
                     fill
+                    loading="eager"
+                    
                     className="object-cover"
                     sizes="(max-width: 1024px) 100vw, 900px"
                   />
-                  <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm">
+                  <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm dark:bg-slate-900/80 dark:text-white">
                     Feature story
                   </span>
                 </div>
                 <div className="space-y-4 p-6 sm:p-8">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                     <span className="font-semibold text-primary">{heroPost.category}</span>
-                    <span className="text-slate-300">•</span>
+                    <span className="text-slate-300 dark:text-white/20">•</span>
                     <span>{heroPost.readTime}</span>
-                    <span className="text-slate-300">•</span>
+                    <span className="text-slate-300 dark:text-white/20">•</span>
                     <span>Just now</span>
                   </div>
                   <h2 className="text-2xl font-semibold text-slate-900 dark:text-white sm:text-3xl">
@@ -187,7 +189,7 @@ export default async function Page() {
                     {heroPost.excerpt}
                   </p>
                   <div className="flex items-center gap-3 pt-2">
-                    <div className="relative h-8 w-8 overflow-hidden rounded-full bg-slate-200">
+                    <div className="relative h-8 w-8 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
                       <Image
                         src={heroAuthor.avatar}
                         alt={heroAuthor.name}
@@ -209,7 +211,7 @@ export default async function Page() {
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Latest posts
                 </h2>
-                <button className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300 dark:border-slate-700 dark:text-slate-300">
+                <button className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300 dark:border-white/10 dark:text-slate-300">
                   View all
                 </button>
               </div>
@@ -222,9 +224,9 @@ export default async function Page() {
           </main>
 
           <aside className="space-y-6 lg:sticky lg:top-24">
-            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
               <div className="flex items-center gap-4">
-                <div className="relative h-14 w-14 overflow-hidden rounded-full bg-slate-200">
+                <div className="relative h-14 w-14 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
                   <Image
                     src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=200&q=80"
                     alt="Author profile"
@@ -237,7 +239,7 @@ export default async function Page() {
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">
                     Maya L. Chen
                   </p>
-                  <p className="text-xs text-slate-500">AI Research Lead</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300">AI Research Lead</p>
                 </div>
               </div>
               <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
@@ -249,36 +251,36 @@ export default async function Page() {
               </button>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
                 Search
               </h3>
               <input
                 type="text"
                 placeholder="Search articles"
-                className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-900 outline-none focus:border-primary dark:border-white/10 dark:bg-white/5 dark:text-white"
               />
             </div>
 
-            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
                 Categories
               </h3>
               <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
                 {categories.map((category) => (
                   <div
                     key={category}
-                    className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-800"
+                    className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 dark:border-white/10"
                   >
                     <span>{category}</span>
-                    <span className="text-xs text-slate-400">12</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">12</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
                 Newsletter
               </h3>
               <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">

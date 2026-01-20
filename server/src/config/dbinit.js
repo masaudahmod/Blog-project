@@ -18,7 +18,7 @@ const initDB = async () => {
     console.error("DB Initialization Error:", error.message);
   } finally {
     console.log("Database Initialized Successfully");
-    process.exit(1);
+    process.exit(0);
   }
 };
 

@@ -89,7 +89,7 @@ export default function Navbar() {
   return (
     <nav
       className={`sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/10 
-    bg-primary dark:bg-slate-950/80 backdrop-blur-md transition-all duration-300
+    bg-slate-300 dark:bg-slate-950/80 backdrop-blur-md transition-all duration-300
     ${showNavbar ? "translate-y-0" : "-translate-y-full"}`}
     >
       <div className="mx-auto flex h-15 container items-center justify-between px-4 sm:px-6 lg:px-8">
