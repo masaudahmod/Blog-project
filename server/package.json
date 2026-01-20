@@ -14,8 +14,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js",
-    "seed": "node src/config/dbinit.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "seed": "node src/config/dbinit.js",
+    "migrate": "node src/config/migrate.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

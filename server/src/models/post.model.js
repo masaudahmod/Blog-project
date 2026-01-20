@@ -54,6 +54,22 @@ export const alterPostTableAddAuthorId = async () => {
   `);
 };
 
+/**
+ * Add is_pinned column to existing posts table (migration)
+ */
+export const alterPostTableAddIsPinned = async () => {
+  await pool.query(`
+    ALTER TABLE posts
+    ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE;
+  `);
+  
+  // Create index for faster queries on pinned posts
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_posts_is_pinned 
+    ON posts(is_pinned) WHERE is_pinned = TRUE;
+  `);
+};
+
 export const createPost = (data) => {
   return pool.query(
     `INSERT INTO posts 
@@ -179,4 +195,71 @@ export const createPostIndexes = async () => {
     CREATE INDEX IF NOT EXISTS idx_posts_created_at 
     ON posts(created_at DESC);
   `);
+  
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_posts_is_pinned 
+    ON posts(is_pinned) WHERE is_pinned = TRUE;
+  `);
+};
+
+/**
+ * Pin a post by ID (unpins all other posts first)
+ * Uses transaction to ensure atomicity - only one post can be pinned at a time
+ * @param {number} postId - The ID of the post to pin
+ * @returns {Promise} Query result with the pinned post
+ */
+export const pinPostById = async (postId) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    // First, unpin all posts
+    await client.query('UPDATE posts SET is_pinned = FALSE WHERE is_pinned = TRUE');
+    
+    // Then pin the specified post
+    const result = await client.query(
+      'UPDATE posts SET is_pinned = TRUE, updated_at = NOW() WHERE id = $1 RETURNING *',
+      [postId]
+    );
+    
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+/**
+ * Get the currently pinned post
+ * @returns {Promise} Query result with the pinned post (or empty if none)
+ */
+export const getPinnedPost = () => {
+  return pool.query(
+    `SELECT * FROM posts WHERE is_pinned = TRUE ORDER BY updated_at DESC LIMIT 1`
+  );
+};
+
+/**
+ * Unpin all posts
+ * Uses transaction to ensure atomicity
+ * @returns {Promise} Query result
+ */
+export const unpinAllPosts = async () => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await client.query(
+      'UPDATE posts SET is_pinned = FALSE, updated_at = NOW() WHERE is_pinned = TRUE RETURNING *'
+    );
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 };

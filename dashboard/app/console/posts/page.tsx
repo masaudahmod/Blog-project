@@ -1,6 +1,6 @@
 "use client";
 
-import { getAllPosts, updatePostPublishStatus } from "@/lib/action";
+import { getAllPosts, updatePostPublishStatus, pinPost, getPinnedPost } from "@/lib/action";
 import { PostType } from "@/lib/type";
 import {
   Table,
@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit, Trash2, Eye, EyeOff, MessageSquare } from "lucide-react";
+import { MoreVertical, Edit, Trash2, Eye, EyeOff, MessageSquare, Pin, PinOff } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
@@ -34,6 +34,7 @@ interface PostWithMetadata extends PostType {
   };
   comment_count?: number;
   pending_comment_count?: number;
+  is_pinned?: boolean;
 }
 
 export default function Page() {
@@ -46,6 +47,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [updating, setUpdating] = useState<number | null>(null);
+  const [pinnedPostId, setPinnedPostId] = useState<number | null>(null);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -63,6 +65,24 @@ export default function Page() {
     }
   }, [currentPage, currentFilter]);
 
+  // Fetch pinned post on mount and when posts change
+  const fetchPinnedPost = useCallback(async () => {
+    try {
+      const result = await getPinnedPost();
+      if (result.success && result.data?.post) {
+        setPinnedPostId(result.data.post.id);
+      } else {
+        setPinnedPostId(null);
+      }
+    } catch (error) {
+      console.error("Error fetching pinned post:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPinnedPost();
+  }, [fetchPinnedPost]);
+
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
@@ -79,6 +99,25 @@ export default function Page() {
       }
     } catch (error) {
       toast.error("Failed to update post status");
+      console.error(error);
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const handlePinToggle = async (postId: number) => {
+    try {
+      setUpdating(postId);
+      const result = await pinPost(postId);
+      if (result.success) {
+        toast.success(result.data.message || "Post pinned successfully");
+        await fetchPinnedPost(); // Refresh pinned post
+        fetchPosts(); // Refresh list
+      } else {
+        toast.error(result.message || "Failed to pin post");
+      }
+    } catch (error) {
+      toast.error("Failed to pin post");
       console.error(error);
     } finally {
       setUpdating(null);
@@ -160,12 +199,17 @@ export default function Page() {
               posts.map((post: PostWithMetadata) => (
                 <TableRow key={post.id}>
                   <TableCell className="font-medium">
-                    <Link
-                      href={`/console/posts/${post.slug}`}
-                      className="hover:text-primary transition-colors"
-                    >
-                      {post.title}
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      {pinnedPostId === post.id && (
+                        <Pin className="h-4 w-4 text-primary" title="Pinned post" />
+                      )}
+                      <Link
+                        href={`/console/posts/${post.slug}`}
+                        className="hover:text-primary transition-colors"
+                      >
+                        {post.title}
+                      </Link>
+                    </div>
                   </TableCell>
                   <TableCell>
                     {post.category?.name || "Uncategorized"}
@@ -235,6 +279,23 @@ export default function Page() {
                             <>
                               <Eye className="mr-2 h-4 w-4" />
                               Publish
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handlePinToggle(post.id)}
+                          disabled={updating === post.id}
+                        >
+                          {pinnedPostId === post.id ? (
+                            <>
+                              <PinOff className="mr-2 h-4 w-4" />
+                              Unpin
+                            </>
+                          ) : (
+                            <>
+                              <Pin className="mr-2 h-4 w-4" />
+                              Pin
                             </>
                           )}
                         </DropdownMenuItem>

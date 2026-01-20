@@ -10,7 +10,9 @@ import {
   getPost,
   getPostBySlug,
   getPostsByFilter,
+  getPinnedPostController,
   likePostBySlug,
+  pinPostController,
   unlikePostBySlug,
   updatePublishStatus,
   updatePostBySlug,
@@ -26,6 +28,8 @@ router.get("/filter", getPostsByFilter); // Category filtering endpoint
 router.route("/id/:id").get(getPost).delete(verifyAuth, allowRoles("admin"), deletePost);
 router.route("/slug/:slug").get(getPostBySlug).put(verifyAuth, allowRoles("admin"), upload.single("featured_image"), updatePostBySlug).patch(verifyAuth, allowRoles("admin"), upload.single("featured_image"), updatePostBySlug);
 router.patch("/:id/publish", verifyAuth, allowRoles("admin", "moderator"), updatePublishStatus);
+router.patch("/:id/pin", verifyAuth, allowRoles("admin"), pinPostController);
+router.get("/pinned", getPinnedPostController);
 
 router.route("/comment/:id").post(addComment);
 

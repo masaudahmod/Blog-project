@@ -1,7 +1,7 @@
 import pool from "../config/db.js";
 import { cloudinaryDelete, cloudinaryUpload } from "../service/cloudinary.js";
 import { asyncHandler, AppError } from "../middlewares/error.middleware.js";
-import { updatePost as updatePostModel } from "../models/post.model.js";
+import { updatePost as updatePostModel, pinPostById, getPinnedPost, unpinAllPosts } from "../models/post.model.js";
 
 export const addPost = asyncHandler(async (req, res) => {
   let {
@@ -853,3 +853,71 @@ export const unlikePostBySlug = async (req, res) => {
     });
   }
 };
+
+/**
+ * Pin a post by ID
+ * Automatically unpins all other posts (only one post can be pinned at a time)
+ * If the post is already pinned, it will unpin it instead
+ * PATCH /api/post/:id/pin
+ */
+export const pinPostController = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const postId = parseInt(id);
+
+  if (isNaN(postId)) {
+    throw new AppError("Invalid post ID", 400);
+  }
+
+  // Check if post exists and get its current pinned status
+  const postCheck = await pool.query("SELECT id, is_pinned FROM posts WHERE id = $1", [postId]);
+  if (postCheck.rows.length === 0) {
+    throw new AppError("Post not found", 404);
+  }
+
+  const isCurrentlyPinned = postCheck.rows[0].is_pinned;
+
+  // If already pinned, unpin it instead
+  if (isCurrentlyPinned) {
+    const result = await unpinAllPosts();
+    return res.status(200).json({
+      success: true,
+      message: "Post unpinned successfully",
+      post: postCheck.rows[0],
+    });
+  }
+
+  // Pin the post (this will automatically unpin others via transaction)
+  const result = await pinPostById(postId);
+
+  if (result.rows.length === 0) {
+    throw new AppError("Failed to pin post", 500);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Post pinned successfully",
+    post: result.rows[0],
+  });
+});
+
+/**
+ * Get the currently pinned post
+ * GET /api/post/pinned
+ */
+export const getPinnedPostController = asyncHandler(async (req, res) => {
+  const result = await getPinnedPost();
+
+  if (result.rows.length === 0) {
+    return res.status(200).json({
+      success: true,
+      message: "No pinned post found",
+      post: null,
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Pinned post retrieved",
+    post: result.rows[0],
+  });
+});

@@ -226,6 +226,62 @@ async function updatePostPublishStatus(postId: number, isPublished: boolean) {
   }
 }
 
+/**
+ * Pin a post by ID
+ * Only one post can be pinned at a time - pinning a new post automatically unpins others
+ */
+async function pinPost(postId: number) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/${postId}/pin`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await result.json();
+    if (result.ok) {
+      revalidatePath("/console/posts");
+      return { success: true, data };
+    } else {
+      return { success: false, message: data.message || "Failed to pin post" };
+    }
+  } catch (error) {
+    console.error("Error pinning post:", error);
+    return { success: false, message: "Failed to pin post" };
+  }
+}
+
+/**
+ * Get the currently pinned post
+ */
+async function getPinnedPost() {
+  try {
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/pinned`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const data = await result.json();
+    if (result.ok) {
+      return { success: true, data };
+    } else {
+      return { success: false, message: data.message || "Failed to fetch pinned post" };
+    }
+  } catch (error) {
+    console.error("Error fetching pinned post:", error);
+    return { success: false, message: "Failed to fetch pinned post" };
+  }
+}
+
 async function getAllPostComments(postId: number) {
   try {
     const token = await getCookies();
@@ -827,4 +883,6 @@ export {
   deleteCommentById,
   updatePostPublishStatus,
   getAllPostComments,
+  pinPost,
+  getPinnedPost,
 };

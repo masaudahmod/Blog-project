@@ -1,4 +1,4 @@
-import { alterPostTableAddAuthorId } from "../models/post.model.js";
+import { alterPostTableAddAuthorId, alterPostTableAddIsPinned } from "../models/post.model.js";
 import { createCommentTable } from "../models/comment.model.js";
 import { createPostLikeTable } from "../models/postLike.model.js";
 import { createUserActivityTable } from "../models/userActivity.model.js";
@@ -14,6 +14,10 @@ const migrate = async () => {
     // Add author_id to posts table
     await alterPostTableAddAuthorId();
     console.log("✓ Added author_id column to posts table");
+
+    // Add is_pinned to posts table
+    await alterPostTableAddIsPinned();
+    console.log("✓ Added is_pinned column to posts table");
 
     // Create new tables
     await createCommentTable();
