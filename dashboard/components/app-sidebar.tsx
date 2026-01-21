@@ -36,6 +36,11 @@ const data = {
       url: "/console/posts",
       icon: IconListDetails,
     },
+    { // Add Site Content nav item
+      title: "Site Content", // Set nav label
+      url: "/console/site-content", // Set nav route
+      icon: IconFileWord, // Set nav icon
+    }, // End Site Content nav item
     {
       title: "Categories",
       url: "/console/categories",

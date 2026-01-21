@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { getAllPosts, getPinnedPosts } from "@/lib/action";
+import { getAllPosts, getPinnedPosts, getSiteContentByPageKey } from "@/lib/action"; // Import CMS helper
 import { PostType } from "@/types";
 import Pagination from "@/components/Pagination";
+import NewsletterSubscribeButton from "@/components/NewsletterSubscribeButton";
 
 const heroPost = {
   title: "The Rise of Multimodal Models: How AI Learned to See, Hear, and Speak",
@@ -133,14 +134,27 @@ export function PostCard({
   );
 }
 
-export default async function Page({
+const mapContentsBySection = (contents: { section_key: string; content: Record<string, string> }[] = []) => { // Map content by section key
+  return contents.reduce<Record<string, Record<string, string>>>((acc, item) => { // Reduce content array into object map
+    acc[item.section_key] = item.content || {}; // Store content by section key
+    return acc; // Return accumulator
+  }, {}); // End reduce
+}; // End mapContentsBySection
+
+export default async function Page({ // Render blog listing page
   searchParams,
 }: {
   searchParams: Promise<{ page?: string; filter?: string }>;
 }) {
-  const params = await searchParams;
-  const page = Number(params.page) || 1;
-  const filter = params.filter || "all";
+  const params = await searchParams; // Await search params
+  const page = Number(params.page) || 1; // Resolve current page
+  const filter = params.filter || "all"; // Resolve filter
+  const siteContent = await getSiteContentByPageKey("blog"); // Fetch CMS content for blog
+  const contentMap = mapContentsBySection(siteContent?.contents || []); // Normalize CMS content
+  const headerContent = contentMap.header || {}; // Read header content
+  const latestContent = contentMap.latest || {}; // Read latest content
+  const newsletterContent = contentMap.newsletter || {}; // Read newsletter content
+  const searchContent = contentMap.search || {}; // Read search content
   const allPosts = await getAllPosts(page, filter as "all" | "published" | "draft");
   const { post } = await getPinnedPosts();
   console.log(post);
@@ -156,16 +170,13 @@ export default async function Page({
                 { label: "Artificial Intelligence" },
               ]}
             />
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-600 dark:text-slate-300">
-              Insights
-            </p>
             <h1 className="text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
-              Artificial Intelligence
-            </h1>
+              {headerContent.title || "Artificial Intelligence"}
+            </h1>{/* CMS header title */}
             <p className="max-w-2xl text-base text-slate-600 dark:text-slate-300">
-              Explore the latest research, product design stories, and practical guidance on
-              building with AI.
-            </p>
+              {headerContent.description ||
+                "Explore the latest research, product design stories, and practical guidance on building with AI."}
+            </p>{/* CMS header description */}
           </header>
 
           <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -223,10 +234,10 @@ export default async function Page({
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                    Latest posts
-                  </h2>
+                    {latestContent.title || "Latest posts"}
+                  </h2>{/* CMS latest title */}
                   <button className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300 dark:border-white/10 dark:text-slate-300">
-                    View all
+                    {latestContent.subtitle || "View all"}
                   </button>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
@@ -275,11 +286,11 @@ export default async function Page({
 
               <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-                  Search
-                </h3>
+                  {searchContent.title || "Search"}
+                </h3>{/* CMS search title */}
                 <input
                   type="text"
-                  placeholder="Search articles"
+                  placeholder={searchContent.subtitle || "Search articles"}
                   className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-900 outline-none focus:border-primary dark:border-white/10 dark:bg-white/5 dark:text-white"
                 />
               </div>
@@ -303,14 +314,12 @@ export default async function Page({
 
               <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-                  Newsletter
-                </h3>
+                  {newsletterContent.title || "Newsletter"}
+                </h3>{/* CMS newsletter title */}
                 <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-                  Get new posts and deep dives delivered weekly.
-                </p>
-                <button className="mt-4 w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 dark:bg-white dark:text-slate-900">
-                  Subscribe
-                </button>
+                  {newsletterContent.description || "Get new posts and deep dives delivered weekly."}
+                </p>{/* CMS newsletter description */}
+                <NewsletterSubscribeButton />
               </div>
             </aside>
           </div>

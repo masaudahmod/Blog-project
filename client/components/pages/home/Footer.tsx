@@ -8,6 +8,11 @@ interface FooterLink {
   href: string;
 }
 
+interface FooterProps { // Define footer props
+  brandName?: string; // Optional brand name
+  brandDescription?: string; // Optional brand description
+} // End FooterProps
+
 const categories: FooterLink[] = [
   { label: "Machine Learning", href: "/categories?cat=machine-learning" },
   { label: "Robotics", href: "/categories?cat=robotics" },
@@ -22,8 +27,11 @@ const companyLinks: FooterLink[] = [
   { label: "Terms", href: "/terms" },
 ];
 
-export default function Footer() {
-  const currentYear = new Date().getFullYear();
+export default function Footer({ brandName, brandDescription }: FooterProps) { // Render footer component
+  const currentYear = new Date().getFullYear(); // Read current year
+  const displayBrandName = brandName || "AI News"; // Resolve brand name
+  const displayBrandDescription = // Resolve brand description
+    brandDescription || "The leading source for artificial intelligence news, research, and tutorials."; // Provide fallback description
 
   return (
     <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
@@ -37,13 +45,12 @@ export default function Footer() {
                 <Terminal size={20} />
               </div>
               <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                AI News
-              </span>
+                {displayBrandName}
+              </span>{/* Brand name */}
             </Link>
             <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xs">
-              The leading source for artificial intelligence news, research, and
-              tutorials.
-            </p>
+              {displayBrandDescription}
+            </p>{/* Brand description */}
           </div>
 
           {/* Middle Column - Categories */}

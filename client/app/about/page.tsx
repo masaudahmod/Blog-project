@@ -9,6 +9,7 @@ import {
   School,
 } from "lucide-react";
 import Link from "next/link";
+import { getSiteContentByPageKey } from "@/lib/action"; // Import CMS helper
 
 const Explore = [
   {
@@ -33,7 +34,35 @@ const Explore = [
   },
 ];
 
-export default function Page() {
+const mapContentsBySection = (contents: { section_key: string; content: Record<string, string> }[] = []) => { // Map content by section key
+  return contents.reduce<Record<string, Record<string, string>>>((acc, item) => { // Reduce content array into object map
+    acc[item.section_key] = item.content || {}; // Store content by section key
+    return acc; // Return accumulator
+  }, {}); // End reduce
+}; // End mapContentsBySection
+
+const buildExploreCards = (contentMap: Record<string, Record<string, string>>) => { // Build explore cards with CMS overrides
+  return Explore.map((card, index) => { // Map default cards to CMS data
+    const sectionKey = `card_${index + 1}`; // Build card section key
+    const cmsContent = contentMap[sectionKey] || {}; // Read CMS card content
+    return { // Return merged card
+      ...card, // Keep default card data
+      title: cmsContent.title || card.title, // Override title if present
+      desc: cmsContent.description || card.desc, // Override description if present
+    }; // End merged card
+  }); // End map
+}; // End buildExploreCards
+
+export default async function Page() { // Render about page
+  const siteContent = await getSiteContentByPageKey("about"); // Fetch CMS content for about
+  const contentMap = mapContentsBySection(siteContent?.contents || []); // Normalize CMS content
+  const heroContent = contentMap.hero || {}; // Read hero content
+  const authorContent = contentMap.author || {}; // Read author content
+  const exploreContent = contentMap.explore || {}; // Read explore content
+  const missionContent = contentMap.mission || {}; // Read mission content
+  const visionContent = contentMap.vision || {}; // Read vision content
+  const ctaContent = contentMap.cta || {}; // Read CTA content
+  const exploreCards = buildExploreCards(contentMap); // Build CMS-aware cards
   return (
     <div className="bg-background-light dark:bg-background-dark overflow-x-hidden">
       {/* Hero Section */}
@@ -48,13 +77,13 @@ export default function Page() {
           />
 
           <h1 className="text-4xl md:text-6xl font-black tracking-tight">
-            Our Story
-          </h1>
+            {heroContent.title || "Our Story"}
+          </h1>{/* CMS hero title */}
 
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400">
-            Exploring the intersection of code, creativity, and life. A journey
-            into the future of technology, one line of code at a time.
-          </p>
+            {heroContent.description ||
+              "Exploring the intersection of code, creativity, and life. A journey into the future of technology, one line of code at a time."}
+          </p>{/* CMS hero description */}
         </div>
       </section>
 
@@ -79,32 +108,34 @@ export default function Page() {
               </span>
 
               <h2 className="text-3xl font-bold">
-                Who is behind the keyboard?
-              </h2>
+                {authorContent.title || "Who is behind the keyboard?"}
+              </h2>{/* CMS author title */}
 
               <p className="text-primary dark:text-secondary text-lg">
-                I am a passionate developer and writer dedicated to sharing
-                knowledge. This blog documents my journey from novice to expert.
-              </p>
+                {authorContent.description ||
+                  "I am a passionate developer and writer dedicated to sharing knowledge. This blog documents my journey from novice to expert."}
+              </p>{/* CMS author description */}
 
               <p className="text-primary dark:text-secondary text-lg">
-                I believe clean code, continuous learning, and community-driven
-                growth can change careers and lives.
-              </p>
+                {authorContent.subtitle ||
+                  "I believe clean code, continuous learning, and community-driven growth can change careers and lives."}
+              </p>{/* CMS author subtitle */}
             </div>
           </section>
 
           {/* What We Explore */}
           <section className="flex flex-col gap-10">
             <div className="text-center max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold mb-4">What We Explore</h2>
+              <h2 className="text-3xl font-bold mb-4">
+                {exploreContent.title || "What We Explore"}
+              </h2>{/* CMS explore title */}
               <p className="text-primary dark:text-secondary">
-                Dive into a variety of topics designed to help you become a
-                better developer and thinker.
-              </p>
+                {exploreContent.description ||
+                  "Dive into a variety of topics designed to help you become a better developer and thinker."}
+              </p>{/* CMS explore description */}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-              {Explore.map((explore_, i) => (
+              {exploreCards.map((explore_, i) => (
                 <div
                   key={i}
                   className=" p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow flex flex-col gap-4"
@@ -129,23 +160,25 @@ export default function Page() {
               <div className="absolute -right-10 -top-10 size-40 rounded-full bg-white/10 blur-2xl"></div>
               <div className="relative z-10">
                 <Rocket size={50} className="mb-5" />
-                <h3 className="text-2xl font-bold mb-4">Our Mission</h3>
+                <h3 className="text-2xl font-bold mb-4">
+                  {missionContent.title || "Our Mission"}
+                </h3>{/* CMS mission title */}
                 <p className="text-white/90 leading-relaxed text-lg">
-                  To empower readers by simplifying complex concepts and
-                  fostering a habit of continuous learning. We aim to be the
-                  bridge between confusion and clarity for developers worldwide.
-                </p>
+                  {missionContent.description ||
+                    "To empower readers by simplifying complex concepts and fostering a habit of continuous learning. We aim to be the bridge between confusion and clarity for developers worldwide."}
+                </p>{/* CMS mission description */}
               </div>
             </div>
             <div className="dark:bg-[#1e2530] dark:text-primary p-10 rounded-3xl flex flex-col justify-between">
               <div>
                 <Eye size={50} className="mb-5" />
-                <h3 className="text-2xl font-bold  mb-4">Our Vision</h3>
+                <h3 className="text-2xl font-bold  mb-4">
+                  {visionContent.title || "Our Vision"}
+                </h3>{/* CMS vision title */}
                 <p className="leading-relaxed text-lg">
-                  Building a knowledge-driven community where creativity meets
-                  logic. We envision a space where developers of all levels can
-                  find inspiration and practical wisdom.
-                </p>
+                  {visionContent.description ||
+                    "Building a knowledge-driven community where creativity meets logic. We envision a space where developers of all levels can find inspiration and practical wisdom."}
+                </p>{/* CMS vision description */}
               </div>
             </div>
           </section>
@@ -207,12 +240,12 @@ export default function Page() {
           <section className="w-full py-12 text-center flex flex-col items-center gap-8">
             <div className="max-w-2xl">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Let’s Learn and Grow Together
-              </h2>
+                {ctaContent.title || "Let’s Learn and Grow Together"}
+              </h2>{/* CMS CTA title */}
               <p className="text-lg text-primary dark:text-secondary">
-                Join the community and never miss an update. Whether you are
-                here to learn or just to browse, I&#39;m glad you made it.
-              </p>
+                {ctaContent.description ||
+                  "Join the community and never miss an update. Whether you are here to learn or just to browse, I'm glad you made it."}
+              </p>{/* CMS CTA description */}
             </div>
             <div className="flex flex-wrap flex-col md:flex-row justify-center gap-4 w-full">
               <Link

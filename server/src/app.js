@@ -6,6 +6,7 @@ import newsletterRoutes from "./routes/newsletter.routes.js";
 import CommentRoutes from "./routes/comment.routes.js";
 import LikeRoutes from "./routes/like.routes.js";
 import ActivityRoutes from "./routes/activity.routes.js";
+import SiteContentRoutes from "./routes/siteContent.routes.js"; // Import site content routes
 import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
@@ -20,6 +21,7 @@ app.use("/api", newsletterRoutes);
 app.use("/api/comments", CommentRoutes);
 app.use("/api/likes", LikeRoutes);
 app.use("/api/activity", ActivityRoutes);
+app.use("/api/site-content", SiteContentRoutes); // Register site content routes
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

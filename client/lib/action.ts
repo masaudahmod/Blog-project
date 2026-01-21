@@ -4,7 +4,31 @@
  * Client-side API actions for the public blog
  */
 
-const API_URL = process.env.NEXT_SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL; // Resolve API base URL
+
+/**
+ * Get site content by page key
+ */
+export async function getSiteContentByPageKey(pageKey: string) { // Fetch CMS content for a page
+  try { // Start safe request
+    const result = await fetch(`${API_URL}/site-content/page/${pageKey}`, { // Call site content endpoint
+      method: "GET", // Use GET method
+      headers: { // Set request headers
+        "Content-Type": "application/json", // Declare JSON
+      }, // End headers
+      cache: "no-store", // Always fetch fresh content
+    }); // End fetch call
+    const data = await result.json(); // Parse response JSON
+    if (result.ok) { // Check for success
+      return data; // Return API payload
+    } // End success check
+    console.error("Error fetching site content:", data?.message || "Unknown error"); // Log error
+    return null; // Return null on failure
+  } catch (error) { // Handle network errors
+    console.error("Error fetching site content:", error); // Log error
+    return null; // Return null on failure
+  } // End error handling
+} // End getSiteContentByPageKey
 
 /**
  * Get all posts with pagination

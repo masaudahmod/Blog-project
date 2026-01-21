@@ -6,11 +6,13 @@ import { useEffect, useState } from "react";
 interface NewsletterSubscriptionProps {
   isRow?: boolean;
   variant?: "default" | "banner";
+  onSuccess?: () => void;
 }
 
 export default function NewsletterSubscription({
   isRow = false,
   variant = "default",
+  onSuccess,
 }: NewsletterSubscriptionProps) {
   // email state
   const [email, setEmail] = useState("");
@@ -29,6 +31,13 @@ export default function NewsletterSubscription({
         setEmail("");
         setLoading(false);
         setResultMessage(result.message || "");
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          // Delay to show success message briefly before closing
+          setTimeout(() => {
+            onSuccess();
+          }, 2000);
+        }
       }
     } catch (error) {
       console.error("Error fetching posts:", error);
