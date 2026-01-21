@@ -181,7 +181,7 @@ export const allPosts = asyncHandler(async (req, res) => {
  */
 export const getPostsByFilter = asyncHandler(async (req, res) => {
   const { categoryId, categorySlug, page = 1, limit = 10, filter = "all", includeStats = "false" } = req.query;
-  
+
   // Validate pagination parameters
   const pageNum = Math.max(1, parseInt(page) || 1);
   const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 10));
@@ -200,7 +200,7 @@ export const getPostsByFilter = asyncHandler(async (req, res) => {
   // First, verify the category exists
   let categoryQuery;
   let categoryParams;
-  
+
   if (categoryId) {
     categoryQuery = "SELECT id, name, slug FROM categories WHERE id = $1 AND active = TRUE";
     categoryParams = [categoryId];
@@ -210,7 +210,7 @@ export const getPostsByFilter = asyncHandler(async (req, res) => {
   }
 
   const categoryResult = await pool.query(categoryQuery, categoryParams);
-  
+
   if (categoryResult.rows.length === 0) {
     throw new AppError("Category not found or inactive", 404);
   }
@@ -420,8 +420,8 @@ export const updatePost = asyncHandler(async (req, res) => {
   if (result.rowCount === 0) {
     throw new AppError("Post not found", 404);
   }
-  
-  res.status(200).json({ 
+
+  res.status(200).json({
     success: true,
     message: "Post updated successfully",
     post: result.rows[0]
@@ -434,14 +434,14 @@ export const updatePost = asyncHandler(async (req, res) => {
  */
 export const updatePostBySlug = asyncHandler(async (req, res) => {
   const { slug } = req.params;
-  
+
   // First, get the post by slug to get the ID and existing data
   const postResult = await pool.query("SELECT id, featured_image_url, featured_image_public_id, likes, comments, interactions FROM posts WHERE slug = $1", [slug]);
-  
+
   if (postResult.rows.length === 0) {
     throw new AppError("Post not found", 404);
   }
-  
+
   const postId = postResult.rows[0].id;
   const existingImageUrl = postResult.rows[0].featured_image_url;
   const existingPublicId = postResult.rows[0].featured_image_public_id;
@@ -482,7 +482,7 @@ export const updatePostBySlug = asyncHandler(async (req, res) => {
     if (existingPublicId) {
       await cloudinaryDelete(existingPublicId);
     }
-    
+
     // Upload new image
     image_upload = await cloudinaryUpload(
       featured_image?.path,
@@ -905,19 +905,28 @@ export const pinPostController = asyncHandler(async (req, res) => {
  * GET /api/post/pinned
  */
 export const getPinnedPostController = asyncHandler(async (req, res) => {
-  const result = await getPinnedPost();
+  try {
+    const result = await getPinnedPost();
+    
+    if (result.rows.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No pinned post found",
+        post: null,
+      });
+    }
 
-  if (result.rows.length === 0) {
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: "No pinned post found",
-      post: null,
+      message: "Pinned post retrieved",
+      post: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error get pinned post:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error in get pinned post",
+      error: error.message,
     });
   }
-
-  res.status(200).json({
-    success: true,
-    message: "Pinned post retrieved",
-    post: result.rows[0],
-  });
 });

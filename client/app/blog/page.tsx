@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { getAllPosts } from "@/lib/action";
+import { getAllPosts, getPinnedPosts } from "@/lib/action";
 import { PostType } from "@/types";
 import Pagination from "@/components/Pagination";
 
@@ -142,7 +142,8 @@ export default async function Page({
   const page = Number(params.page) || 1;
   const filter = params.filter || "all";
   const allPosts = await getAllPosts(page, filter as "all" | "published" | "draft");
-  console.log(allPosts?.posts);
+  const { post } = await getPinnedPosts();
+  console.log(post);
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-white">
       <div className="container mx-auto">
@@ -169,12 +170,13 @@ export default async function Page({
 
           <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
             <main className="space-y-10">
+              {/* pinned post */}
               <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
                 <div className="relative">
                   <div className="relative h-56 w-full sm:h-72 lg:h-80">
                     <Image
-                      src={heroPost.image}
-                      alt={heroPost.title}
+                      src={post?.featured_image_url || ""}
+                      alt={post?.title || ""}
                       fill
                       loading="eager"
 
@@ -187,17 +189,17 @@ export default async function Page({
                   </div>
                   <div className="space-y-4 p-6 sm:p-8">
                     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                      <span className="font-semibold text-primary">{heroPost.category}</span>
+                      <span className="font-semibold text-primary">{post?.category?.name || ""}</span>
                       <span className="text-slate-300 dark:text-white/20">•</span>
-                      <span>{heroPost.readTime}</span>
+                      <span>{post?.read_time || ""}</span>
                       <span className="text-slate-300 dark:text-white/20">•</span>
                       <span>Just now</span>
                     </div>
                     <h2 className="text-2xl font-semibold text-slate-900 dark:text-white sm:text-3xl">
-                      {heroPost.title}
+                      {post?.title || ""}
                     </h2>
                     <p className="text-sm text-slate-600 dark:text-slate-300 sm:text-base">
-                      {heroPost.excerpt}
+                      {post?.excerpt || ""}
                     </p>
                     <div className="flex items-center gap-3 pt-2">
                       <div className="relative h-8 w-8 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
@@ -217,6 +219,7 @@ export default async function Page({
                 </div>
               </section>
 
+              {/* latest posts */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-slate-900 dark:text-white">

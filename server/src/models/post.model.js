@@ -237,9 +237,20 @@ export const pinPostById = async (postId) => {
  * @returns {Promise} Query result with the pinned post (or empty if none)
  */
 export const getPinnedPost = () => {
-  return pool.query(
-    `SELECT * FROM posts WHERE is_pinned = TRUE ORDER BY updated_at DESC LIMIT 1`
-  );
+  return pool.query(`
+    SELECT 
+      posts.*,
+      json_build_object(
+        'id', categories.id,
+        'name', categories.name,
+        'slug', categories.slug
+      ) AS category
+    FROM posts
+    LEFT JOIN categories ON posts.category_id = categories.id
+    WHERE posts.is_pinned = TRUE
+    ORDER BY posts.updated_at DESC
+    LIMIT 1
+  `);
 };
 
 /**

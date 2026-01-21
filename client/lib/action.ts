@@ -470,3 +470,24 @@ export async function newsletterUnsubscribe({ email }: { email: string }) {
     return { success: false, message: "Failed to unsubscribe" };
   }
 }
+
+// get pinned posts
+export async function getPinnedPosts() {
+  try {
+    const result = await fetch(`${API_URL}/post/pinned`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await result.json();
+    if (result.ok) {
+      return data;
+    }
+    console.error("Error getting pinned posts");
+    return [];
+  } catch (error) {
+    console.error("Error getting pinned posts:", error);
+    return [];
+  }
+}
