@@ -15,7 +15,7 @@ export const getCache = async (key) => { // Define a cache read helper
   if (!isRedisReady || !redisClient.isOpen) return null; // Skip if Redis is not ready
   try { // Start safe Redis read
     const value = await redisClient.get(key); // Read cached value
-    return value; // Return cached value
+    return value ? JSON.parse(value) : null; // Return parsed cached value
   } catch (error) { // Handle Redis get errors
     console.error("Redis get error:", error?.message || error); // Log get error
     return null; // Fall back to no cache
@@ -24,7 +24,7 @@ export const getCache = async (key) => { // Define a cache read helper
 export const setCache = async (key, value, ttlSeconds) => { // Define a cache write helper
   if (!isRedisReady || !redisClient.isOpen) return false; // Skip if Redis is not ready
   try { // Start safe Redis write
-    await redisClient.set(key, value, { EX: ttlSeconds }); // Set cache with expiry
+    await redisClient.set(key, JSON.stringify(value), { EX: ttlSeconds }); // Set cache with expiry
     return true; // Confirm cache write
   } catch (error) { // Handle Redis set errors
     console.error("Redis set error:", error?.message || error); // Log set error

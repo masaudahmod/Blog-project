@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"; // Import button component
 import { Input } from "@/components/ui/input"; // Import input component
 import { Label } from "@/components/ui/label"; // Import label component
 import { toast } from "sonner"; // Import toast notifications
-const API_URL = process.env.NEXT_PUBLIC_SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || ""; // Read public API base URL
+const API_URL = process.env.NEXT_PUBLIC_SERVER_API_URL || process.env.NEXT_SERVER_API_URL || ""; // Read public API base URL
 const pageOptions = ["home", "blog", "about"]; // Provide common page keys
 type SiteContentItem = { // Define site content type
   id: number; // Store row id
@@ -159,9 +159,9 @@ export default function Page() { // Export page component
             <Label htmlFor="page_key">Page Key</Label>{/* Page key label */}
             <Input id="page_key" list="page-options" value={form.page_key} onChange={(e) => handleChange("page_key", e.target.value)} placeholder="home" />{/* Page key input */}
             <datalist id="page-options">{/* Suggest page keys */}
-              {pageOptions.map((option) => ( // Map page key options
-                <option key={option} value={option} /> // Render option
-              ))} {/* End options map */}
+              {pageOptions.map((option) => (
+                <option key={option} value={option} />
+              ))}{/* End options map */}
             </datalist>{/* End datalist */}
           </div>{/* End page key field */}
           <div className="space-y-2">{/* Section key field */}
@@ -189,55 +189,55 @@ export default function Page() { // Export page component
             Clear{/* Reset label */}
           </Button>{/* End reset button */}
         </div>{/* End form actions */}
-        {error && ( // Render error message
-          <p className="text-sm text-red-600">{error}</p> // Show error text
+        {error && (
+          <p className="text-sm text-red-600">{error}</p>
         )}{/* End error message */}
       </div>{/* End form card */}
-      <div className="rounded-lg border">{/* Table card */}
-        <Table>{/* Table wrapper */}
-          <TableHeader>{/* Table header */}
-            <TableRow>{/* Table row */}
-              <TableHead>Page</TableHead>{/* Page column */}
-              <TableHead>Section</TableHead>{/* Section column */}
-              <TableHead>Title</TableHead>{/* Title column */}
-              <TableHead className="text-right">Actions</TableHead>{/* Actions column */}
-            </TableRow>{/* End header row */}
-          </TableHeader>{/* End table header */}
-          <TableBody>{/* Table body */}
-            {loading && ( // Show loading row
-              <TableRow>{/* Loading row */}
-                <TableCell colSpan={4} className="text-center py-6">{/* Loading cell */}
-                  Loading site contents...{/* Loading text */}
-                </TableCell>{/* End loading cell */}
-              </TableRow>{/* End loading row */}
-            )}{/* End loading row */}
-            {!loading && items.length === 0 && ( // Show empty state row
-              <TableRow>{/* Empty state row */}
-                <TableCell colSpan={4} className="text-center py-6 text-slate-500">{/* Empty state cell */}
-                  No site content found{/* Empty state text */}
-                </TableCell>{/* End empty state cell */}
-              </TableRow>{/* End empty state row */}
-            )}{/* End empty state row */}
-            {!loading && items.map((item) => ( // Render rows
-              <TableRow key={item.id}>{/* Content row */}
-                <TableCell>{item.page_key}</TableCell>{/* Page cell */}
-                <TableCell>{item.section_key}</TableCell>{/* Section cell */}
-                <TableCell>{item.content?.title || "-"}</TableCell>{/* Title cell */}
-                <TableCell className="text-right">{/* Actions cell */}
-                  <div className="flex items-center justify-end gap-2">{/* Actions layout */}
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>{/* Edit button */}
-                      Edit{/* Edit label */}
-                    </Button>{/* End edit button */}
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(item)}>{/* Delete button */}
-                      Delete{/* Delete label */}
-                    </Button>{/* End delete button */}
-                  </div>{/* End actions layout */}
-                </TableCell>{/* End actions cell */}
-              </TableRow>{/* End content row */}
-            ))}{/* End rows */}
-          </TableBody>{/* End table body */}
-        </Table>{/* End table */}
-      </div>{/* End table card */}
-    </div> // End page container
-  ); // End render
-} // End page component
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Page</TableHead>
+              <TableHead>Section</TableHead>
+              <TableHead>Title</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-6">
+                  Loading site contents...
+                </TableCell>
+              </TableRow>
+            )}
+            {!loading && items.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-6 text-slate-500">
+                  No site content found
+                </TableCell>
+              </TableRow>
+            )}
+            {!loading && items.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>{item.page_key}</TableCell>
+                <TableCell>{item.section_key}</TableCell>
+                <TableCell>{item.content?.title || "-"}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
+                      Edit
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(item)}>
+                      Delete
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
