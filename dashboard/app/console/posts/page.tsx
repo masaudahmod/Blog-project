@@ -201,7 +201,9 @@ export default function Page() {
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       {pinnedPostId === post.id && (
-                        <Pin className="h-4 w-4 text-primary" title="Pinned post" />
+                        <span className="inline-flex" title="Pinned post">
+                          <Pin className="h-4 w-4 text-primary" aria-hidden="true" />
+                        </span>
                       )}
                       <Link
                         href={`/console/posts/${post.slug}`}
