@@ -49,10 +49,10 @@ const migrate = async () => {
     await createUserActivityTable();
     console.log("✓ Created user_activity table");
 
-    await createSiteContentTable(); // Create site_contents table
-    console.log("✓ Created site_contents table"); // Log table creation
+    await createSiteContentTable();
+    console.log("✓ Created site_contents table")
 
-    // Optional indexes
+
     await createPostIndexes();
     console.log("✓ Ensured post indexes exist");
 
