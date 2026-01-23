@@ -75,3 +75,15 @@ export interface User {
   created_at?: string; // ISO date string
   updated_at?: string; // ISO date string
 }
+
+
+type SiteContentPayload = {
+  page_key: string;
+  section_key: string;
+  content: {
+    title: string;
+    subtitle: string;
+    description: string;
+  };
+};
+export type { SiteContentPayload };

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { SiteContentPayload } from "./type";
 
 async function getCookies() {
   try {
@@ -14,6 +15,11 @@ async function getCookies() {
   } catch (error) {
     console.error("Error fetching cookies:", error);
   }
+}
+
+function getApiBaseUrl() {
+  const baseUrl = process.env.NEXT_SERVER_API_URL;
+  return baseUrl || null;
 }
 
 async function login(formdata: FormData) {
@@ -168,7 +174,7 @@ async function getPostsByCategory({
       if (result.status >= 500) {
         console.error("Error fetching filtered posts:", data.message);
       }
-      
+
       // If category not found (404), return empty but with category info if available
       if (result.status === 404) {
         return {
@@ -179,7 +185,7 @@ async function getPostsByCategory({
           category: null,
         };
       }
-      
+
       return {
         success: false,
         message: data.message || "Failed to fetch filtered posts",
@@ -852,6 +858,117 @@ async function getNewsletterSubcriberPaginate({
   }
 }
 
+async function getSiteContents() {
+  try {
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) {
+      return {
+        ok: false,
+        message: "Missing API URL. Set NEXT_SERVER_API_URL.",
+        contents: [],
+      };
+    }
+    const token = await getCookies();
+    const result = await fetch(`${baseUrl}/site-content`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+    const data = await result.json();
+    if (!result.ok) {
+      return {
+        ok: false,
+        message: data?.message || "Failed to load site contents", 
+        contents: [],
+      };
+    }
+    return { ok: true, contents: data?.contents || [] };
+  } catch (error) {
+    console.error("Error fetching site contents:", error);
+    return { ok: false, message: "Failed to load site contents", contents: [] };
+  }
+}
+
+async function createSiteContent(payload: SiteContentPayload) {
+  try {
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) {
+      return { ok: false, message: "Missing API URL. Set NEXT_SERVER_API_URL." };
+    }
+    const token = await getCookies();
+    const result = await fetch(`${baseUrl}/site-content`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await result.json();
+    if (!result.ok) {
+      return { ok: false, message: data?.message || "Failed to save site content" };
+    }
+    return { ok: true, data };
+  } catch (error) {
+    console.error("Error creating site content:", error);
+    return { ok: false, message: "Failed to save site content" };
+  }
+}
+
+async function updateSiteContent(id: number, payload: SiteContentPayload) {
+  try {
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) {
+      return { ok: false, message: "Missing API URL. Set NEXT_SERVER_API_URL." };
+    }
+    const token = await getCookies();
+    const result = await fetch(`${baseUrl}/site-content/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await result.json();
+    if (!result.ok) {
+      return { ok: false, message: data?.message || "Failed to save site content" };
+    }
+    return { ok: true, data };
+  } catch (error) {
+    console.error("Error updating site content:", error);
+    return { ok: false, message: "Failed to save site content" };
+  }
+}
+
+async function deleteSiteContent(id: number) {
+  try {
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) {
+      return { ok: false, message: "Missing API URL. Set NEXT_SERVER_API_URL." };
+    }
+    const token = await getCookies();
+    const result = await fetch(`${baseUrl}/site-content/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await result.json();
+    if (!result.ok) {
+      return { ok: false, message: data?.message || "Failed to delete site content" };
+    }
+    return { ok: true, data };
+  } catch (error) {
+    console.error("Error deleting site content:", error);
+    return { ok: false, message: "Failed to delete site content" };
+  }
+}
+
 export {
   getCookies,
   login,
@@ -885,4 +1002,8 @@ export {
   getAllPostComments,
   pinPost,
   getPinnedPost,
+  getSiteContents,
+  createSiteContent,
+  updateSiteContent,
+  deleteSiteContent,
 };
