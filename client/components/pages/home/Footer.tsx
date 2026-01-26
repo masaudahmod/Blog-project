@@ -1,17 +1,12 @@
-"use client";
-
 import Link from "next/link";
 import { Terminal, Twitter, Globe } from "lucide-react";
+import { getSiteContentByPageKey } from "@/lib/action";
 
 interface FooterLink {
   label: string;
   href: string;
 }
 
-interface FooterProps { // Define footer props
-  brandName?: string; // Optional brand name
-  brandDescription?: string; // Optional brand description
-} // End FooterProps
 
 const categories: FooterLink[] = [
   { label: "Machine Learning", href: "/categories?cat=machine-learning" },
@@ -27,11 +22,14 @@ const companyLinks: FooterLink[] = [
   { label: "Terms", href: "/terms" },
 ];
 
-export default function Footer({ brandName, brandDescription }: FooterProps) { // Render footer component
-  const currentYear = new Date().getFullYear(); // Read current year
-  const displayBrandName = brandName || "AI News"; // Resolve brand name
-  const displayBrandDescription = // Resolve brand description
-    brandDescription || "The leading source for artificial intelligence news, research, and tutorials."; // Provide fallback description
+export default async function Footer() {
+  // Fetch CMS content for footer section
+  const siteContent = await getSiteContentByPageKey("home");
+  const footerContent = siteContent?.contents?.find((item: { section_key: string; content?: Record<string, string> }) => item.section_key === "footer");
+  
+  const currentYear = new Date().getFullYear();
+  const displayBrandName = footerContent?.content?.title || "AI News";
+  const displayBrandDescription = footerContent?.content?.description || "The leading source for artificial intelligence news, research, and tutorials.";
 
   return (
     <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
