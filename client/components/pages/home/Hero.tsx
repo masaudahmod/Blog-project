@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 
 interface SideArticle {
   id: string;
@@ -56,20 +57,14 @@ export default function Hero({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Featured Story */}
         <div className="lg:col-span-2 relative group">
-          <Link href={`/blog/${featuredStory.id}`}>
-            <div className="relative h-[400px] md:h-[500px] lg:h-[600px] rounded-2xl overflow-hidden">
+          <Link href={`#`}>
+            <div className="relative h-[400px] md:h-[500px] lg:h-[600px] rounded-2xl overflow-hidden backdrop-blur-sm">
               {/* Background Image with Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 dark:from-blue-950 dark:via-purple-950 dark:to-indigo-950">
-                <div className="absolute inset-0 bg-black/40 dark:bg-black/50 group-hover:bg-black/30 dark:group-hover:bg-black/40 transition-colors" />
-                {/* Abstract pattern overlay */}
-                <div className="absolute inset-0 opacity-30 dark:opacity-40">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/20 dark:bg-blue-400/30 rounded-full blur-3xl" />
-                  <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-purple-500/20 dark:bg-purple-400/30 rounded-full blur-3xl" />
-                </div>
-              </div>
-
+              <Image src={featuredStory.image} alt={featuredStory.title} fill className="object-cover" />
+              {/* Gradient Overlay - Black to White (bottom to top) */}
+              <div className="absolute inset-0 bg-linear-to-t from-black via-black/60 to-transparent" />
               {/* Content */}
-              <div className="relative h-full flex flex-col justify-end p-6 md:p-8 lg:p-10 text-white">
+              <div className="relative h-full flex flex-col justify-end p-6 md:p-8 lg:p-10 text-white z-10">
                 {/* Badge */}
                 <div className="mb-4">
                   <span className="inline-block px-3 py-1 text-xs font-semibold bg-blue-500 dark:bg-blue-600 rounded-full">
@@ -107,7 +102,7 @@ export default function Hero({
             >
               <div className="relative h-[190px] md:h-[240px] rounded-xl overflow-hidden">
                 {/* Background Image with Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 dark:from-slate-900 dark:via-slate-800 dark:to-slate-950">
+                <div className="absolute inset-0 bg-linear-to-br from-slate-800 via-slate-700 to-slate-900 dark:from-slate-900 dark:via-slate-800 dark:to-slate-950">
                   <div className="absolute inset-0 bg-black/50 dark:bg-black/60 group-hover:bg-black/40 dark:group-hover:bg-black/50 transition-colors" />
                   {/* Pattern overlay for variety */}
                   {index === 0 && (

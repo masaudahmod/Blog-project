@@ -6,6 +6,8 @@ export const createSiteContentTable = async () => {
       page_key VARCHAR(100) NOT NULL,
       section_key VARCHAR(100) NOT NULL,
       content JSONB NOT NULL,
+      image_url TEXT,
+      image_public_id VARCHAR(255),
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
       UNIQUE (page_key, section_key)
@@ -23,17 +25,28 @@ export const getSiteContentsByPageKey = async (pageKey) => {
     [pageKey]
   );
 };
-export const createSiteContent = async ({ page_key, section_key, content }) => {
+export const createSiteContent = async ({ page_key, section_key, content, image_url = null, image_public_id = null }) => {
   return pool.query(
-    `INSERT INTO site_contents (page_key, section_key, content) VALUES ($1, $2, $3) RETURNING *`,
-    [page_key, section_key, JSON.stringify(content)]
+    `INSERT INTO site_contents (page_key, section_key, content, image_url, image_public_id) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    [page_key, section_key, JSON.stringify(content), image_url, image_public_id]
   );
 };
-export const updateSiteContentById = async (id, content) => {
-  return pool.query(
-    `UPDATE site_contents SET content = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
-    [JSON.stringify(content), id]
-  );
+export const updateSiteContentById = async (id, content, image_url = undefined, image_public_id = undefined) => {
+  // Build dynamic update query based on whether image is provided
+  // Use undefined to mean "don't update image", null to mean "remove image", string to mean "set new image"
+  if (image_url !== undefined && image_public_id !== undefined) {
+    // Update both content and image (can be null to remove image)
+    return pool.query(
+      `UPDATE site_contents SET content = $1, image_url = $2, image_public_id = $3, updated_at = NOW() WHERE id = $4 RETURNING *`,
+      [JSON.stringify(content), image_url, image_public_id, id]
+    );
+  } else {
+    // Update only content (image fields remain unchanged)
+    return pool.query(
+      `UPDATE site_contents SET content = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+      [JSON.stringify(content), id]
+    );
+  }
 };
 export const deleteSiteContentById = async (id) => {
   return pool.query(

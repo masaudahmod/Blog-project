@@ -5,19 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import Image from "next/image";
+import { X } from "lucide-react";
 import {
   createSiteContent,
   deleteSiteContent,
   getSiteContents,
   updateSiteContent,
 } from "@/lib/action";
-import { SiteContentPayload } from "@/lib/type";
 const pageOptions = ["home", "blog", "about"];
 type SiteContentItem = {
   id: number;
   page_key: string;
   section_key: string;
   content: { title?: string; subtitle?: string; description?: string };
+  image_url?: string;
+  image_public_id?: string;
 };
 type SiteContentForm = {
   page_key: string;
@@ -40,6 +43,10 @@ export default function Page() {
   const [form, setForm] = useState<SiteContentForm>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null); // Store selected image file
+  const [imagePreview, setImagePreview] = useState<string | null>(null); // Store preview URL
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null); // Store existing image URL when editing
+  const [imageRemoved, setImageRemoved] = useState(false); // Track if user removed image
   const canSubmit = useMemo(() => {
     return Boolean(form.page_key.trim() && form.section_key.trim() && form.title.trim());
   }, [form.page_key, form.section_key, form.title]);
@@ -69,6 +76,35 @@ export default function Page() {
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
+    setImageFile(null); // Clear image file
+    setImagePreview(null); // Clear preview
+    setExistingImageUrl(null); // Clear existing image
+    setImageRemoved(false); // Reset removal flag
+  };
+  
+  // Handle image file selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; // Get selected file
+    if (file) {
+      setImageFile(file); // Store file
+      setImageRemoved(false); // Reset removal flag when new image is selected
+      // Create preview URL
+      const reader = new FileReader(); // Create file reader
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string); // Set preview URL
+      };
+      reader.readAsDataURL(file); // Read file as data URL
+    }
+  };
+  
+  // Handle image removal
+  const handleRemoveImage = () => {
+    setImageFile(null); // Clear file
+    setImagePreview(null); // Clear preview
+    setImageRemoved(true); // Mark as removed
+    if (existingImageUrl) {
+      setExistingImageUrl(null); // Clear existing image URL
+    }
   };
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -77,19 +113,28 @@ export default function Page() {
     }
     try {
       setSaving(true);
-      const payload: SiteContentPayload = {
-        page_key: form.page_key.trim(),
-        section_key: form.section_key.trim(),
-        content: {
-          title: form.title.trim(),
-          subtitle: form.subtitle.trim(),
-          description: form.description.trim(),
-        },
-      };
+      
+      // Create FormData to support file upload
+      const formData = new FormData(); // Create FormData object
+      formData.append("page_key", form.page_key.trim()); // Add page key
+      formData.append("section_key", form.section_key.trim()); // Add section key
+      formData.append("content", JSON.stringify({ // Add content as JSON string
+        title: form.title.trim(),
+        subtitle: form.subtitle.trim(),
+        description: form.description.trim(),
+      }));
+      
+      // Handle image upload
+      if (imageFile) {
+        formData.append("image", imageFile); // Add image file
+      } else if (imageRemoved) {
+        formData.append("remove_image", "true"); // Mark image for removal
+      }
+      
       const isEditing = editingId !== null;
       const result = isEditing
-        ? await updateSiteContent(editingId, payload)
-        : await createSiteContent(payload);
+        ? await updateSiteContent(editingId, formData) // Pass FormData for update
+        : await createSiteContent(formData); // Pass FormData for create
       if (!result.ok) {
         throw new Error(result.message || "Failed to save site content");
       }
@@ -112,6 +157,16 @@ export default function Page() {
       subtitle: item.content?.subtitle || "",
       description: item.content?.description || "",
     });
+    // Load existing image if available
+    if (item.image_url) {
+      setExistingImageUrl(item.image_url); // Set existing image URL
+      setImagePreview(item.image_url); // Set preview to existing image
+    } else {
+      setExistingImageUrl(null); // Clear existing image
+      setImagePreview(null); // Clear preview
+    }
+    setImageFile(null); // Clear new file selection
+    setImageRemoved(false); // Reset removal flag
   };
   const handleDelete = async (item: SiteContentItem) => {
     const confirmed = window.confirm(`Delete ${item.page_key} / ${item.section_key}?`);
@@ -164,6 +219,38 @@ export default function Page() {
             <Label htmlFor="description">Description</Label>
             <Input id="description" value={form.description} onChange={(e) => handleChange("description", e.target.value)} placeholder="Section description" />
           </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="image">Image (Optional)</Label>
+            <Input 
+              id="image" 
+              type="file" 
+              accept="image/*" 
+              onChange={handleImageChange}
+              className="cursor-pointer"
+            />
+            {/* Show image preview or existing image */}
+            {(imagePreview || existingImageUrl) && !imageRemoved && (
+              <div className="relative mt-2 w-full max-w-md">
+                <div className="relative h-48 w-full rounded-lg overflow-hidden border">
+                  <Image
+                    src={imagePreview || existingImageUrl || ""}
+                    alt="Preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={handleRemoveImage}
+                >
+                  <X size={16} />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={handleSubmit} disabled={!canSubmit || saving}>
@@ -206,7 +293,14 @@ export default function Page() {
               <TableRow key={item.id}>
                 <TableCell>{item.page_key}</TableCell>
                 <TableCell>{item.section_key}</TableCell>
-                <TableCell>{item.content?.title || "-"}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <span>{item.content?.title || "-"}</span>
+                    {item.image_url && (
+                      <span className="text-xs text-blue-600">📷</span>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>

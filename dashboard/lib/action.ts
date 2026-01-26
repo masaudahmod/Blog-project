@@ -892,7 +892,7 @@ async function getSiteContents() {
   }
 }
 
-async function createSiteContent(payload: SiteContentPayload) {
+async function createSiteContent(formData: FormData) {
   try {
     const baseUrl = getApiBaseUrl();
     if (!baseUrl) {
@@ -902,10 +902,10 @@ async function createSiteContent(payload: SiteContentPayload) {
     const result = await fetch(`${baseUrl}/site-content`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        // Don't set Content-Type header - browser will set it with boundary for FormData
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(payload),
+      body: formData, // Send FormData directly (includes file if present)
     });
     const data = await result.json();
     if (!result.ok) {
@@ -918,7 +918,7 @@ async function createSiteContent(payload: SiteContentPayload) {
   }
 }
 
-async function updateSiteContent(id: number, payload: SiteContentPayload) {
+async function updateSiteContent(id: number, formData: FormData) {
   try {
     const baseUrl = getApiBaseUrl();
     if (!baseUrl) {
@@ -928,10 +928,10 @@ async function updateSiteContent(id: number, payload: SiteContentPayload) {
     const result = await fetch(`${baseUrl}/site-content/${id}`, {
       method: "PUT",
       headers: {
-        "Content-Type": "application/json",
+        // Don't set Content-Type header - browser will set it with boundary for FormData
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(payload),
+      body: formData, // Send FormData directly (includes file if present)
     });
     const data = await result.json();
     if (!result.ok) {
