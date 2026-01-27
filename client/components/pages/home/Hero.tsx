@@ -69,13 +69,12 @@ export default async function Hero() {
     })) || [];
   
   const sideArticles = cmsSideArticles.length > 0 ? cmsSideArticles : defaultSideArticles;
-  console.log("sideArticles", sideArticles);
   return (
     <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Featured Story */}
         <div className="lg:col-span-2 relative group">
-          <Link href={`/articles`}>
+          <Link href={`/`}>
             <div className="relative h-[400px] md:h-[500px] lg:h-[600px] rounded-2xl overflow-hidden backdrop-blur-sm">
               {/* Background Image with Overlay */}
               <Image src={featuredStory.image} alt={featuredStory.title} fill className="object-cover" />
@@ -115,7 +114,7 @@ export default async function Hero() {
           {sideArticles.map((article: SideArticle, index: number) => (
             <Link
               key={article.id}
-              href={`/blog/${article.id}`}
+              href={`/`}
               className="relative group flex-1"
             >
               <div className="relative h-[190px] md:h-[240px] rounded-xl overflow-hidden">

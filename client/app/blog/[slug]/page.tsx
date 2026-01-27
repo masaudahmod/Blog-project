@@ -7,7 +7,72 @@ import LikeSection from "./LikeSection";
 import NewsletterSubscription from "@/components/NewsletterSubscription";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { PostType } from "@/types";
+import { Metadata } from "next";
 
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
+  
+  if (!post) {
+    return {
+      title: "Post Not Found",
+      description: "The requested blog post could not be found.",
+    };
+  }
+
+  const url = `${process.env.NEXT_PUBLIC_SITE_URL}/blog/${post.slug}`;
+
+  return {
+    title: post.meta_title || post.title,
+    description: post.meta_description || post.excerpt || "",
+    keywords: post.meta_keywords || [],
+    alternates: {
+      canonical: url,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+    openGraph: {
+      title: post.meta_title || post.title,
+      description: post.meta_description || post.excerpt || "",
+      url,
+      siteName: "Your Site Name",
+      type: "article",
+      publishedTime: post.published_at || post.created_at,
+      section: post.category?.name || "",
+      tags: post.tags || [],
+      images: post.featured_image_url
+        ? [
+            {
+              url: post.featured_image_url,
+              width: 1200,
+              height: 630,
+              alt: post.featured_image_alt || post.title,
+            },
+          ]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.meta_title || post.title,
+      description: post.meta_description || post.excerpt || "",
+      images: post.featured_image_url ? [post.featured_image_url] : [],
+    },
+  };
+}
 
 interface TocItem {
   id: string;
@@ -85,13 +150,41 @@ export default async function BlogPostPage({
   ];
   const readTimeLabel = post.read_time ? `${post.read_time} min read` : undefined;
 
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.meta_title || post.title,
+    description: post.meta_description || post.excerpt || "",
+    image: post.featured_image_url ? [post.featured_image_url] : [],
+    datePublished: post.published_at || post.created_at,
+    dateModified: post.updated_at || post.created_at,
+    author: {
+      "@type": "Person",
+      name: "Your Name or Brand",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Your Site Name",
+      logo: {
+        "@type": "ImageObject",
+        url: `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/blog/${post.slug}`,
+    },
+  };
+
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="container mx-auto">
         <div className=" px-4 pb-16 pt-8 lg:px-8">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
             <main className="space-y-10">
-              <Breadcrumbs items={breadcrumbItems} readTime={readTimeLabel} />
+            <Breadcrumbs items={breadcrumbItems} readTime={readTimeLabel} />
+              <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }} />
               <article className="rounded-2xl p-5 sm:p-8">
                 <div className="space-y-6">
                   <div className="space-y-4">
@@ -139,13 +232,13 @@ export default async function BlogPostPage({
                   <div
                     className="prose prose-slate max-w-none dark:prose-invert
                     prose-headings:scroll-mt-28
-                    prose-h1:text-3xl prose-h1:font-semibold
-                    prose-h2:text-2xl prose-h2:font-semibold
-                    prose-h3:text-xl prose-h3:font-semibold
+                    prose-h3:text-3xl prose-h3:font-semibold
+                    prose-h4:text-2xl prose-h4:font-semibold
+                    prose-h5:text-xl prose-h5:font-semibold
+                    prose-h6:text-lg prose-h6:font-semibold
                     prose-blockquote:border-l-4 prose-blockquote:border-primary/40 prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:text-slate-600
                     dark:prose-blockquote:bg-slate-800/60 dark:prose-blockquote:text-slate-200
-                    prose-pre:rounded-xl prose-pre:bg-slate-900 prose-pre:text-slate-100
-                    ql-editor"
+                    prose-pre:rounded-xl prose-pre:bg-slate-900 prose-pre:text-slate-100"
                     dangerouslySetInnerHTML={{ __html: contentHtml }}
                   />
 
@@ -260,3 +353,4 @@ export default async function BlogPostPage({
     </div>
   );
 }
+
