@@ -91,6 +91,36 @@ function slugify(input: string) {
     .replace(/(^-|-$)/g, "");
 }
 
+function injectAdsIntoContent(html: string) {
+  if (!html) return html;
+
+  const adCode = `
+    <div class="my-8 flex justify-center">
+      <!-- Google AdSense Ad Unit -->
+      <ins class="adsbygoogle"
+           style="display:block; text-align:center;"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="1234567890"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
+  `;
+
+  const paragraphs = html.split("</p>");
+
+  // যদি 4 টার কম paragraph হয় তাহলে ad বসাবো না
+  if (paragraphs.length < 4) return html;
+
+  // 2nd paragraph এর পরে ad
+  paragraphs.splice(2, 0, adCode);
+
+  // মাঝখানে আরেকটা ad
+  const middleIndex = Math.floor(paragraphs.length / 2);
+  paragraphs.splice(middleIndex, 0, adCode);
+
+  return paragraphs.join("</p>");
+}
+
 function buildContentWithToc(html: string) {
   if (!html) {
     return { html: "", toc: [] as TocItem[] };
@@ -137,6 +167,7 @@ export default async function BlogPostPage({
   ]);
 
   const { html: contentHtml, toc } = buildContentWithToc(post.content || "");
+  const contentWithAds = injectAdsIntoContent(contentHtml);
   const relatedPosts = Array.isArray(post.related_posts) ? post.related_posts : [];
   const breadcrumbItems = [
     { label: "Home", href: "/" },
@@ -239,7 +270,7 @@ export default async function BlogPostPage({
                     prose-blockquote:border-l-4 prose-blockquote:border-primary/40 prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:text-slate-600
                     dark:prose-blockquote:bg-slate-800/60 dark:prose-blockquote:text-slate-200
                     prose-pre:rounded-xl prose-pre:bg-slate-900 prose-pre:text-slate-100"
-                    dangerouslySetInnerHTML={{ __html: contentHtml }}
+                    dangerouslySetInnerHTML={{ __html: contentWithAds }}
                   />
 
                   {post.tags && post.tags.length > 0 && (
