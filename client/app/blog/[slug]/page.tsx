@@ -250,7 +250,7 @@ export default async function BlogPostPage({
                   Get the latest posts, deep dives, and tutorials delivered to your inbox.
                 </p>
                 <div className="mt-4">
-                  <NewsletterSubscription variant="banner" isRow={true} />
+                  <NewsletterSubscription variant="modal" isRow={true} />
                 </div>
               </div>
             </aside>
