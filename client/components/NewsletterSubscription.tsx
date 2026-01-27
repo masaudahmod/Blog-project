@@ -60,8 +60,6 @@ export default function NewsletterSubscription({
           onSubmit={handleSubmit}
           className="w-full max-w-md mx-auto flex flex-col sm:flex-row gap-3"
         >
-
-
           <input
             type="email"
             required
@@ -106,11 +104,10 @@ export default function NewsletterSubscription({
       <form
         onSubmit={handleSubmit}
         className={`w-full ${isRow
-            ? "md:w-auto flex flex-col md:flex-row items-center gap-3"
+            ? "md:w-auto flex flex-col items-center gap-3"
             : "flex flex-col gap-3"
           }`}
       >
-
         <input
           type="email"
           required

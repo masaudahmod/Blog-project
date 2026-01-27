@@ -4,6 +4,7 @@ import { getAllPosts, getPinnedPosts, getSiteContentByPageKey } from "@/lib/acti
 import { PostType } from "@/types";
 import Pagination from "@/components/Pagination";
 import NewsletterSubscribeButton from "@/components/NewsletterSubscribeButton";
+import Link from "next/link";
 
 const heroPost = {
   title: "The Rise of Multimodal Models: How AI Learned to See, Hear, and Speak",
@@ -96,12 +97,14 @@ const categories = [
 
 export function PostCard({
   title,
+  slug,
   excerpt,
   category,
   date,
   image,
 }: {
   title?: string;
+  slug?: string;
   excerpt?: string;
   category?: string;
   date?: string;
@@ -109,6 +112,7 @@ export function PostCard({
 }) {
   return (
     <article className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:bg-slate-900">
+      <Link href={`/blog/${slug}`}>
       <div className="relative h-40 w-full overflow-hidden">
         {image && (
           <Image
@@ -130,6 +134,7 @@ export function PostCard({
         <h3 className="text-base font-semibold text-slate-900 dark:text-white">{title}</h3>
         <p className="text-sm text-slate-600 dark:text-slate-300">{excerpt}</p>
       </div>
+      </Link>
     </article>
   );
 }
@@ -242,7 +247,7 @@ export default async function Page({ // Render blog listing page
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
                   {allPosts?.posts?.map((post: PostType) => (
-                    <PostCard key={post.id} title={post.title} excerpt={post.excerpt || undefined} category={post.category?.name || undefined} date={post.published_at || undefined} image={post.featured_image_url || undefined} />
+                    <PostCard key={post.id} slug={post.slug} title={post.title} excerpt={post.excerpt || undefined} category={post.category?.name || undefined} date={post.published_at || undefined} image={post.featured_image_url || undefined} />
                   ))}
                 </div>
                 <div className="flex justify-center">
