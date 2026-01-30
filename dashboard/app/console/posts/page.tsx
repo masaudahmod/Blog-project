@@ -25,6 +25,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import ConfirmPostDelete from "@/app/(components)/ConfirmPostDelete";
+import PostViewModal from "@/app/(components)/PostViewModal";
 
 interface PostWithMetadata extends PostType {
   author?: {
@@ -48,6 +49,7 @@ export default function Page() {
   const [totalPages, setTotalPages] = useState(1);
   const [updating, setUpdating] = useState<number | null>(null);
   const [pinnedPostId, setPinnedPostId] = useState<number | null>(null);
+  const [viewPostSlug, setViewPostSlug] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -255,11 +257,11 @@ export default function Page() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/console/posts/${post.slug}`}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </Link>
+                        <DropdownMenuItem
+                          onClick={() => setViewPostSlug(post.slug)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          View
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href={`/console/posts/${post.slug}`}>
@@ -325,6 +327,12 @@ export default function Page() {
           </TableBody>
         </Table>
       </div>
+
+      <PostViewModal
+        slug={viewPostSlug}
+        open={!!viewPostSlug}
+        onOpenChange={(open) => !open && setViewPostSlug(null)}
+      />
 
       {/* Pagination */}
       <div className="flex items-center justify-between">
