@@ -47,13 +47,19 @@ export default function RichTextEditor({
     onChange(content);
   };
 
+  // Detect if dark mode is enabled on the page
+  const isDarkMode =
+    typeof window !== "undefined" &&
+    document.documentElement.classList.contains("dark");
+
+
   return (
     <div
-      className={`bg-white dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden ${
-        className || ""
-      }`}
+      className={`bg-green-500 dark:bg-orange-500 rounded-xl border-none overflow-hidden ${className || ""
+        }`}
     >
       <Editor
+      key={isDarkMode ? "dark-editor" : "light-editor"}
         apiKey={apiKey}
         licenseKey={apiKey ? undefined : "gpl"}
         onInit={(evt, editor) => {
@@ -90,6 +96,8 @@ export default function RichTextEditor({
               color: inherit;
               margin: 16px;
               height: 400px;
+              background: ${isDarkMode ? "#0f172a" : "#ffffff"} !important;
+              color: ${isDarkMode ? "#e2e8f0" : "#0f172a"} ;
             }
             p {
               margin: 0 0 12px 0;
@@ -105,17 +113,17 @@ export default function RichTextEditor({
             blockquote {
               margin: 16px 0;
               padding-left: 16px;
-              border-left: 4px solid #e5e7eb;
+              border-left: 4px solid ${isDarkMode ? "#334155" : "#e5e7eb"};
             }
             code {
-              background: #f3f4f6;
+              background: ${isDarkMode ? "#334155" : "#f3f4f6"};
               padding: 2px 6px;
               border-radius: 4px;
               font-family: 'Courier New', monospace;
             }
           `,
-          skin: "oxide",
-          content_css: "default",
+          skin: isDarkMode ? "oxide-dark" : "oxide",
+          content_css: isDarkMode ? "dark" : "default",
           branding: false,
           promotion: false,
           // Auto-resize to content
