@@ -71,6 +71,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  headline?: string;
   role?: "admin" | "editor" | "author" | "subscriber";
   created_at?: string; // ISO date string
   updated_at?: string; // ISO date string
