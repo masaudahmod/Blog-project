@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, TrendingUp, Calendar } from "lucide-react";
 import { getSiteContentByPageKey } from "@/lib/action";
+import { PostCard } from "@/components/pages/blog/PostCard";
 
 interface Article {
   id: string;
@@ -127,39 +128,16 @@ export default async function Latest() {
             {/* First Row - Two Articles */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {articles.slice(0, 2).map((article) => (
-                <Link
+                <PostCard
                   key={article.id}
-                  href={`/blog/${article.id}`}
-                  className="group"
-                >
-                  <article className="h-full">
-                    {/* Image */}
-                    <div className="relative h-48 md:h-56 rounded-xl overflow-hidden mb-4 bg-linear-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800">
-                      <div className="absolute inset-0 bg-black/10 dark:bg-black/20 group-hover:bg-black/5 dark:group-hover:bg-black/10 transition-colors" />
-                      {/* Placeholder pattern */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-24 h-24 bg-blue-500/20 dark:bg-blue-400/30 rounded-full blur-2xl" />
-                      </div>
-                    </div>
-
-                    {/* Meta */}
-                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-2">
-                      <span className="font-medium">{article.category}</span>
-                      <span>·</span>
-                      <span>{article.readTime}</span>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                      {article.title}
-                    </h3>
-
-                    {/* Excerpt */}
-                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
-                      {article.excerpt}
-                    </p>
-                  </article>
-                </Link>
+                  variant="front"
+                  slug={article.id}
+                  title={article.title}
+                  excerpt={article.excerpt}
+                  category={article.category}
+                  readTime={article.readTime}
+                  image={article.image}
+                />
               ))}
             </div>
 

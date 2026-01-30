@@ -30,7 +30,6 @@ export default function Page() {
 
   //form states
   const [postTitle, setPostTitle] = useState<string | null>("");
-  const [postSlug, setPostSlug] = useState<string | null>("");
   const [metaTitle, setMetaTitle] = useState<string | null>("");
   const [metaDescription, setMetaDescription] = useState<string | null>("");
   const [metaKeywords, setMetaKeywords] = useState<string | null>("");
@@ -52,7 +51,7 @@ export default function Page() {
     fetchCategories();
   }, []);
 
-  
+
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
@@ -71,19 +70,19 @@ export default function Page() {
   // Calculate read_time from content (strip HTML, count words, 200 words = 1 minute)
   const calculateReadTime = (htmlContent: string | null): number => {
     if (!htmlContent) return 1;
-    
+
     // Create a temporary div to strip HTML tags
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = htmlContent;
     const textContent = tempDiv.textContent || tempDiv.innerText || "";
-    
+
     // Count words (split by whitespace and filter empty strings)
     const words = textContent.trim().split(/\s+/).filter(word => word.length > 0);
     const wordCount = words.length;
-    
+
     // Calculate minutes: 200 words = 1 minute
     const minutes = Math.max(1, Math.ceil(wordCount / 200));
-    
+
     return minutes;
   };
 
@@ -91,11 +90,10 @@ export default function Page() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     setLoading(true);
     e.preventDefault();
-    
-    
+
+
     const fd = new FormData();
     fd.append("title", postTitle || "");
-    fd.append("slug", postSlug || "");
     fd.append("content", content || "");
     fd.append("meta_title", metaTitle || "");
     fd.append("meta_description", metaDescription || "");
@@ -113,13 +111,6 @@ export default function Page() {
     // Calculate and add read_time
     const readTime = calculateReadTime(content);
     fd.append("read_time", readTime.toString());
-
-    // Generate and add canonical_url
-    if (postSlug) {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
-      const canonicalUrl = `${siteUrl}/posts/${postSlug}`;
-      fd.append("canonical_url", canonicalUrl);
-    }
 
     // Add featured image alt and caption if provided
     if (featuredImageAlt) {
@@ -183,9 +174,9 @@ export default function Page() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={handleSaveDraft}
             disabled={loading}
           >
@@ -200,7 +191,7 @@ export default function Page() {
           <div className="col-span-12 lg:col-span-8 flex flex-col gap-8">
             {/* Title and Editor */}
             <div className="flex flex-col gap-4 p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 <div className="flex flex-col gap-2">
                   <p className="text-sm font-medium px-3 text-slate-700 dark:text-slate-300">
                     Post Title
@@ -210,26 +201,26 @@ export default function Page() {
                     type="text"
                     name="title"
                     value={postTitle || ""}
-                    className="form-input flex w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border-none outline-none bg-white dark:bg-slate-800/50 h-11 px-3 text-sm"
+                    className="form-input flex w-full rounded-lg text-[#111318] dark:text-white border-none outline-none bg-white dark:bg-slate-800/50 h-11 px-3 text-sm"
                     placeholder="Post Title"
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm font-medium px-3 text-slate-700 dark:text-slate-300">
-                    Post Slug
-                  </p>
-                  <Input
-                    onChange={(e) => {
-                      setPostSlug(e.target.value);
-                    }}
-                    type="text"
-                    name="slug"
-                    value={postSlug || ""}
-                    className="form-input flex w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border-none outline-none bg-white dark:bg-slate-800/50 h-11 px-3 text-sm"
-                    placeholder="Post Slug"
-                  />
-                </div>
               </div>
+
+
+              {/* Excerpt */}
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium px-3 text-slate-700 dark:text-slate-300">
+                  Excerpt
+                </p>
+                <textarea
+                  onChange={(e) => setExcerpt(e.target.value)}
+                  name="excerpt"
+                  className="form-textarea w-full rounded-lg text-[#111318] dark:text-white border-none outline-none bg-white dark:bg-slate-800/50 h-24 p-3 text-sm"
+                  placeholder="Enter excerpt"
+                ></textarea>
+              </div>
+
 
               {/* Rich Text Editor */}
               <div className="flex flex-col gap-2">
@@ -331,8 +322,8 @@ export default function Page() {
                     const foundCategory =
                       categories && categories.length
                         ? categories.find(
-                            (cat: Category) => cat.id.toString() === value
-                          )
+                          (cat: Category) => cat.id.toString() === value
+                        )
                         : null;
                     setSelectedCategory(foundCategory || null);
                   }}
@@ -356,16 +347,6 @@ export default function Page() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {/* Excerpt */}
-            <div className="">
-              <textarea
-                onChange={(e) => setExcerpt(e.target.value)}
-                name="excerpt"
-                className="form-textarea w-full rounded-lg text-[#111318] dark:text-white focus:ring-2 focus:ring-primary/50 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 h-24 p-3 text-sm"
-                placeholder="Enter excerpt"
-              ></textarea>
             </div>
 
             {/* Tags */}
@@ -482,7 +463,7 @@ export default function Page() {
               </Card>
             </div>
 
-            <Button 
+            <Button
               type="button"
               onClick={handlePublish}
               disabled={loading}
