@@ -16,7 +16,7 @@ export async function getSiteContentByPageKey(pageKey: string) { // Fetch CMS co
       headers: { // Set request headers
         "Content-Type": "application/json", // Declare JSON
       }, // End headers
-      cache: "no-store", // Always fetch fresh content
+      next: { revalidate: 60 }, // ISR: revalidate every 60 seconds
     }); // End fetch call
     const data = await result.json(); // Parse response JSON
     if (result.ok) { // Check for success
@@ -40,7 +40,7 @@ export async function getAllPosts(page = 1, filter: "all" | "published" | "draft
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     const data = await result.json();
     if (result.ok) {
@@ -65,7 +65,7 @@ export async function getPostById(id: number) {
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     const { post } = await result.json();
     if (result.ok) {
@@ -112,7 +112,7 @@ export async function getPostsByCategory({
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     const data = await result.json();
     if (result.ok) {
@@ -136,7 +136,7 @@ export async function getPostBySlug(slug: string) {
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     const { post } = await result.json();
     if (result.ok) {
@@ -161,7 +161,7 @@ export async function getPostComments(postId: number) {
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     const data = await result.json();
     if (result.ok) {
@@ -348,7 +348,7 @@ export async function checkLikeStatus({
         headers: {
           "Content-Type": "application/json",
         },
-        cache: "no-store",
+        next: { revalidate: 60 },
       }
     );
     const data = await result.json();
@@ -372,7 +372,7 @@ export async function getLikeCount(postId: number) {
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     const data = await result.json();
     if (result.ok) {
@@ -399,7 +399,7 @@ export async function getCategories(options?: { withCount?: boolean }) {
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     const data = await result.json();
     if (result.ok) {
@@ -423,7 +423,7 @@ export async function getCategoryById(id: number) {
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     const data = await result.json();
     if (result.ok) {
@@ -515,6 +515,7 @@ export async function getPinnedPosts() {
       headers: {
         "Content-Type": "application/json",
       },
+      next: { revalidate: 60 },
     });
     const data = await result.json();
     if (result.ok) {
@@ -538,7 +539,7 @@ export async function getTrendingPosts(limit = 5) {
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     const data = await result.json();
     if (result.ok && data?.posts) {
