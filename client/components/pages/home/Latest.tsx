@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, TrendingUp, Calendar } from "lucide-react";
-import { getSiteContentByPageKey } from "@/lib/action";
+import { getSiteContentByPageKey, getTrendingPosts } from "@/lib/action";
 import { PostCard } from "@/components/pages/blog/PostCard";
 
 interface Article {
@@ -13,9 +13,26 @@ interface Article {
 }
 
 interface TrendingArticle {
-  id: string;
+  id: number | string;
+  slug: string;
   title: string;
   timeAgo: string;
+}
+
+function getTimeAgo(dateStr: string | null | undefined): string {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? "s" : ""} ago`;
+  return date.toLocaleDateString();
 }
 
 
@@ -60,11 +77,11 @@ const defaultArticles: Article[] = [
 ];
 
 const defaultTrendingArticles: TrendingArticle[] = [
-  { id: "1", title: "Google released Gemini 1.0 Pro with 1M token context window", timeAgo: "2 hours ago" },
-  { id: "2", title: "Mistral AI announces partnership with Microsoft Azure", timeAgo: "5 hours ago" },
-  { id: "3", title: "Regulatory talks in EU finalize the new AI Act draft", timeAgo: "1 day ago" },
-  { id: "4", title: "OpenAI releases GPT-4 Turbo with improved reasoning", timeAgo: "2 days ago" },
-  { id: "5", title: "Anthropic introduces Claude 3.5 Sonnet with enhanced capabilities", timeAgo: "3 days ago" },
+  { id: "1", slug: "1", title: "Google released Gemini 1.0 Pro with 1M token context window", timeAgo: "2 hours ago" },
+  { id: "2", slug: "2", title: "Mistral AI announces partnership with Microsoft Azure", timeAgo: "5 hours ago" },
+  { id: "3", slug: "3", title: "Regulatory talks in EU finalize the new AI Act draft", timeAgo: "1 day ago" },
+  { id: "4", slug: "4", title: "OpenAI releases GPT-4 Turbo with improved reasoning", timeAgo: "2 days ago" },
+  { id: "5", slug: "5", title: "Anthropic introduces Claude 3.5 Sonnet with enhanced capabilities", timeAgo: "3 days ago" },
 ];
 
 export default async function Latest() {
@@ -80,7 +97,16 @@ export default async function Latest() {
   const ad3Content = contents.find((item: { section_key: string; content?: Record<string, string> }) => item.section_key === "ad-3");
   
   const articles = defaultArticles;
-  const trendingArticles = defaultTrendingArticles;
+  const { posts: trendingPosts } = await getTrendingPosts(5);
+  const trendingArticles: TrendingArticle[] =
+    trendingPosts?.length > 0
+      ? trendingPosts.map((p: { id: number; slug: string; title: string; published_at?: string }) => ({
+          id: p.id,
+          slug: p.slug,
+          title: p.title,
+          timeAgo: getTimeAgo(p.published_at),
+        }))
+      : defaultTrendingArticles;
   const sectionTitle = latestContent?.content?.title || "Latest Articles";
   const sectionCtaLabel = latestContent?.content?.subtitle || "View all";
   const digestTitle = digestContent?.content?.title || "AI Daily Digest";
@@ -252,7 +278,7 @@ export default async function Latest() {
               {trendingArticles.map((article, index) => (
                 <li key={article.id}>
                   <Link
-                    href={`/blog/${article.id}`}
+                    href={`/blog/${article.slug}`}
                     className="flex items-start gap-3 group"
                   >
                     <span className="shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-semibold flex items-center justify-center mt-0.5">

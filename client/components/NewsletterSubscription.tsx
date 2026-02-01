@@ -264,7 +264,7 @@ export default function NewsletterSubscription({
 
   return (
     <div
-      className={`w-full border shadow-lg rounded-lg p-5 ${isRow
+      className={`w-full rounded-lg p-5 ${isRow
         ? "flex flex-col md:flex-row items-center justify-between gap-4"
         : "flex flex-col gap-4 justify-center items-center"
         }`}
@@ -291,7 +291,7 @@ export default function NewsletterSubscription({
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full md:w-72 px-4 py-2 rounded-xl border border-gray-300 bg-transparent outline-none focus:border-primary"
+          className="w-full px-4 py-2 rounded-xl border border-gray-300 bg-transparent outline-none focus:border-primary"
         />
 
         <button

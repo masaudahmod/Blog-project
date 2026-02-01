@@ -59,7 +59,7 @@ export default function NewsletterModal({ isOpen, onClose }: NewsletterModalProp
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-1 top-1 sm:right-4 sm:top-4 rounded-full p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer transition-colors touch-manipulation"
+          className="absolute right-1 top-1 sm:right-4 sm:top-4 rounded-full p-1.5 text-slate-600  cursor-pointer transition-colors touch-manipulation"
           aria-label="Close modal"
         >
           <X className="h-5 w-5 sm:h-6 sm:w-6" />

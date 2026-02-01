@@ -17,7 +17,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
-  
+
   if (!post) {
     return {
       title: "Post Not Found",
@@ -56,13 +56,13 @@ export async function generateMetadata({
       tags: post.tags || [],
       images: post.featured_image_url
         ? [
-            {
-              url: post.featured_image_url,
-              width: 1200,
-              height: 630,
-              alt: post.featured_image_alt || post.title,
-            },
-          ]
+          {
+            url: post.featured_image_url,
+            width: 1200,
+            height: 630,
+            alt: post.featured_image_alt || post.title,
+          },
+        ]
         : [],
     },
     twitter: {
@@ -211,10 +211,10 @@ export default async function BlogPostPage({
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto">
-        <div className=" px-4 pb-16 pt-8 lg:px-8">
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <main className="space-y-10">
-            <Breadcrumbs items={breadcrumbItems} readTime={readTimeLabel} />
+        <div className=" px-4 pb-16 pt-8 lg:px-3">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <main className="space-y-2">
+              <Breadcrumbs items={breadcrumbItems} readTime={readTimeLabel} />
               <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }} />
               <article className="rounded-2xl p-5 sm:p-8">
                 <div className="space-y-6">
