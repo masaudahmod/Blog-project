@@ -10,6 +10,7 @@ const postFilterKey = (categoryId, page, filter) => `post:filter:${categoryId}:$
 const postIdKey = (id) => `post:id:${id}`;
 const postSlugKey = (slug) => `post:slug:${slug}`;
 const POST_PINNED_KEY = "post:pinned";
+const POST_TRENDING_KEY = "post:trending";
 
 async function invalidatePostListAndFilter(categoryId) {
   await deleteCache(postListKey(1, "all"));
@@ -181,6 +182,36 @@ export const allPosts = asyncHandler(async (req, res) => {
     currentPage: page,
     totalPages,
     posts: posts.rows,
+  };
+  await setCache(cacheKey, payload, CACHE_TTL);
+  res.status(200).json(payload);
+});
+
+/**
+ * Get trending posts (published, ordered by published_at DESC)
+ * Query: limit (default 5, max 10)
+ * Returns: id, slug, title, published_at for sidebar / "Trending Now"
+ */
+export const getTrendingPosts = asyncHandler(async (req, res) => {
+  const limit = Math.min(10, Math.max(1, parseInt(req.query.limit) || 5));
+  const cacheKey = `${POST_TRENDING_KEY}:${limit}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.status(200).json({ ...cached, source: "cache" });
+  }
+
+  const query = `
+    SELECT id, slug, title, published_at
+    FROM posts
+    WHERE is_published = true AND published_at IS NOT NULL
+    ORDER BY published_at DESC
+    LIMIT $1
+  `;
+  const result = await pool.query(query, [limit]);
+  const payload = {
+    success: true,
+    message: "Trending posts retrieved",
+    posts: result.rows,
   };
   await setCache(cacheKey, payload, CACHE_TTL);
   res.status(200).json(payload);

@@ -13,6 +13,7 @@ import {
   getPostBySlug,
   getPostsByFilter,
   getPinnedPostController,
+  getTrendingPosts,
   likePostBySlug,
   pinPostController,
   unlikePostBySlug,
@@ -27,6 +28,7 @@ const router = express.Router();
 router.post("/add", verifyAuth, allowRoles("admin"), upload.single("featured_image"), addPost);
 router.get("/", allPosts);
 router.get("/filter", getPostsByFilter); // Category filtering endpoint
+router.get("/trending", getTrendingPosts); // Trending / recent published posts for sidebar
 router.route("/id/:id").get(getPost).delete(verifyAuth, allowRoles("admin"), deletePost);
 router.route("/slug/:slug").get(getPostBySlug).put(verifyAuth, allowRoles("admin"), upload.single("featured_image"), updatePostBySlug).patch(verifyAuth, allowRoles("admin"), upload.single("featured_image"), updatePostBySlug);
 router.patch("/:id/publish", verifyAuth, allowRoles("admin", "moderator"), updatePublishStatus);
