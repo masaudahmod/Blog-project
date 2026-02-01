@@ -1,6 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { getAllPosts, getPinnedPosts, getSiteContentByPageKey } from "@/lib/action"; // Import CMS helper
+import { getAllPosts, getPinnedPosts, getSiteContentByPageKey, getCategories } from "@/lib/action"; // Import CMS helper
 import { PostType } from "@/types";
 import Pagination from "@/components/Pagination";
 import NewsletterSubscribeButton from "@/components/NewsletterSubscribeButton";
@@ -12,14 +13,7 @@ const heroAuthor = {
     "https://i.ibb.co.com/4ZMqPQ2/me.png",
 };
 
-const categories = [
-  "Artificial Intelligence",
-  "Machine Learning",
-  "Edge AI",
-  "MLOps",
-  "Product",
-  "Research",
-];
+type CategoryWithCount = { id: number; name: string; slug: string; post_count?: number };
 
 const mapContentsBySection = (contents: { section_key: string; content: Record<string, string> }[] = []) => { // Map content by section key
   return contents.reduce<Record<string, Record<string, string>>>((acc, item) => { // Reduce content array into object map
@@ -44,7 +38,7 @@ export default async function Page({ // Render blog listing page
   const searchContent = contentMap.search || {}; // Read search content
   const allPosts = await getAllPosts(page, filter as "all" | "published" | "draft");
   const { post } = await getPinnedPosts();
-  console.log(post);
+  const categories = (await getCategories({ withCount: true })) as CategoryWithCount[];
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <div className="container mx-auto">
@@ -53,8 +47,7 @@ export default async function Page({ // Render blog listing page
             <Breadcrumbs
               items={[
                 { label: "Home", href: "/" },
-                { label: "Categories", href: "/categories" },
-                { label: "Artificial Intelligence" },
+                { label: "Blog", href: "/blog" },
               ]}
             />
             <h1 className="text-3xl font-semibold text-slate-900 sm:text-4xl">
@@ -147,8 +140,8 @@ export default async function Page({ // Render blog listing page
                 <div className="flex items-center gap-4">
                   <div className="relative h-14 w-14 overflow-hidden rounded-full bg-slate-200">
                     <Image
-                      src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=200&q=80"
-                      alt="Author profile"
+                      src="https://i.ibb.co.com/4ZMqPQ2/me.png"
+                      alt="Masaud Ahmod"
                       fill
                       loading="eager"
                       className="object-cover"
@@ -157,16 +150,16 @@ export default async function Page({ // Render blog listing page
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-900">
-                      Maya L. Chen
+                      Masaud Ahmod
                     </p>
-                    <p className="text-xs text-slate-600">AI Research Lead</p>
+                    <p className="text-xs text-slate-600">Professional Blogger </p>
                   </div>
                 </div>
                 <p className="mt-4 text-sm text-slate-600">
                   Writing about human-centered AI, product strategy, and how to build with
                   responsibility.
                 </p>
-                <button className="mt-4 w-full rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+                <button disabled className="cursor-not-allowed mt-4 w-full rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
                   Follow
                 </button>
               </div>
@@ -187,15 +180,22 @@ export default async function Page({ // Render blog listing page
                   Categories
                 </h3>
                 <div className="mt-4 space-y-2 text-sm text-slate-600">
-                  {categories.map((category) => (
-                    <div
-                      key={category}
-                      className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2"
-                    >
-                      <span>{category}</span>
-                      <span className="text-xs text-slate-400">12</span>
-                    </div>
-                  ))}
+                  {categories.length === 0 ? (
+                    <p className="text-slate-500">No categories yet.</p>
+                  ) : (
+                    categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        href={`/categories?cat=${category.slug}`}
+                        className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 transition hover:border-primary hover:bg-slate-50"
+                      >
+                        <span>{category.name}</span>
+                        <span className="text-xs text-slate-400">
+                          {typeof category.post_count === "number" ? category.post_count : "—"}
+                        </span>
+                      </Link>
+                    ))
+                  )}
                 </div>
               </div>
 

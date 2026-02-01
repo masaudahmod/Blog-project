@@ -387,10 +387,14 @@ export async function getLikeCount(postId: number) {
 
 /**
  * Get all categories
+ * @param withCount - when true, returns categories with post_count (published posts per category)
  */
-export async function getCategories() {
+export async function getCategories(options?: { withCount?: boolean }) {
   try {
-    const result = await fetch(`${API_URL}/category`, {
+    const params = new URLSearchParams();
+    if (options?.withCount) params.set("withCount", "true");
+    const url = `${API_URL}/category${params.toString() ? `?${params.toString()}` : ""}`;
+    const result = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -521,5 +525,28 @@ export async function getPinnedPosts() {
   } catch (error) {
     console.error("Error getting pinned posts:", error);
     return [];
+  }
+}
+
+/**
+ * Get trending posts (recent published, for sidebar "Trending Now")
+ */
+export async function getTrendingPosts(limit = 5) {
+  try {
+    const result = await fetch(`${API_URL}/post/trending?limit=${limit}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+    const data = await result.json();
+    if (result.ok && data?.posts) {
+      return { posts: data.posts };
+    }
+    return { posts: [] };
+  } catch (error) {
+    console.error("Error fetching trending posts:", error);
+    return { posts: [] };
   }
 }

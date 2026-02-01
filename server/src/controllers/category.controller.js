@@ -4,7 +4,7 @@ import { createCategory, deleteCategoryById, getCategories, deactivateCategory }
 import { asyncHandler, AppError } from "../middlewares/error.middleware.js";
 
 const CACHE_TTL = 300; // 5 minutes
-const CACHE_KEYS = { ALL: "category:all", ALL_ADMIN: "category:all:admin" };
+const CACHE_KEYS = { ALL: "category:all", ALL_ADMIN: "category:all:admin", ALL_WITH_COUNT: "category:all:withCount" };
 const categoryCacheKey = (id) => `category:id:${id}`;
 
 export const addCategory = async (req, res) => {
@@ -20,6 +20,7 @@ export const addCategory = async (req, res) => {
     }
     await deleteCache(CACHE_KEYS.ALL);
     await deleteCache(CACHE_KEYS.ALL_ADMIN);
+    await deleteCache(CACHE_KEYS.ALL_WITH_COUNT);
     const result = await createCategory(name, category_slug);
     res
       .status(201)
@@ -34,7 +35,12 @@ export const addCategory = async (req, res) => {
 export const allCategories = async (req, res) => {
   try {
     const showAll = req.query.showAll === "true";
-    const cacheKey = showAll ? CACHE_KEYS.ALL_ADMIN : CACHE_KEYS.ALL;
+    const withCount = req.query.withCount === "true";
+    const cacheKey = withCount
+      ? CACHE_KEYS.ALL_WITH_COUNT
+      : showAll
+        ? CACHE_KEYS.ALL_ADMIN
+        : CACHE_KEYS.ALL;
 
     const cached = await getCache(cacheKey);
     if (cached) {
@@ -45,9 +51,22 @@ export const allCategories = async (req, res) => {
       });
     }
 
-    const query = showAll
-      ? `SELECT id, name, slug, created_at, active FROM categories ORDER BY id DESC`
-      : `SELECT id, name, slug, created_at, active FROM categories WHERE active = TRUE ORDER BY id DESC`;
+    let query;
+    if (withCount) {
+      query = `
+        SELECT c.id, c.name, c.slug,
+          COUNT(p.id) FILTER (WHERE p.is_published = true)::int AS post_count
+        FROM categories c
+        LEFT JOIN posts p ON p.category_id = c.id
+        WHERE c.active = TRUE
+        GROUP BY c.id, c.name, c.slug
+        ORDER BY c.name ASC
+      `;
+    } else {
+      query = showAll
+        ? `SELECT id, name, slug, created_at, active FROM categories ORDER BY id DESC`
+        : `SELECT id, name, slug, created_at, active FROM categories WHERE active = TRUE ORDER BY id DESC`;
+    }
     const result = await pool.query(query);
     const payload = { categories: result.rows };
     await setCache(cacheKey, payload, CACHE_TTL);
@@ -114,6 +133,7 @@ export const updateCategory = async (req, res) => {
   const { name, slug } = req.body;
   await deleteCache(CACHE_KEYS.ALL);
   await deleteCache(CACHE_KEYS.ALL_ADMIN);
+  await deleteCache(CACHE_KEYS.ALL_WITH_COUNT);
   await deleteCache(categoryCacheKey(id));
   const query = `
     UPDATE categories 
@@ -163,6 +183,7 @@ export const deleteCategory = asyncHandler(async (req, res) => {
 
   await deleteCache(CACHE_KEYS.ALL);
   await deleteCache(CACHE_KEYS.ALL_ADMIN);
+  await deleteCache(CACHE_KEYS.ALL_WITH_COUNT);
   await deleteCache(categoryCacheKey(id));
   const result = await deactivateCategory(categoryId);
 
