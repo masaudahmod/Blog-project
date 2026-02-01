@@ -84,7 +84,7 @@ export default async function Hero() {
               <div className="relative h-full flex flex-col justify-end p-6 md:p-8 lg:p-10 text-white z-10">
                 {/* Badge */}
                 <div className="mb-4">
-                  <span className="inline-block px-3 py-1 text-xs font-semibold bg-blue-500 dark:bg-blue-600 rounded-full">
+                  <span className="inline-block px-3 py-1 text-xs font-semibold bg-blue-500 rounded-full">
                     {featuredStory.badge}
                   </span>
                 </div>
@@ -95,12 +95,12 @@ export default async function Hero() {
                 </h1>
 
                 {/* Description */}
-                <p className="text-sm md:text-base text-white/90 dark:text-white/95 mb-4 max-w-2xl">
+                <p className="text-sm md:text-base text-white/90 mb-4 max-w-2xl">
                   {featuredStory.description}
                 </p>
 
                 {/* Read More */}
-                <div className="flex items-center gap-2 text-sm font-medium text-white/80 dark:text-white/90 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-2 text-sm font-medium text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
                   Read more
                   <ArrowRight size={16} />
                 </div>
@@ -119,28 +119,28 @@ export default async function Hero() {
             >
               <div className="relative h-[190px] md:h-[240px] rounded-xl overflow-hidden">
                 {/* Background Image with Overlay */}
-                <div className="absolute inset-0 bg-linear-to-br from-slate-800 via-slate-700 to-slate-900 dark:from-slate-900 dark:via-slate-800 dark:to-slate-950">
-                  <div className="absolute inset-0 bg-black/50 dark:bg-black/60 group-hover:bg-black/40 dark:group-hover:bg-black/50 transition-colors" />
+                <div className="absolute inset-0 bg-linear-to-br from-slate-800 via-slate-700 to-slate-900">
+                  <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
                   {/* Pattern overlay for variety
                   {index === 0 && (
-                    <div className="absolute inset-0 opacity-20 dark:opacity-30">
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-blue-400/30 dark:bg-blue-500/40 rounded-full blur-2xl" />
+                    <div className="absolute inset-0 opacity-20">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-blue-400/30 rounded-full blur-2xl" />
                     </div>
                   )}
                   {index === 1 && (
-                    <div className="absolute inset-0 opacity-20 dark:opacity-30">
-                      <div className="absolute top-1/3 right-1/3 w-32 h-32 bg-purple-400/30 dark:bg-purple-500/40 rounded-full blur-2xl" />
+                    <div className="absolute inset-0 opacity-20">
+                      <div className="absolute top-1/3 right-1/3 w-32 h-32 bg-purple-400/30 rounded-full blur-2xl" />
                     </div>
                   )} */}
                   <Image src={article.image} alt={article.title} fill className="object-cover" />
-                  <div className="absolute inset-0 bg-black/50 dark:bg-black/60 group-hover:bg-black/40 dark:group-hover:bg-black/50 transition-colors" />
+                  <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
                 </div>
 
                 {/* Content */}
                 <div className="relative h-full flex flex-col justify-end p-4 md:p-5 text-white">
                   {article.badge && (
                     <div className="mb-2">
-                      <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-blue-500 dark:bg-blue-600 rounded">
+                      <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-blue-500 rounded">
                         {article.badge}
                       </span>
                     </div>

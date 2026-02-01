@@ -111,7 +111,7 @@ export default async function Latest() {
         <div className="lg:col-span-2">
           {/* Section Header */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white">
+            <h2 className="text-2xl md:text-3xl font-bold text-black">
               {sectionTitle}
             </h2>{/* Section title */}
             <Link
@@ -142,10 +142,10 @@ export default async function Latest() {
             </div>
 
             {/* AI Daily Digest Section */}
-            <div className="bg-purple-50 dark:bg-purple-950/30 rounded-xl p-6 md:p-8 shadow-sm dark:shadow-purple-900/20 border border-purple-100 dark:border-purple-800/50">
+            <div className="bg-purple-50 rounded-xl p-6 md:p-8 shadow-sm border border-purple-100">
               <div className="flex items-start gap-4">
                 {/* Icon */}
-                <div className="shrink-0 w-12 h-12 rounded-lg bg-purple-500 dark:bg-purple-600 flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 rounded-lg bg-purple-500 flex items-center justify-center">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -163,10 +163,10 @@ export default async function Latest() {
 
                 {/* Content */}
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">
                     {digestTitle}
                   </h3>{/* Digest title */}
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                  <p className="text-sm text-slate-600 mb-4">
                     {digestDescription}
                   </p>{/* Digest description */}
 
@@ -175,9 +175,9 @@ export default async function Latest() {
                     {trendingArticles.slice(0, 3).map((item) => (
                       <li
                         key={item.id}
-                        className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+                        className="flex items-start gap-2 text-sm text-slate-700"
                       >
-                        <span className="text-purple-500 dark:text-purple-400 mt-1">•</span>
+                        <span className="text-purple-500 mt-1">•</span>
                         <span>{item.title}</span>
                       </li>
                     ))}
@@ -196,28 +196,28 @@ export default async function Latest() {
                 >
                   <article className="h-full">
                     {/* Image */}
-                    <div className="relative h-48 md:h-56 rounded-xl overflow-hidden mb-4 bg-linear-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800">
-                      <div className="absolute inset-0 bg-black/10 dark:bg-black/20 group-hover:bg-black/5 dark:group-hover:bg-black/10 transition-colors" />
+                    <div className="relative h-48 md:h-56 rounded-xl overflow-hidden mb-4 bg-linear-to-br from-slate-200 to-slate-300">
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                       {/* Placeholder pattern */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-24 h-24 bg-blue-500/20 dark:bg-blue-400/30 rounded-full blur-2xl" />
+                        <div className="w-24 h-24 bg-blue-500/20 rounded-full blur-2xl" />
                       </div>
                     </div>
 
                     {/* Meta */}
-                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
                       <span className="font-medium">{article.category}</span>
                       <span>·</span>
                       <span>{article.readTime}</span>
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 group-hover:text-primary transition-colors line-clamp-2">
                       {article.title}
                     </h3>
 
                     {/* Excerpt */}
-                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                    <p className="text-sm text-slate-600 line-clamp-2">
                       {article.excerpt}
                     </p>
                   </article>
@@ -229,7 +229,7 @@ export default async function Latest() {
             <div className="flex justify-center pt-4">
               <Link
                 href="/blog"
-                className="px-6 py-3 border border-slate-300 dark:border-slate-700 rounded-lg font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                className="px-6 py-3 border border-slate-300 rounded-lg font-medium text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Load More Articles
               </Link>
@@ -240,10 +240,10 @@ export default async function Latest() {
         {/* Sidebar - Right Column */}
         <div className="space-y-6">
           {/* Trending Now */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-slate-900/50">
+          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-bold text-slate-900">
                 {trendingTitle}
               </h3>{/* Trending title */}
             </div>
@@ -255,14 +255,14 @@ export default async function Latest() {
                     href={`/blog/${article.id}`}
                     className="flex items-start gap-3 group"
                   >
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-semibold flex items-center justify-center mt-0.5">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-semibold flex items-center justify-center mt-0.5">
                       {index + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors line-clamp-2">
+                      <p className="text-sm text-slate-700 group-hover:text-primary transition-colors line-clamp-2">
                         {article.title}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {article.timeAgo}
                       </p>
@@ -274,31 +274,31 @@ export default async function Latest() {
           </div>
 
           {/* First Advertisement - Paid Ads/Banner */}
-          <div className="relative bg-linear-to-br from-blue-900 to-indigo-900 dark:from-blue-950 dark:to-indigo-950 rounded-xl p-6 border-2 border-white/20 dark:border-white/10 overflow-hidden">
+          <div className="relative bg-linear-to-br from-blue-900 to-indigo-900 rounded-xl p-6 border-2 border-white/20 overflow-hidden">
             {/* Advertisement Label */}
             <div className="absolute top-3 left-3">
-              <span className="text-xs font-semibold text-white/70 dark:text-white/60 uppercase tracking-wide">
+              <span className="text-xs font-semibold text-white/70 uppercase tracking-wide">
                 Advertisement
               </span>
             </div>
 
             {/* Pattern Overlay */}
-            <div className="absolute inset-0 opacity-10 dark:opacity-15">
+            <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-3xl" />
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full blur-2xl" />
             </div>
 
             {/* Content */}
             <div className="relative z-10 pt-6">
-              <h3 className="text-xl font-bold text-white dark:text-white mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 {adTitle}
               </h3>{/* Ad title */}
-              <p className="text-sm text-slate-300 dark:text-slate-200 mb-4">
+              <p className="text-sm text-slate-300 mb-4">
                 {adDescription}
               </p>{/* Ad description */}
               <Link
                 href={adLink}
-                className="inline-block px-4 py-2 bg-white dark:bg-slate-100 text-blue-900 dark:text-blue-950 rounded-lg font-semibold text-sm hover:bg-slate-100 dark:hover:bg-white transition-colors"
+                className="inline-block px-4 py-2 bg-white text-blue-900 rounded-lg font-semibold text-sm hover:bg-slate-100 transition-colors"
               >
                 {adCtaLabel}
               </Link>
@@ -306,31 +306,31 @@ export default async function Latest() {
           </div>
 
           {/* Second Advertisement - Visiting/Affiliate */}
-          <div className="relative bg-linear-to-br from-emerald-900 to-teal-900 dark:from-emerald-950 dark:to-teal-950 rounded-xl p-6 border-2 border-white/20 dark:border-white/10 overflow-hidden">
+          <div className="relative bg-linear-to-br from-emerald-900 to-teal-900 rounded-xl p-6 border-2 border-white/20 overflow-hidden">
             {/* Advertisement Label */}
             <div className="absolute top-3 left-3">
-              <span className="text-xs font-semibold text-white/70 dark:text-white/60 uppercase tracking-wide">
+              <span className="text-xs font-semibold text-white/70 uppercase tracking-wide">
                 Advertisement
               </span>
             </div>
 
             {/* Pattern Overlay */}
-            <div className="absolute inset-0 opacity-10 dark:opacity-15">
+            <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 right-0 w-28 h-28 bg-white rounded-full blur-3xl" />
               <div className="absolute bottom-0 left-0 w-20 h-20 bg-white rounded-full blur-2xl" />
             </div>
 
             {/* Content */}
             <div className="relative z-10 pt-6">
-              <h3 className="text-xl font-bold text-white dark:text-white mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 {ad2Title}
               </h3>{/* Ad 2 title */}
-              <p className="text-sm text-slate-300 dark:text-slate-200 mb-4">
+              <p className="text-sm text-slate-300 mb-4">
                 {ad2Description}
               </p>{/* Ad 2 description */}
               <Link
                 href={ad2Link}
-                className="inline-block px-4 py-2 bg-white dark:bg-slate-100 text-emerald-900 dark:text-emerald-950 rounded-lg font-semibold text-sm hover:bg-slate-100 dark:hover:bg-white transition-colors"
+                className="inline-block px-4 py-2 bg-white text-emerald-900 rounded-lg font-semibold text-sm hover:bg-slate-100 transition-colors"
               >
                 {ad2CtaLabel}
               </Link>
@@ -338,31 +338,31 @@ export default async function Latest() {
           </div>
 
           {/* Third Advertisement - Page Boosting/Contact for Ads */}
-          <div className="relative bg-linear-to-br from-purple-900 to-pink-900 dark:from-purple-950 dark:to-pink-950 rounded-xl p-6 border-2 border-white/20 dark:border-white/10 overflow-hidden">
+          <div className="relative bg-linear-to-br from-purple-900 to-pink-900 rounded-xl p-6 border-2 border-white/20 overflow-hidden">
             {/* Advertisement Label */}
             <div className="absolute top-3 left-3">
-              <span className="text-xs font-semibold text-white/70 dark:text-white/60 uppercase tracking-wide">
+              <span className="text-xs font-semibold text-white/70 uppercase tracking-wide">
                 Advertisement
               </span>
             </div>
 
             {/* Pattern Overlay */}
-            <div className="absolute inset-0 opacity-10 dark:opacity-15">
+            <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 right-0 w-28 h-28 bg-white rounded-full blur-3xl" />
               <div className="absolute bottom-0 left-0 w-20 h-20 bg-white rounded-full blur-2xl" />
             </div>
 
             {/* Content */}
             <div className="relative z-10 pt-6">
-              <h3 className="text-xl font-bold text-white dark:text-white mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 {ad3Title}
               </h3>{/* Ad 3 title */}
-              <p className="text-sm text-slate-300 dark:text-slate-200 mb-4">
+              <p className="text-sm text-slate-300 mb-4">
                 {ad3Description}
               </p>{/* Ad 3 description */}
               <Link
                 href={ad3Link}
-                className="inline-block px-4 py-2 bg-white dark:bg-slate-100 text-purple-900 dark:text-purple-950 rounded-lg font-semibold text-sm hover:bg-slate-100 dark:hover:bg-white transition-colors"
+                className="inline-block px-4 py-2 bg-white text-purple-900 rounded-lg font-semibold text-sm hover:bg-slate-100 transition-colors"
               >
                 {ad3CtaLabel}
               </Link>

@@ -53,7 +53,7 @@ export default function NewsletterModal({ isOpen, onClose }: NewsletterModalProp
 
       {/* Modal Content */}
       <div
-        className="relative z-10 w-full max-w-lg rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 shadow-xl  dark:bg-slate-900 max-h-[90vh] overflow-y-auto"
+        className="relative z-10 w-full max-w-lg rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 shadow-xl  max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}

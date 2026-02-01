@@ -172,13 +172,13 @@ export default function NewsletterSubscription({
 
             {/* Modal Content */}
             <div
-              className="newsletter-modal-content relative z-10 w-full max-w-md rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-xl max-h-[90vh] overflow-y-auto"
+              className="newsletter-modal-content relative z-10 w-full max-w-md rounded-xl sm:rounded-2xl bg-white p-6 sm:p-8 shadow-xl max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close Button */}
               <button
                 onClick={handleCloseModal}
-                className="absolute right-4 top-4 rounded-full p-1.5 text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+                className="absolute right-4 top-4 rounded-full p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer transition-colors"
                 aria-label="Close modal"
               >
                 <X className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -186,10 +186,10 @@ export default function NewsletterSubscription({
 
               {/* Modal Form */}
               <div className="mt-2">
-                <h3 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">
+                <h3 className="text-2xl font-bold mb-2 text-slate-900">
                   Subscribe to Newsletter
                 </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+                <p className="text-sm text-slate-600 mb-6">
                   Enter your email to get the latest updates.
                 </p>
 
@@ -200,13 +200,13 @@ export default function NewsletterSubscription({
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 outline-none focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-slate-900 placeholder:text-slate-500 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full px-6 py-3 bg-blue-500 dark:bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? "Subscribing..." : "Subscribe"}
                   </button>
@@ -214,8 +214,8 @@ export default function NewsletterSubscription({
                   {resultMessage && (
                     <div
                       className={`text-sm font-medium text-center py-2 px-4 rounded-lg ${hasError
-                          ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
-                          : "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400"
+                          ? "bg-red-50 text-red-600"
+                          : "bg-green-50 text-green-600"
                         }`}
                     >
                       {resultMessage}
@@ -243,18 +243,18 @@ export default function NewsletterSubscription({
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 px-4 py-3 rounded-lg bg-slate-800/50 dark:bg-slate-900/60 border border-white/20 dark:border-white/30 text-white placeholder:text-white/60 dark:placeholder:text-white/50 outline-none focus:border-white/40 dark:focus:border-white/50 focus:ring-2 focus:ring-white/20 dark:focus:ring-white/30"
+            className="flex-1 px-4 py-3 rounded-lg bg-slate-800/50 border border-white/20 text-white placeholder:text-white/60 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/20"
           />
 
           <button
             type="submit"
-            className="px-6 py-3 bg-blue-500 dark:bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors whitespace-nowrap"
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors whitespace-nowrap"
           >
             {loading ? "Subscribing..." : "Subscribe"}
           </button>
         </form>
         {resultMessage && (
-          <span className="text-sm mt-10 font-semibold text-green-600 dark:text-green-400">
+          <span className="text-sm mt-10 font-semibold text-green-600">
             {resultMessage || "This Email is already subscribed!"}
           </span>
         )}
@@ -291,7 +291,7 @@ export default function NewsletterSubscription({
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full md:w-72 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-transparent outline-none focus:border-primary"
+          className="w-full md:w-72 px-4 py-2 rounded-xl border border-gray-300 bg-transparent outline-none focus:border-primary"
         />
 
         <button

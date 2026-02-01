@@ -19,13 +19,6 @@
   --text-color-muted: #6b6b6b;
 }
 
-.dark {
-  --bg-color: #0a0a0a;
-  --bg-color-muted: #1f1f1f;
-  --text-color: #ededed;
-  --text-color-muted: #a1a1a1;
-}
-
 body {
   background-color: var(--bg-color);
   color: var(--text-color);

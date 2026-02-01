@@ -2,13 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import {
   Menu,
   X,
   Search,
-  Moon,
-  Sun,
   Terminal,
   ChevronDown,
   Code,
@@ -31,7 +28,7 @@ const NavLink = ({ href, children, active = false }: NavItem) => (
     className={`group relative px-1 py-2 text-sm font-medium transition-colors ${
       active
         ? "text-primary"
-        : "text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white"
+        : "text-slate-600 hover:text-primary"
     }`}
   >
     {children}
@@ -46,7 +43,6 @@ const NavLink = ({ href, children, active = false }: NavItem) => (
 export default function Navbar() {
   const pathName = usePathname();
   const [mounted, setMounted] = useState(false);
-  const { setTheme, resolvedTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -82,14 +78,12 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  const isDark = resolvedTheme === "dark";
-
   if (!mounted) return null;
 
   return (
     <nav
-      className={`sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/10 
-    bg-slate-300 dark:bg-slate-950/80 backdrop-blur-md transition-all duration-300
+      className={`sticky top-0 z-50 w-full border-b border-gray-200 
+    bg-slate-300 backdrop-blur-md transition-all duration-300
     ${showNavbar ? "translate-y-0" : "-translate-y-full"}`}
     >
       <div className="mx-auto flex h-15 container items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -99,7 +93,7 @@ export default function Navbar() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
               <Terminal size={20} />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <span className="text-xl font-bold tracking-tight text-slate-900">
               DevLog
             </span>
           </Link>
@@ -120,7 +114,7 @@ export default function Navbar() {
               className={`flex items-center gap-1 text-sm font-medium ${
                 pathName === "/categories"
                   ? "text-primary"
-                  : "text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-white"
+                  : "text-slate-600 hover:text-primary"
               }  outline-none`}
             >
               Categories
@@ -137,38 +131,38 @@ export default function Navbar() {
 
             {/* Mega Menu Dropdown */}
             <div className="absolute left-1/2 top-full w-137.5 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top -translate-y-2 group-hover:translate-y-0">
-              <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900 p-6 shadow-2xl">
+              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
                 <div className="grid grid-cols-2 gap-6">
                   {/* Category Items */}
                   <CategoryItem
                     icon={<Code className="text-blue-500" />}
                     title="Frontend"
                     desc="React, Vue, & Tailwind CSS"
-                    bgColor="bg-blue-50 dark:bg-blue-500/10"
+                    bgColor="bg-blue-50"
                   />
                   <CategoryItem
                     icon={<Database className="text-emerald-500" />}
                     title="Backend"
                     desc="Node, Python & PostgreSQL"
-                    bgColor="bg-emerald-50 dark:bg-emerald-500/10"
+                    bgColor="bg-emerald-50"
                   />
                   <CategoryItem
                     icon={<Brush className="text-purple-500" />}
                     title="UI/UX Design"
                     desc="Figma & Design Systems"
-                    bgColor="bg-purple-50 dark:bg-purple-500/10"
+                    bgColor="bg-purple-50"
                   />
                   <CategoryItem
                     icon={<Rocket className="text-orange-500" />}
                     title="Productivity"
                     desc="Agile & Modern Workflows"
-                    bgColor="bg-orange-50 dark:bg-orange-500/10"
+                    bgColor="bg-orange-50"
                   />
                 </div>
-                <div className="mt-6 border-t border-gray-100 dark:border-white/5 pt-4">
+                <div className="mt-6 border-t border-gray-100 pt-4">
                   <Link
                     href="/categories"
-                    className="flex items-center justify-between rounded-lg bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm font-medium text-primary hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                    className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm font-medium text-primary hover:bg-slate-100 transition-colors"
                   >
                     <span>Explore all topics</span>
                     <ArrowRight size={18} />
@@ -199,31 +193,18 @@ export default function Navbar() {
                 className="
         h-full w-full
         rounded-full
-        bg-slate-100 dark:bg-white/5
+        bg-slate-100
         pl-10 pr-4
         text-sm outline-none
         focus:ring-2 focus:ring-primary/20
-        dark:text-white
       "
               />
             </div>
           </div>
 
-          {/* Theme Toggle */}
-          <button
-            onClick={() => setTheme(isDark ? "light" : "dark")}
-            className="flex h-10 cursor-pointer w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
-          >
-            {isDark ? (
-              <Sun size={20} className="text-yellow-400" />
-            ) : (
-              <Moon size={20} />
-            )}
-          </button>
-
           {/* Mobile Menu Toggle */}
           <button
-            className="md:hidden p-2 text-slate-600 dark:text-slate-300"
+            className="md:hidden p-2 text-slate-600"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -233,14 +214,14 @@ export default function Navbar() {
 
       {/* Mobile Menu Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-slate-950 border-b border-gray-200 dark:border-white/10 min-h-screen w-full fixed top-0 left-0 z-50 transform translate-x-0 transition-transform duration-300 ease-in-out ">
+        <div className="md:hidden bg-white border-b border-gray-200 min-h-screen w-full fixed top-0 left-0 z-50 transform translate-x-0 transition-transform duration-300 ease-in-out ">
           {/* Logo */}
           <div className="flex items-center justify-between gap-3 shrink-0 px-5 mt-5">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
                 <Terminal size={20} />
               </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <span className="text-xl font-bold tracking-tight text-slate-900">
                 DevLog
               </span>
             </Link>
@@ -256,7 +237,7 @@ export default function Navbar() {
               className={`block px-4 py-2 ${
                 pathName === "/"
                   ? "text-primary"
-                  : "text-slate-600 dark:text-slate-300"
+                  : "text-slate-600"
               } font-medium`}
             >
               Home
@@ -267,7 +248,7 @@ export default function Navbar() {
               className={`block px-4 py-2 ${
                 pathName === "/blog"
                   ? "text-primary"
-                  : "text-slate-600 dark:text-slate-300"
+                  : "text-slate-600"
               } font-medium`}
             >
               Articles
@@ -278,7 +259,7 @@ export default function Navbar() {
               className={`block px-4 py-2 ${
                 pathName === "/categories"
                   ? "text-primary"
-                  : "text-slate-600 dark:text-slate-300"
+                  : "text-slate-600"
               } font-medium`}
             >
               Categories
@@ -289,12 +270,12 @@ export default function Navbar() {
               className={`block px-4 py-2 ${
                 pathName === "/about"
                   ? "text-primary"
-                  : "text-slate-600 dark:text-slate-300"
+                  : "text-slate-600"
               } font-medium`}
             >
               About
             </Link>
-            <div className="pt-4 border-t border-gray-100 dark:border-white/5">
+            <div className="pt-4 border-t border-gray-100">
               <div className="relative">
                 <Search
                   size={18}
@@ -302,7 +283,7 @@ export default function Navbar() {
                 />
                 <input
                   type="text"
-                  className="w-full bg-slate-100 dark:bg-white/5 rounded-xl py-3 pl-10 text-sm outline-none"
+                  className="w-full bg-slate-100 rounded-xl py-3 pl-10 text-sm outline-none"
                   placeholder="Search articles..."
                 />
               </div>
@@ -325,7 +306,7 @@ function CategoryItem({ icon, title, desc, bgColor }: CategoryItemProps) {
   return (
     <Link
       href="#"
-      className="flex items-start gap-4 rounded-xl p-3 transition-colors hover:bg-slate-50 dark:hover:bg-white/5 group/item"
+      className="flex items-start gap-4 rounded-xl p-3 transition-colors hover:bg-slate-50 group/item"
     >
       <div
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${bgColor} group-hover/item:scale-110 transition-transform`}
@@ -333,10 +314,10 @@ function CategoryItem({ icon, title, desc, bgColor }: CategoryItemProps) {
         {icon}
       </div>
       <div>
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">
-          {title}
+<p className="text-sm font-semibold text-slate-900">
+        {title}
         </p>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs text-slate-500 mt-1">
           {desc}
         </p>
       </div>

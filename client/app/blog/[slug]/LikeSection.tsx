@@ -109,14 +109,14 @@ export default function LikeSection({ postId, initialCount }: LikeSectionProps) 
           disabled={loading}
           className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
             liked
-              ? "border-red-200 bg-red-50 text-red-600 dark:border-red-500/40 dark:bg-red-500/10"
-              : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              ? "border-red-200 bg-red-50 text-red-600"
+              : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
           }`}
         >
           <Heart className={liked ? "fill-red-500 text-red-500" : ""} size={18} />
           {liked ? "Liked" : "Like"}
         </button>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-slate-600">
           {likeCount} {likeCount === 1 ? "person" : "people"} liked this post
         </p>
       </div>

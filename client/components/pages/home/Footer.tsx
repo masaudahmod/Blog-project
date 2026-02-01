@@ -32,7 +32,7 @@ export default async function Footer() {
   const displayBrandDescription = footerContent?.content?.description || "The leading source for artificial intelligence news, research, and tutorials.";
 
   return (
-    <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+    <footer className="bg-white border-t border-slate-200">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
@@ -42,18 +42,18 @@ export default async function Footer() {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
                 <Terminal size={20} />
               </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <span className="text-xl font-bold tracking-tight text-slate-900">
                 {displayBrandName}
               </span>{/* Brand name */}
             </Link>
-            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xs">
+            <p className="text-sm text-slate-600 max-w-xs">
               {displayBrandDescription}
             </p>{/* Brand description */}
           </div>
 
           {/* Middle Column - Categories */}
           <div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4">
+            <h4 className="text-sm font-bold text-slate-900 mb-4">
               Categories
             </h4>
             <ul className="space-y-2">
@@ -61,7 +61,7 @@ export default async function Footer() {
                 <li key={category.href}>
                   <Link
                     href={category.href}
-                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+                    className="text-sm text-slate-600 hover:text-primary transition-colors"
                   >
                     {category.label}
                   </Link>
@@ -72,7 +72,7 @@ export default async function Footer() {
 
           {/* Right Column - Company */}
           <div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4">
+            <h4 className="text-sm font-bold text-slate-900 mb-4">
               Company
             </h4>
             <ul className="space-y-2">
@@ -80,7 +80,7 @@ export default async function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+                    className="text-sm text-slate-600 hover:text-primary transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -91,8 +91,8 @@ export default async function Footer() {
         </div>
 
         {/* Bottom Row - Copyright and Social Icons */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-slate-200 dark:border-slate-800">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-slate-200">
+          <p className="text-sm text-slate-600">
             © {currentYear} AI News Inc. All rights reserved.
           </p>
 
@@ -102,14 +102,14 @@ export default async function Footer() {
               href="https://twitter.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+              className="text-slate-600 hover:text-primary transition-colors"
               aria-label="Twitter"
             >
               <Twitter size={20} />
             </Link>
             <Link
               href="#"
-              className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+              className="text-slate-600 hover:text-primary transition-colors"
               aria-label="Website"
             >
               <Globe size={20} />

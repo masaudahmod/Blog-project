@@ -46,7 +46,7 @@ export default async function Page({ // Render blog listing page
   const { post } = await getPinnedPosts();
   console.log(post);
   return (
-    <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-white">
+    <div className="min-h-screen bg-white text-slate-900">
       <div className="container mx-auto">
         <div className="w-full px-4 pb-16 pt-10 lg:px-8">
           <header className="space-y-4">
@@ -57,10 +57,10 @@ export default async function Page({ // Render blog listing page
                 { label: "Artificial Intelligence" },
               ]}
             />
-            <h1 className="text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
+            <h1 className="text-3xl font-semibold text-slate-900 sm:text-4xl">
               {headerContent.title || "Artificial Intelligence"}
             </h1>{/* CMS header title */}
-            <p className="max-w-2xl text-base text-slate-600 dark:text-slate-300">
+            <p className="max-w-2xl text-base text-slate-600">
               {headerContent.description ||
                 "Explore the latest research, product design stories, and practical guidance on building with AI."}
             </p>{/* CMS header description */}
@@ -69,7 +69,7 @@ export default async function Page({ // Render blog listing page
           <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
             <main className="space-y-10">
               {/* pinned post */}
-              <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
+              <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                 <div className="relative">
                   <div className="relative h-56 w-full sm:h-72 lg:h-80">
                     <Image
@@ -81,26 +81,26 @@ export default async function Page({ // Render blog listing page
                       className="object-cover"
                       sizes="(max-width: 1024px) 100vw, 900px"
                     />
-                    <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm dark:bg-slate-900/80 dark:text-white">
+                    <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm">
                       Feature story
                     </span>
                   </div>
                   <div className="space-y-4 p-6 sm:p-8">
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
                       <span className="font-semibold text-primary">{post?.category?.name || ""}</span>
-                      <span className="text-slate-300 dark:text-white/20">•</span>
+                      <span className="text-slate-300">•</span>
                       <span>{post?.read_time || ""}</span>
-                      <span className="text-slate-300 dark:text-white/20">•</span>
+                      <span className="text-slate-300">•</span>
                       <span>Just now</span>
                     </div>
-                    <h2 className="text-2xl font-semibold text-slate-900 dark:text-white sm:text-3xl">
+                    <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
                       {post?.title || ""}
                     </h2>
-                    <p className="text-sm text-slate-600 dark:text-slate-300 sm:text-base">
+                    <p className="text-sm text-slate-600 sm:text-base">
                       {post?.excerpt || ""}
                     </p>
                     <div className="flex items-center gap-3 pt-2">
-                      <div className="relative h-8 w-8 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
+                      <div className="relative h-8 w-8 overflow-hidden rounded-full bg-slate-200">
                         <Image
                           src={heroAuthor.avatar}
                           alt={heroAuthor.name}
@@ -109,7 +109,7 @@ export default async function Page({ // Render blog listing page
                           sizes="32px"
                         />
                       </div>
-                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      <span className="text-xs font-semibold text-slate-700">
                         {heroAuthor.name}
                       </span>
                     </div>
@@ -120,10 +120,10 @@ export default async function Page({ // Render blog listing page
               {/* latest posts */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  <h2 className="text-xl font-semibold text-slate-900">
                     {latestContent.title || "Latest posts"}
                   </h2>{/* CMS latest title */}
-                  <button className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300 dark:border-white/10 dark:text-slate-300">
+                  <button className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300">
                     {latestContent.subtitle || "View all"}
                   </button>
                 </div>
@@ -143,9 +143,9 @@ export default async function Page({ // Render blog listing page
             </main>
 
             <aside className="space-y-6 lg:sticky lg:top-24">
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                 <div className="flex items-center gap-4">
-                  <div className="relative h-14 w-14 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
+                  <div className="relative h-14 w-14 overflow-hidden rounded-full bg-slate-200">
                     <Image
                       src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=200&q=80"
                       alt="Author profile"
@@ -156,13 +156,13 @@ export default async function Page({ // Render blog listing page
                     />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    <p className="text-sm font-semibold text-slate-900">
                       Maya L. Chen
                     </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-300">AI Research Lead</p>
+                    <p className="text-xs text-slate-600">AI Research Lead</p>
                   </div>
                 </div>
-                <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+                <p className="mt-4 text-sm text-slate-600">
                   Writing about human-centered AI, product strategy, and how to build with
                   responsibility.
                 </p>
@@ -171,39 +171,39 @@ export default async function Page({ // Render blog listing page
                 </button>
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600">
                   {searchContent.title || "Search"}
                 </h3>{/* CMS search title */}
                 <input
                   type="text"
                   placeholder={searchContent.subtitle || "Search articles"}
-                  className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-900 outline-none focus:border-primary dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-900 outline-none focus:border-primary"
                 />
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600">
                   Categories
                 </h3>
-                <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                <div className="mt-4 space-y-2 text-sm text-slate-600">
                   {categories.map((category) => (
                     <div
                       key={category}
-                      className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 dark:border-white/10"
+                      className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2"
                     >
                       <span>{category}</span>
-                      <span className="text-xs text-slate-400 dark:text-slate-500">12</span>
+                      <span className="text-xs text-slate-400">12</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600">
                   {newsletterContent.title || "Newsletter"}
                 </h3>{/* CMS newsletter title */}
-                <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                <p className="mt-3 text-sm text-slate-600">
                   {newsletterContent.description || "Get new posts and deep dives delivered weekly."}
                 </p>{/* CMS newsletter description */}
                 <NewsletterSubscribeButton />

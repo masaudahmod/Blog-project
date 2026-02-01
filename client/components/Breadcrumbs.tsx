@@ -31,7 +31,7 @@ export default function Breadcrumbs({
                     {item.label}
                   </Link>
                 ) : (
-                  <span className="text-slate-700 dark:text-slate-200">{item.label}</span>
+                  <span className="text-slate-700">{item.label}</span>
                 )}
                 {!isLast && <span className="text-slate-400">›</span>}
               </li>

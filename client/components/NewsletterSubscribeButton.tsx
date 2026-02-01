@@ -10,7 +10,7 @@ export default function NewsletterSubscribeButton() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="mt-4 w-full cursor-pointer rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 dark:bg-white dark:text-slate-900"
+        className="mt-4 w-full cursor-pointer rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
       >
         Subscribe
       </button>

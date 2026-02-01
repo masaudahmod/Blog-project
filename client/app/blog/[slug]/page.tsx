@@ -209,7 +209,7 @@ export default async function BlogPostPage({
 
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto">
         <div className=" px-4 pb-16 pt-8 lg:px-8">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -231,12 +231,12 @@ export default async function BlogPostPage({
                       )}
                     </div>
 
-                    <h1 className="text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl lg:text-5xl">
+                    <h1 className="text-3xl font-semibold text-slate-900 sm:text-4xl lg:text-5xl">
                       {post.title}
                     </h1>
 
                     {post.excerpt && (
-                      <p className="text-base text-slate-600 dark:text-slate-300 sm:text-lg">
+                      <p className="text-base text-slate-600 sm:text-lg">
                         {post.excerpt}
                       </p>
                     )}
@@ -261,14 +261,14 @@ export default async function BlogPostPage({
                   )}
 
                   <div
-                    className="prose prose-slate max-w-none dark:prose-invert
+                    className="prose prose-slate max-w-none
                     prose-headings:scroll-mt-28
                     prose-h3:text-3xl prose-h3:font-semibold
                     prose-h4:text-2xl prose-h4:font-semibold
                     prose-h5:text-xl prose-h5:font-semibold
                     prose-h6:text-lg prose-h6:font-semibold
                     prose-blockquote:border-l-4 prose-blockquote:border-primary/40 prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:text-slate-600
-                    dark:prose-blockquote:bg-slate-800/60 dark:prose-blockquote:text-slate-200
+                   
                     prose-pre:rounded-xl prose-pre:bg-slate-900 prose-pre:text-slate-100"
                     dangerouslySetInnerHTML={{ __html: contentWithAds }}
                   />
@@ -278,7 +278,7 @@ export default async function BlogPostPage({
                       {post.tags.map((tag: string, i: number) => (
                         <span
                           key={i}
-                          className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                          className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600"
                         >
                           #{tag}
                         </span>
@@ -299,7 +299,7 @@ export default async function BlogPostPage({
               {relatedPosts.length > 0 && (
                 <section className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                    <h2 className="text-xl font-semibold text-slate-900">
                       Read next
                     </h2>
                   </div>
@@ -322,11 +322,11 @@ export default async function BlogPostPage({
                           </div>
                         )}
                         <div className="space-y-2 p-4">
-                          <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                          <p className="text-sm font-semibold text-slate-900">
                             {related.title}
                           </p>
                           {related.excerpt && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                            <p className="text-xs text-slate-500">
                               {related.excerpt}
                             </p>
                           )}
@@ -343,7 +343,7 @@ export default async function BlogPostPage({
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                   Table of contents
                 </h3>
-                <div className="mt-4 border-l border-slate-200 pl-4 text-sm dark:border-slate-700">
+                <div className="mt-4 border-l border-slate-200 pl-4 text-sm">
                   {toc.length > 0 ? (
                     <ul className="space-y-2">
                       {toc.map((item) => (
@@ -353,7 +353,7 @@ export default async function BlogPostPage({
                         >
                           <a
                             href={`#${item.id}`}
-                            className="text-slate-700 transition hover:text-primary dark:text-slate-200"
+                            className="text-slate-700 transition hover:text-primary"
                           >
                             {item.text}
                           </a>
@@ -370,7 +370,7 @@ export default async function BlogPostPage({
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                   Newsletter
                 </h3>
-                <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                <p className="mt-3 text-sm text-slate-600">
                   Get the latest posts, deep dives, and tutorials delivered to your inbox.
                 </p>
                 <div className="mt-4">

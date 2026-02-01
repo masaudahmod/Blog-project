@@ -102,8 +102,8 @@ export default function Pagination({
           href={buildHref(basePath, 1, query)}
           className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition ${
             previousDisabled
-              ? "pointer-events-none opacity-50 border-slate-200 text-slate-400 dark:border-slate-800 dark:text-slate-500"
-              : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
+              ? "pointer-events-none opacity-50 border-slate-200 text-slate-400"
+              : "border-slate-200 text-slate-700 hover:bg-slate-50"
           }`}
           aria-disabled={previousDisabled}
         >
@@ -115,8 +115,8 @@ export default function Pagination({
         href={buildHref(basePath, Math.max(1, safeCurrentPage - 1), query)}
         className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition ${
           previousDisabled
-            ? "pointer-events-none opacity-50 border-slate-200 text-slate-400 dark:border-slate-800 dark:text-slate-500"
-            : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
+            ? "pointer-events-none opacity-50 border-slate-200 text-slate-400"
+            : "border-slate-200 text-slate-700 hover:bg-slate-50"
         }`}
         aria-disabled={previousDisabled}
       >
@@ -129,7 +129,7 @@ export default function Pagination({
             return (
               <span
                 key={`ellipsis-${index}`}
-                className="px-2 text-slate-400 dark:text-slate-500"
+                className="px-2 text-slate-400"
               >
                 …
               </span>
@@ -145,7 +145,7 @@ export default function Pagination({
               className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition ${
                 isActive
                   ? "border-primary bg-primary text-white"
-                  : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
+                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
               }`}
             >
               {item}
@@ -158,8 +158,8 @@ export default function Pagination({
         href={buildHref(basePath, Math.min(safeTotalPages, safeCurrentPage + 1), query)}
         className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition ${
           nextDisabled
-            ? "pointer-events-none opacity-50 border-slate-200 text-slate-400 dark:border-slate-800 dark:text-slate-500"
-            : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
+            ? "pointer-events-none opacity-50 border-slate-200 text-slate-400"
+            : "border-slate-200 text-slate-700 hover:bg-slate-50"
         }`}
         aria-disabled={nextDisabled}
       >
@@ -171,8 +171,8 @@ export default function Pagination({
           href={buildHref(basePath, safeTotalPages, query)}
           className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition ${
             nextDisabled
-              ? "pointer-events-none opacity-50 border-slate-200 text-slate-400 dark:border-slate-800 dark:text-slate-500"
-              : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
+              ? "pointer-events-none opacity-50 border-slate-200 text-slate-400"
+              : "border-slate-200 text-slate-700 hover:bg-slate-50"
           }`}
           aria-disabled={nextDisabled}
         >

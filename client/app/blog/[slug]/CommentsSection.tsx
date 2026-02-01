@@ -82,7 +82,7 @@ export default function CommentsSection({
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Comments</h2>
+        <h2 className="text-xl font-semibold text-slate-900">Comments</h2>
         <p className="text-sm text-slate-500">
           Share your thoughts or ask a question about this article.
         </p>
@@ -93,15 +93,15 @@ export default function CommentsSection({
           {comments.map((comment) => (
             <div
               key={comment.id}
-              className="rounded-xl border border-slate-200/80 p-4 dark:border-slate-800"
+              className="rounded-xl border border-slate-200/80 p-4"
             >
               <div className="flex items-start gap-3">
                 <CircleUser className="text-slate-400" size={22} />
                 <div className="flex-1">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Anonymous User • {new Date(comment.created_at).toLocaleDateString()}
                   </p>
-                  <p className="mt-2 text-sm text-slate-900 dark:text-white">
+                  <p className="mt-2 text-sm text-slate-900">
                     {comment.message}
                   </p>
                 </div>
@@ -115,18 +115,18 @@ export default function CommentsSection({
 
       <div className="space-y-4">
         <button
-          className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 dark:border-slate-700 dark:text-slate-200"
+          className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300"
           onClick={() => setWriteComponent(!writeComponent)}
         >
           {writeComponent ? "Close comment form" : "Add a comment"}
         </button>
 
         {writeComponent && (
-          <div className="space-y-4 rounded-2xl border border-slate-200/80 p-4 dark:border-slate-800">
+          <div className="space-y-4 rounded-2xl border border-slate-200/80 p-4">
             <textarea
               value={userComment}
               onChange={(e) => setUserComment(e.target.value)}
-              className="w-full min-h-[120px] rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900 outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+              className="w-full min-h-[120px] rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900 outline-none focus:border-primary"
               placeholder="Write your comment here..."
               rows={4}
             />
