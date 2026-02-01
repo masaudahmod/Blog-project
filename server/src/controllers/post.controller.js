@@ -805,35 +805,200 @@ export const approveComment = async (req, res) => {
   }
 };
 
+/**
+ * Get monthly stats for a single month: posts, comments (from comments table), likes (from post_likes table)
+ * GET /api/post/monthly-stats?month=1&year=2025
+ */
 export const getMonthlyPost = async (req, res) => {
   try {
-    // month & year query থেকে নিবো
-    // example: ?month=1&year=2025
     const { month, year } = req.query;
-    const result = await pool.query(
-      `
-      SELECT
-        COUNT(id) AS total_posts,
-        COALESCE(SUM(likes), 0) AS total_likes,
-        COALESCE(SUM(jsonb_array_length(comments)), 0) AS total_comments
-      FROM posts
-      WHERE
-        EXTRACT(MONTH FROM created_at) = $1
-        AND EXTRACT(YEAR FROM created_at) = $2;
-      `,
-      [month, year]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Monthly post not found" });
+    const m = parseInt(month, 10);
+    const y = parseInt(year, 10);
+    if (!m || !y || m < 1 || m > 12) {
+      return res.status(400).json({ message: "Valid month (1-12) and year are required" });
     }
 
+    const [postsResult, commentsResult, likesResult] = await Promise.all([
+      pool.query(
+        `SELECT COUNT(id)::int AS total_posts FROM posts
+         WHERE EXTRACT(MONTH FROM created_at) = $1 AND EXTRACT(YEAR FROM created_at) = $2`,
+        [m, y]
+      ),
+      pool.query(
+        `SELECT COUNT(id)::int AS total_comments FROM comments
+         WHERE EXTRACT(MONTH FROM created_at) = $1 AND EXTRACT(YEAR FROM created_at) = $2`,
+        [m, y]
+      ),
+      pool.query(
+        `SELECT COUNT(id)::int AS total_likes FROM post_likes
+         WHERE EXTRACT(MONTH FROM created_at) = $1 AND EXTRACT(YEAR FROM created_at) = $2`,
+        [m, y]
+      ),
+    ]);
+
+    const total_posts = postsResult.rows[0]?.total_posts ?? 0;
+    const total_comments = commentsResult.rows[0]?.total_comments ?? 0;
+    const total_likes = likesResult.rows[0]?.total_likes ?? 0;
+
     res.status(200).json({
-      message: "Monthly post stats retrieved",
-      data: result.rows[0],
+      message: "Monthly stats retrieved",
+      data: { total_posts, total_comments, total_likes },
     });
   } catch (error) {
     res.status(500).json({
       message: "Server Error in get monthly post",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Get daily stats for the last N days (for charts)
+ * GET /api/post/daily-stats/history?days=10
+ */
+export const getDailyStatsHistory = async (req, res) => {
+  try {
+    const days = Math.min(Math.max(parseInt(req.query.days, 10) || 10, 1), 31);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    const postsResult = await pool.query(
+      `SELECT DATE(created_at) AS day, COUNT(id)::int AS total_posts
+       FROM posts WHERE created_at >= $1
+       GROUP BY DATE(created_at) ORDER BY day`,
+      [startDate]
+    );
+    const commentsResult = await pool.query(
+      `SELECT DATE(created_at) AS day, COUNT(id)::int AS total_comments
+       FROM comments WHERE created_at >= $1
+       GROUP BY DATE(created_at) ORDER BY day`,
+      [startDate]
+    );
+    const likesResult = await pool.query(
+      `SELECT DATE(created_at) AS day, COUNT(id)::int AS total_likes
+       FROM post_likes WHERE created_at >= $1
+       GROUP BY DATE(created_at) ORDER BY day`,
+      [startDate]
+    );
+
+    const byDay = (r, key) => {
+      const map = new Map();
+      (r.rows || []).forEach((row) => {
+        const day = row.day;
+        const dayStr = day instanceof Date ? day.toISOString().slice(0, 10) : String(day).slice(0, 10);
+        map.set(dayStr, row[key]);
+      });
+      return map;
+    };
+    const postsByDay = byDay(postsResult, "total_posts");
+    const commentsByDay = byDay(commentsResult, "total_comments");
+    const likesByDay = byDay(likesResult, "total_likes");
+
+    const result = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toISOString().slice(0, 10);
+      result.push({
+        date: dateStr,
+        posts: postsByDay.get(dateStr) ?? 0,
+        comments: commentsByDay.get(dateStr) ?? 0,
+        likes: likesByDay.get(dateStr) ?? 0,
+      });
+    }
+
+    res.status(200).json({
+      message: "Daily stats history retrieved",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server Error in get daily stats history",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Get monthly stats for the last N months (for charts)
+ * GET /api/post/monthly-stats/history?months=12
+ */
+export const getMonthlyStatsHistory = async (req, res) => {
+  try {
+    const months = Math.min(Math.max(parseInt(req.query.months, 10) || 12, 1), 24);
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+
+    const postsResult = await pool.query(
+      `SELECT
+        EXTRACT(YEAR FROM created_at)::int AS year,
+        EXTRACT(MONTH FROM created_at)::int AS month,
+        COUNT(id)::int AS total_posts
+       FROM posts
+       WHERE created_at >= $1
+       GROUP BY EXTRACT(YEAR FROM created_at), EXTRACT(MONTH FROM created_at)
+       ORDER BY year, month`,
+      [startDate]
+    );
+    const commentsResult = await pool.query(
+      `SELECT
+        EXTRACT(YEAR FROM created_at)::int AS year,
+        EXTRACT(MONTH FROM created_at)::int AS month,
+        COUNT(id)::int AS total_comments
+       FROM comments
+       WHERE created_at >= $1
+       GROUP BY EXTRACT(YEAR FROM created_at), EXTRACT(MONTH FROM created_at)
+       ORDER BY year, month`,
+      [startDate]
+    );
+    const likesResult = await pool.query(
+      `SELECT
+        EXTRACT(YEAR FROM created_at)::int AS year,
+        EXTRACT(MONTH FROM created_at)::int AS month,
+        COUNT(id)::int AS total_likes
+       FROM post_likes
+       WHERE created_at >= $1
+       GROUP BY EXTRACT(YEAR FROM created_at), EXTRACT(MONTH FROM created_at)
+       ORDER BY year, month`,
+      [startDate]
+    );
+
+    const byKey = (r, key) => {
+      const map = new Map();
+      (r.rows || []).forEach((row) => map.set(`${row.year}-${row.month}`, row[key]));
+      return map;
+    };
+    const postsByMonth = byKey(postsResult, "total_posts");
+    const commentsByMonth = byKey(commentsResult, "total_comments");
+    const likesByMonth = byKey(likesResult, "total_likes");
+
+    const result = [];
+    for (let i = 0; i < months; i++) {
+      const d = new Date(startDate);
+      d.setMonth(d.getMonth() + i);
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      const key = `${year}-${month}`;
+      result.push({
+        date: `${year}-${String(month).padStart(2, "0")}-01`,
+        year,
+        month,
+        posts: postsByMonth.get(key) ?? 0,
+        comments: commentsByMonth.get(key) ?? 0,
+        likes: likesByMonth.get(key) ?? 0,
+      });
+    }
+
+    res.status(200).json({
+      message: "Monthly stats history retrieved",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server Error in get monthly stats history",
       error: error.message,
     });
   }

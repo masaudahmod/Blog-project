@@ -6,6 +6,8 @@ import {
   approveComment,
   deletePost,
   getMonthlyPost,
+  getDailyStatsHistory,
+  getMonthlyStatsHistory,
   getPendingComments,
   getPost,
   getPostBySlug,
@@ -39,6 +41,8 @@ router
   .post(verifyAuth, allowRoles("admin"), approveComment);
 
 router.route("/monthly-stats").get(verifyAuth, allowRoles("admin"), getMonthlyPost);
+router.get("/daily-stats/history", verifyAuth, allowRoles("admin"), getDailyStatsHistory);
+router.get("/monthly-stats/history", verifyAuth, allowRoles("admin"), getMonthlyStatsHistory);
 
 router.post("/:slug/like", likePostBySlug);
 router.post("/:slug/unlike", unlikePostBySlug);
