@@ -1,7 +1,26 @@
 import pool from "../config/db.js";
+import { getCache, setCache, deleteCache } from "../config/redis.js";
 import { cloudinaryDelete, cloudinaryUpload } from "../service/cloudinary.js";
 import { asyncHandler, AppError } from "../middlewares/error.middleware.js";
 import { updatePost as updatePostModel, pinPostById, getPinnedPost, unpinAllPosts } from "../models/post.model.js";
+
+const CACHE_TTL = 300; // 5 minutes
+const postListKey = (page, filter) => `post:list:${page}:${filter}`;
+const postFilterKey = (categoryId, page, filter) => `post:filter:${categoryId}:${page}:${filter}`;
+const postIdKey = (id) => `post:id:${id}`;
+const postSlugKey = (slug) => `post:slug:${slug}`;
+const POST_PINNED_KEY = "post:pinned";
+
+async function invalidatePostListAndFilter(categoryId) {
+  await deleteCache(postListKey(1, "all"));
+  await deleteCache(postListKey(1, "published"));
+  await deleteCache(postListKey(1, "draft"));
+  if (categoryId != null) {
+    await deleteCache(postFilterKey(categoryId, 1, "all"));
+    await deleteCache(postFilterKey(categoryId, 1, "published"));
+    await deleteCache(postFilterKey(categoryId, 1, "draft"));
+  }
+}
 
 export const addPost = asyncHandler(async (req, res) => {
   let {
@@ -58,6 +77,7 @@ export const addPost = asyncHandler(async (req, res) => {
     throw new AppError("Missing required fields: title, content, and category_id are required", 400);
   }
 
+  await invalidatePostListAndFilter(parseInt(category_id));
   const result = await pool.query(
     `Insert into posts (title, slug, content, excerpt, featured_image_url, featured_image_public_id, featured_image_alt, featured_image_caption, meta_title, meta_description, meta_keywords, canonical_url, schema_type, category_id, author_id, tags, read_time, likes, comments, interactions, is_published, published_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) returning *`,
     [
@@ -99,7 +119,12 @@ export const allPosts = asyncHandler(async (req, res) => {
   const offset = (page - 1) * limit;
   const filter = req.query.filter || "all"; // all, published, draft
 
-  // Build WHERE clause based on filter
+  const cacheKey = postListKey(page, filter);
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.status(200).json({ ...cached, source: "cache" });
+  }
+
   let whereClause = "";
   if (filter === "published") {
     whereClause = "WHERE posts.is_published = true";
@@ -150,13 +175,15 @@ export const allPosts = asyncHandler(async (req, res) => {
   const totalPosts = parseInt(totalResult.rows[0].count);
   const totalPages = Math.ceil(totalPosts / limit);
 
-  res.status(200).json({
+  const payload = {
     success: true,
     message: "Posts retrieved",
     currentPage: page,
     totalPages,
     posts: posts.rows,
-  });
+  };
+  await setCache(cacheKey, payload, CACHE_TTL);
+  res.status(200).json(payload);
 });
 
 /**
@@ -217,6 +244,12 @@ export const getPostsByFilter = asyncHandler(async (req, res) => {
 
   const category = categoryResult.rows[0];
   const resolvedCategoryId = category.id;
+
+  const filterCacheKey = postFilterKey(resolvedCategoryId, pageNum, statusFilter);
+  const filterCached = await getCache(filterCacheKey);
+  if (filterCached) {
+    return res.status(200).json({ ...filterCached, source: "cache" });
+  }
 
   // Build WHERE clause for post status filter
   let statusWhereClause = "";
@@ -347,16 +380,23 @@ export const getPostsByFilter = asyncHandler(async (req, res) => {
     response.message = `No posts found for category "${category.name}"`;
   }
 
+  await setCache(filterCacheKey, response, CACHE_TTL);
   res.status(200).json(response);
 });
 
 export const getPost = async (req, res) => {
   try {
     const { id } = req.params;
+    const cacheKey = postIdKey(id);
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.status(200).json({ message: "Post retrieved", post: cached.post, source: "cache" });
+    }
     const query = "SELECT * FROM posts WHERE id = $1";
     const result = await pool.query(query, [id]);
     if (result.rows.length === 0)
       return res.status(404).json({ message: "Post not found" });
+    await setCache(cacheKey, { post: result.rows[0] }, CACHE_TTL);
     res.status(200).json({ message: "Post retrieved", post: result.rows[0] });
   } catch (error) {
     return res
@@ -368,10 +408,16 @@ export const getPost = async (req, res) => {
 export const getPostBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
+    const cacheKey = postSlugKey(slug);
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.status(200).json({ message: "Post retrieved", post: cached.post, source: "cache" });
+    }
     const query = "SELECT * FROM posts WHERE slug = $1";
     const result = await pool.query(query, [slug]);
     if (result.rows.length === 0)
       return res.status(404).json({ message: "Post not found" });
+    await setCache(cacheKey, { post: result.rows[0] }, CACHE_TTL);
     res.status(200).json({ message: "Post retrieved", post: result.rows[0] });
   } catch (error) {
     return res
@@ -395,10 +441,16 @@ export const deletePost = async (req, res) => {
     const featured_image_public_id =
       postResult.rows[0].featured_image_public_id;
 
+    const slug = postResult.rows[0].slug;
+    const category_id = postResult.rows[0].category_id;
+
     if (featured_image_public_id) {
       await cloudinaryDelete(featured_image_public_id);
     }
 
+    await deleteCache(postIdKey(id));
+    await deleteCache(postSlugKey(slug));
+    await invalidatePostListAndFilter(category_id);
     await pool.query("DELETE FROM posts WHERE id = $1", [id]);
 
     res.status(200).json({ message: "Post deleted" });
@@ -421,10 +473,15 @@ export const updatePost = asyncHandler(async (req, res) => {
     throw new AppError("Post not found", 404);
   }
 
+  const post = result.rows[0];
+  await deleteCache(postIdKey(id));
+  await deleteCache(postSlugKey(post.slug));
+  await invalidatePostListAndFilter(post.category_id);
+
   res.status(200).json({
     success: true,
     message: "Post updated successfully",
-    post: result.rows[0]
+    post,
   });
 });
 
@@ -594,10 +651,15 @@ export const updatePostBySlug = asyncHandler(async (req, res) => {
     throw new AppError("Failed to update post", 500);
   }
 
+  const post = result.rows[0];
+  await deleteCache(postIdKey(postId));
+  await deleteCache(postSlugKey(finalSlug));
+  await invalidatePostListAndFilter(post.category_id);
+
   return res.status(200).json({
     success: true,
     message: "Post updated successfully",
-    post: result.rows[0],
+    post,
   });
 });
 
@@ -620,7 +682,6 @@ export const updatePublishStatus = asyncHandler(async (req, res) => {
     throw new AppError("Post not found", 404);
   }
 
-  // Update publish status
   const published_at = is_published ? new Date().toISOString() : null;
   const result = await pool.query(
     `UPDATE posts 
@@ -630,10 +691,15 @@ export const updatePublishStatus = asyncHandler(async (req, res) => {
     [is_published, published_at, id]
   );
 
+  const post = result.rows[0];
+  await deleteCache(postIdKey(id));
+  await deleteCache(postSlugKey(post.slug));
+  await invalidatePostListAndFilter(post.category_id);
+
   res.status(200).json({
     success: true,
     message: is_published ? "Post published successfully" : "Post unpublished successfully",
-    post: result.rows[0],
+    post,
   });
 });
 
@@ -876,8 +942,8 @@ export const pinPostController = asyncHandler(async (req, res) => {
 
   const isCurrentlyPinned = postCheck.rows[0].is_pinned;
 
-  // If already pinned, unpin it instead
   if (isCurrentlyPinned) {
+    await deleteCache(POST_PINNED_KEY);
     const result = await unpinAllPosts();
     return res.status(200).json({
       success: true,
@@ -886,7 +952,7 @@ export const pinPostController = asyncHandler(async (req, res) => {
     });
   }
 
-  // Pin the post (this will automatically unpin others via transaction)
+  await deleteCache(POST_PINNED_KEY);
   const result = await pinPostById(postId);
 
   if (result.rows.length === 0) {
@@ -906,21 +972,21 @@ export const pinPostController = asyncHandler(async (req, res) => {
  */
 export const getPinnedPostController = asyncHandler(async (req, res) => {
   try {
-    const result = await getPinnedPost();
-    
-    if (result.rows.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: "No pinned post found",
-        post: null,
-      });
+    const cached = await getCache(POST_PINNED_KEY);
+    if (cached) {
+      return res.status(200).json({ ...cached, source: "cache" });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Pinned post retrieved",
-      post: result.rows[0],
-    });
+    const result = await getPinnedPost();
+    if (result.rows.length === 0) {
+      const emptyPayload = { success: true, message: "No pinned post found", post: null };
+      await setCache(POST_PINNED_KEY, emptyPayload, CACHE_TTL);
+      return res.status(200).json(emptyPayload);
+    }
+
+    const payload = { success: true, message: "Pinned post retrieved", post: result.rows[0] };
+    await setCache(POST_PINNED_KEY, payload, CACHE_TTL);
+    res.status(200).json(payload);
   } catch (error) {
     console.error("Error get pinned post:", error);
     res.status(500).json({
