@@ -806,8 +806,52 @@ async function getMonthlyPost(month: number, year: number) {
     );
     return result.json();
   } catch (error) {
-    console.error("Error getting comment:", error);
+    console.error("Error getting monthly stats:", error);
     return null;
+  }
+}
+
+async function getMonthlyStatsHistory(months: number = 12) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/monthly-stats/history?months=${months}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await result.json();
+    if (result.ok && data.data) return data.data as { date: string; posts: number; comments: number; likes: number }[];
+    return [];
+  } catch (error) {
+    console.error("Error getting monthly stats history:", error);
+    return [];
+  }
+}
+
+async function getDailyStatsHistory(days: number = 10) {
+  try {
+    const token = await getCookies();
+    const result = await fetch(
+      `${process.env.NEXT_SERVER_API_URL}/post/daily-stats/history?days=${days}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await result.json();
+    if (result.ok && data.data) return data.data as { date: string; posts: number; comments: number; likes: number }[];
+    return [];
+  } catch (error) {
+    console.error("Error getting daily stats history:", error);
+    return [];
   }
 }
 
@@ -992,6 +1036,8 @@ export {
   getPendingComments,
   approveComment,
   getMonthlyPost,
+  getMonthlyStatsHistory,
+  getDailyStatsHistory,
   likePost,
   getNewsletterSubcriberPaginate,
   getComments,

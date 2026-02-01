@@ -25,7 +25,9 @@ import { Input } from "@/components/ui/input";
 interface Comment {
   id: number;
   post_id: number;
+  parent_id: number | null;
   user_identifier: string;
+  user_name: string | null;
   message: string;
   status: "pending" | "approved" | "rejected";
   created_at: string;
@@ -201,12 +203,17 @@ export default function CommentsPage() {
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3 flex-1">
-                  <CircleUser className="text-slate-400 mt-1" size={24} />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                  <CircleUser className="text-slate-400 mt-1 shrink-0" size={24} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <p className="font-medium text-slate-900 dark:text-white">
-                        Anonymous User
+                        {comment.user_name?.trim() || "Anonymous"}
                       </p>
+                      {comment.parent_id != null && (
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          (Reply to #{comment.parent_id})
+                        </span>
+                      )}
                       {getStatusBadge(comment.status)}
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
