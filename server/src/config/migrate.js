@@ -2,7 +2,7 @@ import { createUserTable, alterUserTable } from "../models/user.model.js";
 import { createCategoryTable } from "../models/category.model.js";
 import { createPostTable, createPostIndexes, alterPostTableAddAuthorId, alterPostTableAddIsPinned } from "../models/post.model.js";
 import { createNewsletterTable } from "../models/newsletter.model.js";
-import { createCommentTable } from "../models/comment.model.js";
+import { createCommentTable, alterCommentTableAddThreadAndName, alterCommentTableDefaultApproved } from "../models/comment.model.js";
 import { createPostLikeTable } from "../models/postLike.model.js";
 import { createUserActivityTable } from "../models/userActivity.model.js";
 import { createSiteContentTable } from "../models/siteContent.model.js"; // Import site content table helper
@@ -42,6 +42,10 @@ const migrate = async () => {
     // Dependent tables
     await createCommentTable();
     console.log("✓ Created comments table");
+    await alterCommentTableAddThreadAndName();
+    console.log("✓ Comments table: parent_id & user_name columns ensured");
+    await alterCommentTableDefaultApproved();
+    console.log("✓ Comments table: default status = approved");
 
     await createPostLikeTable();
     console.log("✓ Created post_likes table");
