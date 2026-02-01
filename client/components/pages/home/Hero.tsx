@@ -74,7 +74,7 @@ export default async function Hero() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Featured Story */}
         <div className="lg:col-span-2 relative group">
-          <Link href={`/`}>
+          <Link href={`/blog`}>
             <div className="relative h-[400px] md:h-[500px] lg:h-[600px] rounded-2xl overflow-hidden backdrop-blur-sm">
               {/* Background Image with Overlay */}
               <Image src={featuredStory.image} alt={featuredStory.title} fill className="object-cover" />
@@ -111,13 +111,13 @@ export default async function Hero() {
 
         {/* Side Articles */}
         <div className="flex flex-col gap-6">
-          {sideArticles.map((article: SideArticle, index: number) => (
+          {sideArticles.map((article: SideArticle) => (
             <Link
               key={article.id}
               href={`/`}
               className="relative group flex-1"
             >
-              <div className="relative h-[190px] md:h-[240px] rounded-xl overflow-hidden">
+              <div className="relative h-[190px] md:h-[270px] rounded-xl overflow-hidden">
                 {/* Background Image with Overlay */}
                 <div className="absolute inset-0 bg-linear-to-br from-slate-800 via-slate-700 to-slate-900">
                   <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />

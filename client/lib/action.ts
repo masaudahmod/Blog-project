@@ -177,24 +177,32 @@ export async function getPostComments(postId: number) {
 }
 
 /**
- * Add a comment to a post
+ * Add a comment to a post (top-level or reply)
+ * Optional: parent_id (reply to comment), user_name (display name for this comment)
  */
 export async function addComment({
   post_id,
   user_identifier,
   message,
+  parent_id,
+  user_name,
 }: {
   post_id: number;
   user_identifier: string;
   message: string;
+  parent_id?: number | null;
+  user_name?: string | null;
 }) {
   try {
+    const body: Record<string, unknown> = { post_id, user_identifier, message };
+    if (parent_id != null && parent_id > 0) body.parent_id = parent_id;
+    if (user_name != null && String(user_name).trim()) body.user_name = String(user_name).trim();
     const result = await fetch(`${API_URL}/comments`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ post_id, user_identifier, message }),
+      body: JSON.stringify(body),
     });
     const data = await result.json();
     return data;
