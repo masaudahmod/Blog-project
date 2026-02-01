@@ -6,6 +6,19 @@ const CACHE_TTL_SECONDS = 600; // 10 minutes
 const SITE_ALL_KEY = "site:all";
 const buildPageCacheKey = (pageKey) => `site:page:${pageKey}`;
 
+/** Allowed section_key values per page_key (must match dashboard SECTION_OPTIONS_BY_PAGE) */
+const ALLOWED_SECTIONS_BY_PAGE = {
+  home: ["latest", "daily-middle-ad", "ad", "ad-2", "ad-3", "trending", "hero", "footer", "newsletter"],
+  blog: ["header", "latest", "newsletter", "search"],
+  about: ["hero", "author", "explore", "mission", "vision", "cta"],
+};
+
+function isAllowedSection(pageKey, sectionKey) {
+  const allowed = ALLOWED_SECTIONS_BY_PAGE[pageKey];
+  if (!allowed) return false;
+  return allowed.includes(sectionKey);
+}
+
 export const getAllContents = async (req, res) => {
   try {
     const cached = await getCache(SITE_ALL_KEY);
@@ -57,6 +70,12 @@ export const createContent = async (req, res) => { // Handle create endpoint
     if (!page_key || !section_key) { // Validate required keys
       return res.status(400).json({ success: false, message: "page_key and section_key are required" }); // Return validation error
     } // End validation
+    if (!isAllowedSection(page_key, section_key)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid section_key "${section_key}" for page_key "${page_key}". Use a section key allowed for this page.`,
+      });
+    }
     if (!content || typeof content !== "object" || Array.isArray(content)) {
       return res.status(400).json({ success: false, message: "content must be a JSON object" });
     }

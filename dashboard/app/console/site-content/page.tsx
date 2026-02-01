@@ -4,6 +4,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import Image from "next/image";
 import { X } from "lucide-react";
@@ -13,12 +20,57 @@ import {
   getSiteContents,
   updateSiteContent,
 } from "@/lib/action";
-const pageOptions = ["home", "blog", "about"];
+
+const PAGE_OPTIONS = [
+  { value: "home", label: "home" },
+  { value: "blog", label: "blog" },
+  { value: "about", label: "about" },
+] as const;
+
+/** Section key options per page (must match server ALLOWED_SECTIONS_BY_PAGE) */
+const SECTION_OPTIONS_BY_PAGE: Record<string, { value: string; label: string }[]> = {
+  home: [
+    { value: "latest", label: "latest" },
+    { value: "daily-middle-ad", label: "daily-middle-ad" },
+    { value: "ad", label: "ad" },
+    { value: "ad-2", label: "ad-2" },
+    { value: "ad-3", label: "ad-3" },
+    { value: "trending", label: "trending" },
+    { value: "hero", label: "hero" },
+    { value: "footer", label: "footer" },
+    { value: "newsletter", label: "newsletter" },
+  ],
+  blog: [
+    { value: "header", label: "header" },
+    { value: "latest", label: "latest" },
+    { value: "newsletter", label: "newsletter" },
+    { value: "search", label: "search" },
+  ],
+  about: [
+    { value: "hero", label: "hero" },
+    { value: "author", label: "author" },
+    { value: "explore", label: "explore" },
+    { value: "mission", label: "mission" },
+    { value: "vision", label: "vision" },
+    { value: "cta", label: "cta" },
+  ],
+};
+
+/** Sections that show Link input (subtitle button href) for advertisement */
+const SECTIONS_WITH_LINK = ["daily-middle-ad", "ad", "ad-2", "ad-3"] as const;
+function sectionHasLink(sectionKey: string): boolean {
+  return (SECTIONS_WITH_LINK as readonly string[]).includes(sectionKey);
+}
+
+function getSectionOptionsForPage(pageKey: string): { value: string; label: string }[] {
+  return SECTION_OPTIONS_BY_PAGE[pageKey] ?? [];
+}
+
 type SiteContentItem = {
   id: number;
   page_key: string;
   section_key: string;
-  content: { title?: string; subtitle?: string; description?: string };
+  content: { title?: string; subtitle?: string; description?: string; link?: string };
   image_url?: string;
   image_public_id?: string;
 };
@@ -28,6 +80,7 @@ type SiteContentForm = {
   title: string;
   subtitle: string;
   description: string;
+  link: string;
 };
 const emptyForm: SiteContentForm = {
   page_key: "",
@@ -35,6 +88,7 @@ const emptyForm: SiteContentForm = {
   title: "",
   subtitle: "",
   description: "",
+  link: "",
 };
 export default function Page() {
   const [items, setItems] = useState<SiteContentItem[]>([]);
@@ -71,7 +125,16 @@ export default function Page() {
     fetchContents();
   }, []);
   const handleChange = (field: keyof SiteContentForm, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "page_key") {
+        const allowed = getSectionOptionsForPage(value).map((o) => o.value);
+        if (prev.section_key && !allowed.includes(prev.section_key)) {
+          next.section_key = "";
+        }
+      }
+      return next;
+    });
   };
   const resetForm = () => {
     setForm(emptyForm);
@@ -118,11 +181,15 @@ export default function Page() {
       const formData = new FormData(); // Create FormData object
       formData.append("page_key", form.page_key.trim()); // Add page key
       formData.append("section_key", form.section_key.trim()); // Add section key
-      formData.append("content", JSON.stringify({ // Add content as JSON string
+      const content: Record<string, string> = {
         title: form.title.trim(),
         subtitle: form.subtitle.trim(),
         description: form.description.trim(),
-      }));
+      };
+      if (sectionHasLink(form.section_key) && form.link.trim()) {
+        content.link = form.link.trim();
+      }
+      formData.append("content", JSON.stringify(content));
       
       // Handle image upload
       if (imageFile) {
@@ -156,6 +223,7 @@ export default function Page() {
       title: item.content?.title || "",
       subtitle: item.content?.subtitle || "",
       description: item.content?.description || "",
+      link: item.content?.link || "",
     });
     // Load existing image if available
     if (item.image_url) {
@@ -196,16 +264,40 @@ export default function Page() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="page_key">Page Key</Label>
-            <Input id="page_key" list="page-options" value={form.page_key} onChange={(e) => handleChange("page_key", e.target.value)} placeholder="home" />
-            <datalist id="page-options">
-              {pageOptions.map((option) => (
-                <option key={option} value={option} />
-              ))}
-            </datalist>
+            <Select
+              value={form.page_key || undefined}
+              onValueChange={(value) => handleChange("page_key", value)}
+            >
+              <SelectTrigger id="page_key" className="w-full">
+                <SelectValue placeholder="Select page" />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="section_key">Section Key</Label>
-            <Input id="section_key" value={form.section_key} onChange={(e) => handleChange("section_key", e.target.value)} placeholder="hero" />
+            <Select
+              value={form.section_key || undefined}
+              onValueChange={(value) => handleChange("section_key", value)}
+              disabled={!form.page_key}
+            >
+              <SelectTrigger id="section_key" className="w-full">
+                <SelectValue placeholder={form.page_key ? "Select section" : "Select page first"} />
+              </SelectTrigger>
+              <SelectContent>
+                {getSectionOptionsForPage(form.page_key).map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
@@ -219,6 +311,18 @@ export default function Page() {
             <Label htmlFor="description">Description</Label>
             <Input id="description" value={form.description} onChange={(e) => handleChange("description", e.target.value)} placeholder="Section description" />
           </div>
+          {sectionHasLink(form.section_key) && (
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="link">Link (subtitle button href for advertisement)</Label>
+              <Input
+                id="link"
+                type="url"
+                value={form.link}
+                onChange={(e) => handleChange("link", e.target.value)}
+                placeholder="https://example.com or /page"
+              />
+            </div>
+          )}
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="image">Image (Optional)</Label>
             <Input 
