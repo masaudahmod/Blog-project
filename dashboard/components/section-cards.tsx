@@ -15,7 +15,7 @@ export async function SectionCards() {
   const currentMonth = new Date().getMonth() + 1;
   const monthlyStats = await getMonthlyPost(currentMonth, currentYear);
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Overview</CardDescription>
@@ -38,7 +38,7 @@ export async function SectionCards() {
         <CardHeader>
           <CardDescription>Posts this month</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {monthlyStats.data?.total_posts ?? 0}
+            {monthlyStats?.data?.total_posts ?? 0}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -51,7 +51,7 @@ export async function SectionCards() {
         <CardHeader>
           <CardDescription>Comments this month</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {monthlyStats.data?.total_comments ?? 0}
+            {monthlyStats?.data?.total_comments ?? 0}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -64,7 +64,7 @@ export async function SectionCards() {
         <CardHeader>
           <CardDescription>Likes this month</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {monthlyStats.data?.total_likes ?? 0}
+            {monthlyStats?.data?.total_likes ?? 0}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">

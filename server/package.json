@@ -17,7 +17,8 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "seed": "node src/config/dbinit.js",
-    "migrate": "node src/config/migrate.js"
+    "migrate": "node src/config/migrate.js",
+    "seed:admin": "node src/config/seed/seedAdmin.js"
   },
   "devDependencies": {
     "@vercel/node": "^5.5.28"

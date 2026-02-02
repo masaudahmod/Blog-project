@@ -22,6 +22,17 @@ function getApiBaseUrl() {
   return baseUrl || null;
 }
 
+/** Parse response as JSON without throwing when server returns HTML or plain text (e.g. error pages). */
+async function safeParseJson<T>(response: Response): Promise<T | null> {
+  const text = await response.text();
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null;
+  }
+}
+
 async function login(formdata: FormData) {
   try {
     const email = formdata.get("email");
@@ -804,7 +815,8 @@ async function getMonthlyPost(month: number, year: number) {
         },
       }
     );
-    return result.json();
+    const data = await safeParseJson<unknown>(result);
+    return data ?? null;
   } catch (error) {
     console.error("Error getting monthly stats:", error);
     return null;
@@ -824,8 +836,8 @@ async function getMonthlyStatsHistory(months: number = 12) {
         },
       }
     );
-    const data = await result.json();
-    if (result.ok && data.data) return data.data as { date: string; posts: number; comments: number; likes: number }[];
+    const data = await safeParseJson<{ data?: { date: string; posts: number; comments: number; likes: number }[] }>(result);
+    if (result.ok && data?.data) return data.data;
     return [];
   } catch (error) {
     console.error("Error getting monthly stats history:", error);
@@ -846,8 +858,8 @@ async function getDailyStatsHistory(days: number = 10) {
         },
       }
     );
-    const data = await result.json();
-    if (result.ok && data.data) return data.data as { date: string; posts: number; comments: number; likes: number }[];
+    const data = await safeParseJson<{ data?: { date: string; posts: number; comments: number; likes: number }[] }>(result);
+    if (result.ok && data?.data) return data.data;
     return [];
   } catch (error) {
     console.error("Error getting daily stats history:", error);

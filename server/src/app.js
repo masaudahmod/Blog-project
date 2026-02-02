@@ -26,4 +26,8 @@ app.use("/api/site-content", SiteContentRoutes); // Register site content routes
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
+app.get("/", (req, res) => {
+  res.send("Welcome to the Journal Thoughts API");
+});
+
 export default app;
