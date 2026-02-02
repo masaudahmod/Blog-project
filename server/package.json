@@ -20,6 +20,9 @@
     "migrate": "node src/config/migrate.js",
     "seed:admin": "node src/config/seed/seedAdmin.js"
   },
+  "engines": {
+    "node": "25.4.0"
+  },
   "devDependencies": {
     "@vercel/node": "^5.5.28"
   },

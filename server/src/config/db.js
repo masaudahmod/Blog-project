@@ -6,12 +6,12 @@ const isVercel = !!process.env.VERCEL;
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" || isVercel ? { rejectUnauthorized: false } : false,
+  ssl: false,
   // Smaller pool on Vercel/serverless to avoid exhausting DB connections
-  max: isVercel ? 2 : 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-  allowExitOnIdle: false,
+  // max: isVercel ? 2 : 20,
+  // idleTimeoutMillis: 30000,
+  // connectionTimeoutMillis: 10000,
+  // allowExitOnIdle: false,
 });
 
 pool.on("error", (err) => {

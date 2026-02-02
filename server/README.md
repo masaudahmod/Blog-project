@@ -1,6 +1,6 @@
 # 📝 Blog Backend API Documentation
 
-A comprehensive RESTful API backend for a Blog Application built with **Node.js**, **Express.js**, and **PostgreSQL**. This API provides endpoints for authentication, blog post management, category management, newsletter subscriptions, and more.
+A comprehensive RESTful API backend for a Blog Application built with **Node.js**, **Express.js 5**, and **PostgreSQL**. This API provides endpoints for authentication, blog post management, category management, comments (legacy JSONB and dedicated comments table), likes, newsletter subscriptions, activity logging, and site content management.
 
 ---
 
@@ -10,13 +10,13 @@ A comprehensive RESTful API backend for a Blog Application built with **Node.js*
 - **Node.js** - JavaScript runtime
 - **Express.js 5** - Web application framework
 - **PostgreSQL** - Relational database (using `pg` library)
+- **Redis** - Caching (posts, comments, site content; optional, graceful fallback if unavailable)
 - **JWT (JSON Web Tokens)** - Authentication mechanism
 - **BCrypt** - Password hashing (10 rounds)
-- **Cloudinary** - Image upload and management
+- **Cloudinary** - Image upload and management (posts, site content)
 - **Nodemailer** - Email service for newsletters
 - **Multer** - File upload middleware
-- **Cookie Parser** - Cookie management
-- **CORS** - Cross-origin resource sharing
+- **CORS** / **Cookie-parser** - Available as dependencies (auth reads token from cookie/header manually)
 - **Dotenv** - Environment variable management
 
 ### Server Connection to Database
@@ -27,36 +27,44 @@ The server connects to PostgreSQL using a connection pool:
 // server/src/config/db.js
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: process.env.NODE_ENV === "production" || isVercel ? { rejectUnauthorized: false } : false,
+  max: isVercel ? 2 : 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 ```
 
 **Connection Details:**
-- Uses connection pooling for efficient database connections
-- SSL enabled for secure connections
-- Connection string provided via `DATABASE_URL` environment variable
-- Automatic error handling and connection management
+- Uses connection pooling; smaller pool on Vercel/serverless
+- SSL enabled in production
+- Connection string via `DATABASE_URL`
+- Optional `checkConnection()` helper for health checks
 
 ### Middleware Usage
 
 #### 1. **Built-in Express Middleware**
 - `express.json()` - Parses JSON request bodies
 - `express.urlencoded({ extended: true })` - Parses URL-encoded bodies
-- `cookie-parser` - Parses cookies from request headers
 
 #### 2. **Custom Middleware**
 
-**Authentication Middleware** (`auth.middleware.js`):
-- `verifyAdmin` - Verifies JWT token and ensures user has admin role
-- `verifyUserByRole(role)` - Verifies user has specific role (future use)
+**Authentication** (`auth.middleware.js`):
+- `verifyAuth` - Verifies JWT (cookie or `Authorization: Bearer`); attaches `req.user`
+- `verifyAdmin` - Verifies JWT and ensures role is admin (deprecated; use `verifyAuth` + `allowRoles`)
+- `allowRoles(...roles)` - Role-based access (e.g. `allowRoles("admin", "moderator")`)
+- Use together: `verifyAuth, allowRoles("admin")` for protected routes
 
-**File Upload Middleware** (`multer.middleware.js`):
-- `upload.single("featured_image")` - Handles single image file uploads
-- Files are temporarily stored before Cloudinary upload
+**File Upload** (`multer.middleware.js`):
+- `upload.single("featured_image")` - Post featured image
+- `upload.single("image")` - Site content image
+
+**Error Handling** (`error.middleware.js`):
+- `errorHandler` - Centralized error responses (JSON with `success: false`, `message`; optional `stack` in development)
+- `asyncHandler` - Wraps async route handlers
+- `AppError` - Custom error class with status code
 
 #### 3. **Route Middleware**
-- Applied to specific routes that require authentication
-- Example: `router.post("/add", verifyAdmin, upload.single("featured_image"), addPost)`
+- Applied per-route: e.g. `verifyAuth, allowRoles("admin")` or `verifyAdmin` on auth routes
 
 ---
 
@@ -65,11 +73,24 @@ const pool = new pg.Pool({
 **Development:** `http://localhost:3000/api`  
 **Production:** `https://yourdomain.com/api`
 
-All endpoints are prefixed with `/api`
+Root: `GET /` returns `"Welcome to the Journal Thoughts API"`.
+
+All API endpoints are prefixed with `/api`.
 
 ---
 
-## 📋 API Endpoints
+## 📋 API Endpoints Summary
+
+| Area        | Base Path           | Description                    |
+|------------|---------------------|--------------------------------|
+| Auth       | `/api/auth`         | Register, login, pending users |
+| Categories | `/api/category`     | CRUD categories                |
+| Posts      | `/api/post`         | Posts, comments (legacy), likes by slug, stats |
+| Comments   | `/api/comments`     | Comments (dedicated table, threading) |
+| Likes      | `/api/likes`        | Like/unlike by post_id + user_identifier |
+| Newsletter | `/api`              | `/newsletter-subscribe`, `/newsletter-unsubscribe` |
+| Activity   | `/api/activity`     | Log and query activity        |
+| Site Content | `/api/site-content` | Page/section content CRUD      |
 
 ---
 
@@ -79,7 +100,7 @@ All endpoints are prefixed with `/api`
 
 **Endpoint:** `POST /api/auth/register`
 
-**Purpose:** Create a new admin account (first-time setup).
+**Purpose:** Create the first admin account.
 
 **Authentication Required:** ❌ No
 
@@ -105,19 +126,7 @@ All endpoints are prefixed with `/api`
 }
 ```
 
-**Response - Error (400):**
-```json
-{
-  "message": "All fields are required"
-}
-```
-
-**Response - Error (400):**
-```json
-{
-  "message": "Email already exists"
-}
-```
+**Response - Error (400):** `{ "message": "All fields are required" }` or `{ "message": "Email already exists" }`
 
 ---
 
@@ -125,7 +134,7 @@ All endpoints are prefixed with `/api`
 
 **Endpoint:** `POST /api/auth/register-user`
 
-**Purpose:** Register a new user (writer/editor) with pending status. Requires admin approval.
+**Purpose:** Register a writer/editor; account is pending until admin activates.
 
 **Authentication Required:** ❌ No
 
@@ -146,19 +155,7 @@ All endpoints are prefixed with `/api`
 }
 ```
 
-**Response - Error (400):**
-```json
-{
-  "message": "All fields are required"
-}
-```
-
-**Response - Error (400):**
-```json
-{
-  "message": "Email already exists"
-}
-```
+**Response - Error (400):** `{ "message": "All fields are required" }` or `{ "message": "Email already exists" }`
 
 ---
 
@@ -166,7 +163,7 @@ All endpoints are prefixed with `/api`
 
 **Endpoint:** `POST /api/auth/login`
 
-**Purpose:** Authenticate user and receive JWT token.
+**Purpose:** Authenticate and receive JWT; token is also set in HTTP-only cookie.
 
 **Authentication Required:** ❌ No
 
@@ -183,44 +180,14 @@ All endpoints are prefixed with `/api`
 {
   "message": "Login successful",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": 1,
-    "name": "John Doe",
-    "email": "admin@example.com",
-    "role": "admin"
-  }
+  "user": { "id": 1, "name": "John Doe", "email": "admin@example.com", "role": "admin" }
 }
 ```
 
-**Response - Error (400):**
-```json
-{
-  "message": "All fields are required"
-}
-```
+**Response - Error (400):** `"All fields are required"` | `"User not found"` | `"Invalid Password"`  
+**Response - Error (403):** `"Your account is not active yet. Please wait for admin approval."`
 
-**Response - Error (400):**
-```json
-{
-  "message": "User not found"
-}
-```
-
-**Response - Error (400):**
-```json
-{
-  "message": "Invalid Password"
-}
-```
-
-**Response - Error (403):**
-```json
-{
-  "message": "Your account is not active yet. Please wait for admin approval."
-}
-```
-
-**Note:** Token is also set as HTTP-only cookie named `token`.
+**Note:** Cookie `token` is set with `httpOnly`, `secure`, `sameSite: 'Strict'`.
 
 ---
 
@@ -228,38 +195,21 @@ All endpoints are prefixed with `/api`
 
 **Endpoint:** `GET /api/auth/me`
 
-**Purpose:** Get currently authenticated user information.
+**Purpose:** Return the authenticated user.
 
-**Authentication Required:** ✅ Yes (Admin)
+**Authentication Required:** ✅ Yes (verifyAdmin)
 
-**Headers:**
-```
-Authorization: Bearer <token>
-```
-OR
-```
-Cookie: token=<token>
-```
+**Headers:** `Authorization: Bearer <token>` or `Cookie: token=<token>`
 
 **Response - Success (200):**
 ```json
 {
   "message": "Current user",
-  "user": {
-    "id": 1,
-    "name": "John Doe",
-    "email": "admin@example.com",
-    "role": "admin"
-  }
+  "user": { "id": 1, "name": "John Doe", "email": "admin@example.com", "role": "admin" }
 }
 ```
 
-**Response - Error (401):**
-```json
-{
-  "message": "Unauthorized"
-}
-```
+**Response - Error (401):** `{ "message": "Unauthorized" }`
 
 ---
 
@@ -267,21 +217,11 @@ Cookie: token=<token>
 
 **Endpoint:** `POST /api/auth/logout`
 
-**Purpose:** Logout user and clear authentication cookie.
+**Purpose:** Clear the auth cookie.
 
-**Authentication Required:** ✅ Yes (Admin)
+**Authentication Required:** ✅ Yes (verifyAdmin)
 
-**Headers:**
-```
-Authorization: Bearer <token>
-```
-
-**Response - Success (200):**
-```json
-{
-  "message": "Logout successful"
-}
-```
+**Response - Success (200):** `{ "message": "Logout successful" }`
 
 ---
 
@@ -289,26 +229,16 @@ Authorization: Bearer <token>
 
 **Endpoint:** `GET /api/auth/pending-user`
 
-**Purpose:** Get list of users waiting for admin approval.
+**Purpose:** List users with status `pending`.
 
 **Authentication Required:** ✅ Yes (Admin)
-
-**Headers:**
-```
-Authorization: Bearer <token>
-```
 
 **Response - Success (200):**
 ```json
 {
   "message": "Pending users",
   "users": [
-    {
-      "id": 2,
-      "name": "Jane Writer",
-      "email": "writer@example.com",
-      "role": "writer"
-    }
+    { "id": 2, "name": "Jane Writer", "email": "writer@example.com", "role": "writer" }
   ]
 }
 ```
@@ -319,38 +249,15 @@ Authorization: Bearer <token>
 
 **Endpoint:** `POST /api/auth/pending-user/:id`
 
-**Purpose:** Activate a pending user account (change status to 'active').
+**Purpose:** Set user status to active.
 
 **Authentication Required:** ✅ Yes (Admin)
 
-**Headers:**
-```
-Authorization: Bearer <token>
-```
+**URL Parameters:** `id` - User ID
 
-**URL Parameters:**
-- `id` - User ID to activate
-
-**Response - Success (200):**
-```json
-{
-  "message": "User activated successfully"
-}
-```
-
-**Response - Error (400):**
-```json
-{
-  "message": "User ID is required"
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "User not found"
-}
-```
+**Response - Success (200):** `{ "message": "User activated successfully" }`  
+**Response - Error (400):** `{ "message": "User ID is required" }`  
+**Response - Error (404):** `{ "message": "User not found" }`
 
 ---
 
@@ -358,31 +265,14 @@ Authorization: Bearer <token>
 
 **Endpoint:** `DELETE /api/auth/pending-user/:id`
 
-**Purpose:** Delete a pending user account.
+**Purpose:** Delete a pending user.
 
 **Authentication Required:** ✅ Yes (Admin)
 
-**Headers:**
-```
-Authorization: Bearer <token>
-```
+**URL Parameters:** `id` - User ID
 
-**URL Parameters:**
-- `id` - User ID to delete
-
-**Response - Success (200):**
-```json
-{
-  "message": "User deleted successfully"
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "User not found"
-}
-```
+**Response - Success (200):** `{ "message": "User deleted successfully" }`  
+**Response - Error (404):** `{ "message": "User not found" }`
 
 ---
 
@@ -392,67 +282,30 @@ Authorization: Bearer <token>
 
 **Endpoint:** `POST /api/post/add`
 
-**Purpose:** Create a new blog post with optional featured image.
+**Purpose:** Create a blog post with optional featured image.
 
 **Authentication Required:** ✅ Yes (Admin)
 
-**Headers:**
-```
-Authorization: Bearer <token>
-Content-Type: multipart/form-data
-```
+**Headers:** `Authorization: Bearer <token>`, `Content-Type: multipart/form-data`
 
 **Request Body (Form Data):**
-```
-title: "My First Blog Post"
-slug: "my-first-blog-post" (optional, auto-generated if not provided)
-content: "<p>Blog post content in HTML...</p>"
-excerpt: "Short summary of the post"
-featured_image: [File] (optional)
-featured_image_alt: "Image description"
-featured_image_caption: "Image caption"
-meta_title: "SEO Meta Title"
-meta_description: "SEO meta description"
-meta_keywords: "keyword1, keyword2, keyword3" (comma-separated)
-canonical_url: "https://example.com/post-url"
-schema_type: "Article" (default)
-category_id: 1
-tags: "tag1, tag2, tag3" (comma-separated)
-read_time: 5
-is_published: true/false
-published_at: "2025-01-15T10:30:00Z" (optional)
-```
+- `title`, `content`, `category_id` (required)
+- `slug`, `excerpt`, `featured_image` (file), `featured_image_alt`, `featured_image_caption`
+- `meta_title`, `meta_description`, `meta_keywords`, `canonical_url`, `schema_type`
+- `tags` (comma-separated), `read_time`, `likes`, `comments`, `interactions`
+- `is_published`, `published_at`, `updated_at`
 
 **Response - Success (201):**
 ```json
 {
+  "success": true,
   "message": "Post created",
-  "post": {
-    "id": 1,
-    "title": "My First Blog Post",
-    "slug": "my-first-blog-post",
-    "content": "<p>Blog post content...</p>",
-    "featured_image_url": "https://res.cloudinary.com/...",
-    "category_id": 1,
-    "is_published": true,
-    "created_at": "2025-01-15T10:30:00Z"
-  }
+  "post": { "id": 1, "title": "...", "slug": "...", ... }
 }
 ```
 
-**Response - Error (400):**
-```json
-{
-  "message": "Missing required fields"
-}
-```
-
-**Response - Error (401):**
-```json
-{
-  "message": "Unauthorized Token"
-}
-```
+**Response - Error (400):** `"Missing required fields: title, content, and category_id are required"`  
+**Response - Error (401):** Unauthorized
 
 ---
 
@@ -460,376 +313,562 @@ published_at: "2025-01-15T10:30:00Z" (optional)
 
 **Endpoint:** `GET /api/post`
 
-**Purpose:** Get paginated list of all blog posts with category information.
+**Purpose:** Paginated list of posts (with category, etc.).
+
+**Authentication Required:** ❌ No
+
+**Query Parameters:** `page` (optional, default 1)
+
+**Response - Success (200):** `{ "message": "Posts retrieved", "currentPage", "totalPages", "posts": [...] }` (may include `source: "cache"`)
+
+---
+
+### 3. Get Posts by Category (Filter)
+
+**Endpoint:** `GET /api/post/filter`
+
+**Purpose:** Paginated posts filtered by category (ID or slug) and status.
 
 **Authentication Required:** ❌ No
 
 **Query Parameters:**
-- `page` (optional) - Page number (default: 1)
+- `categoryId` or `categorySlug` (one required)
+- `page`, `limit` (default 1, 10; max limit 50)
+- `filter`: `all` | `published` | `draft` (default `all`)
+- `includeStats`: `true` to include category stats and latest posts
 
-**Example:** `GET /api/post?page=1`
+**Example:** `GET /api/post/filter?categorySlug=technology&page=1&filter=published`
 
 **Response - Success (200):**
 ```json
 {
-  "message": "Posts retrieved",
-  "currentPage": 1,
-  "totalPages": 5,
-  "posts": [
-    {
-      "id": 1,
-      "title": "My First Blog Post",
-      "slug": "my-first-blog-post",
-      "content": "<p>Blog post content...</p>",
-      "excerpt": "Short summary",
-      "featured_image_url": "https://res.cloudinary.com/...",
-      "category": {
-        "id": 1,
-        "name": "Technology",
-        "slug": "technology"
-      },
-      "likes": 10,
-      "is_published": true,
-      "published_at": "2025-01-15T10:30:00Z",
-      "created_at": "2025-01-15T10:30:00Z"
-    }
-  ]
+  "success": true,
+  "message": "Posts retrieved successfully",
+  "category": { "id": 1, "name": "Technology", "slug": "technology" },
+  "pagination": { "currentPage": 1, "totalPages": 5, "totalPosts": 42, "limit": 10, "hasNextPage": true, "hasPrevPage": false },
+  "posts": [...],
+  "categoryStats": { "allCategories": [...], "latestPosts": [...] }
 }
 ```
+(Optional `categoryStats` when `includeStats=true`.)
 
-**Response - Error (500):**
+---
+
+### 4. Get Trending Posts
+
+**Endpoint:** `GET /api/post/trending`
+
+**Purpose:** Published posts ordered by `published_at` DESC (e.g. for sidebar).
+
+**Authentication Required:** ❌ No
+
+**Query Parameters:** `limit` (optional, default 5, max 10)
+
+**Response - Success (200):**
 ```json
 {
-  "message": "Server Error",
-  "error": "Error message"
+  "success": true,
+  "message": "Trending posts retrieved",
+  "posts": [ { "id": 1, "slug": "...", "title": "...", "published_at": "..." } ]
 }
 ```
 
 ---
 
-### 3. Get Post by ID
+### 5. Get Pinned Post
+
+**Endpoint:** `GET /api/post/pinned`
+
+**Purpose:** Get the single pinned post (if any).
+
+**Authentication Required:** ❌ No
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "message": "Pinned post retrieved",
+  "post": { ... }
+}
+```
+or `"No pinned post found"` with `post: null`.
+
+---
+
+### 6. Get Post by ID
 
 **Endpoint:** `GET /api/post/id/:id`
 
-**Purpose:** Get a single blog post by its ID.
+**Purpose:** Single post by ID.
 
 **Authentication Required:** ❌ No
 
-**URL Parameters:**
-- `id` - Post ID
-
-**Response - Success (200):**
-```json
-{
-  "message": "Post retrieved",
-  "post": {
-    "id": 1,
-    "title": "My First Blog Post",
-    "slug": "my-first-blog-post",
-    "content": "<p>Blog post content...</p>",
-    "category_id": 1,
-    "tags": ["tag1", "tag2"],
-    "likes": 10,
-    "comments": [],
-    "is_published": true,
-    "created_at": "2025-01-15T10:30:00Z"
-  }
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "Post not found"
-}
-```
+**Response - Success (200):** `{ "message": "Post retrieved", "post": { ... } }`  
+**Response - Error (404):** `{ "message": "Post not found" }`
 
 ---
 
-### 4. Get Post by Slug
+### 7. Get Post by Slug
 
 **Endpoint:** `GET /api/post/slug/:slug`
 
-**Purpose:** Get a single blog post by its URL-friendly slug.
+**Purpose:** Single post by slug.
 
 **Authentication Required:** ❌ No
 
-**URL Parameters:**
-- `slug` - Post slug (URL-friendly identifier)
-
-**Example:** `GET /api/post/slug/my-first-blog-post`
-
-**Response - Success (200):**
-```json
-{
-  "message": "Post retrieved",
-  "post": {
-    "id": 1,
-    "title": "My First Blog Post",
-    "slug": "my-first-blog-post",
-    "content": "<p>Blog post content...</p>",
-    "category_id": 1,
-    "likes": 10,
-    "is_published": true
-  }
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "Post not found"
-}
-```
+**Response - Success (200):** `{ "message": "Post retrieved", "post": { ... } }`  
+**Response - Error (404):** `{ "message": "Post not found" }`
 
 ---
 
-### 5. Delete Post
+### 8. Update Post by Slug
+
+**Endpoint:** `PUT /api/post/slug/:slug` or `PATCH /api/post/slug/:slug`
+
+**Purpose:** Update post; optional featured image.
+
+**Authentication Required:** ✅ Yes (Admin)
+
+**Headers:** `Authorization: Bearer <token>`, `Content-Type: multipart/form-data`
+
+**URL Parameters:** `slug` - Post slug
+
+**Response - Success (200):** `{ "success": true, "message": "Post updated", "post": { ... } }`  
+**Response - Error (404):** `{ "message": "Post not found" }`
+
+---
+
+### 9. Update Publish Status
+
+**Endpoint:** `PATCH /api/post/:id/publish`
+
+**Purpose:** Set post published/draft.
+
+**Authentication Required:** ✅ Yes (Admin or Moderator)
+
+**Request Body:** e.g. `{ "is_published": true }`
+
+**Response - Success (200):** `{ "success": true, "message": "...", "post": { ... } }`
+
+---
+
+### 10. Pin / Unpin Post
+
+**Endpoint:** `PATCH /api/post/:id/pin`
+
+**Purpose:** Pin this post (unpins others); call again to unpin.
+
+**Authentication Required:** ✅ Yes (Admin)
+
+**Response - Success (200):** `{ "success": true, "message": "Post pinned successfully" | "Post unpinned successfully", "post": { ... } }`  
+**Response - Error (404):** `{ "message": "Post not found" }`
+
+---
+
+### 11. Delete Post
 
 **Endpoint:** `DELETE /api/post/id/:id`
 
-**Purpose:** Delete a blog post and its associated Cloudinary image.
+**Purpose:** Delete post and its Cloudinary featured image.
 
 **Authentication Required:** ✅ Yes (Admin)
 
-**Headers:**
-```
-Authorization: Bearer <token>
-```
-
-**URL Parameters:**
-- `id` - Post ID to delete
-
-**Response - Success (200):**
-```json
-{
-  "message": "Post deleted"
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "Post not found"
-}
-```
-
-**Response - Error (401):**
-```json
-{
-  "message": "Unauthorized Token"
-}
-```
+**Response - Success (200):** `{ "message": "Post deleted" }`  
+**Response - Error (404):** `{ "message": "Post not found" }`
 
 ---
 
-### 6. Like Post
+### 12. Like Post (by slug)
 
 **Endpoint:** `POST /api/post/:slug/like`
 
-**Purpose:** Increment the like count for a post.
+**Purpose:** Increment like count for post (legacy behavior by slug).
 
 **Authentication Required:** ❌ No
 
-**URL Parameters:**
-- `slug` - Post slug
-
-**Response - Success (200):**
-```json
-{
-  "likes": 11
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "Post not found"
-}
-```
+**Response - Success (200):** `{ "likes": 11 }`  
+**Response - Error (404):** `{ "message": "Post not found" }`
 
 ---
 
-### 7. Unlike Post
+### 13. Unlike Post (by slug)
 
 **Endpoint:** `POST /api/post/:slug/unlike`
 
-**Purpose:** Decrement the like count for a post (minimum 0).
+**Purpose:** Decrement like count (min 0).
 
 **Authentication Required:** ❌ No
 
-**URL Parameters:**
-- `slug` - Post slug
-
-**Response - Success (200):**
-```json
-{
-  "likes": 10
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "Post not found"
-}
-```
+**Response - Success (200):** `{ "likes": 10 }`  
+**Response - Error (404):** `{ "message": "Post not found" }`
 
 ---
 
-### 8. Get Monthly Post Statistics
-
-**Endpoint:** `GET /api/post/monthly-stats`
-
-**Purpose:** Get statistics for posts created in a specific month.
-
-**Authentication Required:** ✅ Yes (Admin)
-
-**Headers:**
-```
-Authorization: Bearer <token>
-```
-
-**Query Parameters:**
-- `month` (required) - Month number (1-12)
-- `year` (required) - Year (e.g., 2025)
-
-**Example:** `GET /api/post/monthly-stats?month=1&year=2025`
-
-**Response - Success (200):**
-```json
-{
-  "message": "Monthly post stats retrieved",
-  "data": {
-    "total_posts": 15,
-    "total_likes": 250,
-    "total_comments": 45
-  }
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "Monthly post not found"
-}
-```
-
----
-
-## 💬 Comment APIs
-
-### 1. Add Comment
+### 14. Add Comment (Legacy – JSONB on post)
 
 **Endpoint:** `POST /api/post/comment/:id`
 
-**Purpose:** Add a comment to a blog post (status: pending, requires admin approval).
+**Purpose:** Add a comment stored in the post’s `comments` JSONB (status `pending`).
 
 **Authentication Required:** ❌ No
 
-**URL Parameters:**
-- `id` - Post ID
+**URL Parameters:** `id` - Post ID
 
 **Request Body:**
 ```json
 {
   "userName": "John Doe",
-  "message": "Great article! Very informative."
+  "message": "Great article!"
 }
 ```
 
-**Response - Success (200):**
-```json
-{
-  "message": "Comment added"
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "Post not found"
-}
-```
-
-**Note:** Comments are stored as JSONB array in the posts table. New comments have `status: "pending"` until approved by admin.
+**Response - Success (200):** `{ "message": "Comment added" }`  
+**Response - Error (404):** `{ "message": "Post not found" }`
 
 ---
 
-### 2. Get Pending Comments
+### 15. Get Pending Comments (Legacy)
 
 **Endpoint:** `GET /api/post/comments/pending`
 
-**Purpose:** Get all comments with pending status across all posts.
+**Purpose:** List posts that have pending comments (JSONB comments).
 
 **Authentication Required:** ✅ Yes (Admin)
-
-**Headers:**
-```
-Authorization: Bearer <token>
-```
 
 **Response - Success (200):**
 ```json
 {
   "message": "Pending comments retrieved",
   "comments": [
-    {
-      "id": 1,
-      "title": "My First Blog Post",
-      "pending_comments": [
-        {
-          "id": "abc123",
-          "author": "John Doe",
-          "message": "Great article!",
-          "status": "pending",
-          "created_at": "2025-01-15T10:30:00Z"
-        }
-      ]
-    }
+    { "id": 1, "title": "...", "pending_comments": [ { "id": "...", "author": "...", "message": "...", "status": "pending", "created_at": "..." } ] }
   ]
 }
 ```
+**Response - Error (404):** `{ "message": "No pending comments found" }`
 
-**Response - Error (404):**
+---
+
+### 16. Approve Comment (Legacy)
+
+**Endpoint:** `POST /api/post/comments/pending`
+
+**Purpose:** Set a legacy comment’s status to `approved`.
+
+**Authentication Required:** ✅ Yes (Admin)
+
+**Query Parameters:** `postId`, `commentId`
+
+**Example:** `POST /api/post/comments/pending?postId=1&commentId=abc123`
+
+**Response - Success (200):** `{ "message": "Comment approved" }`  
+**Response - Error (404):** `{ "message": "Post not found" }`
+
+---
+
+### 17. Monthly Post Stats
+
+**Endpoint:** `GET /api/post/monthly-stats`
+
+**Purpose:** Counts for a given month: posts, comments (from `comments` table), likes (from `post_likes`).
+
+**Authentication Required:** ✅ Yes (Admin)
+
+**Query Parameters:** `month` (1–12), `year` (required)
+
+**Example:** `GET /api/post/monthly-stats?month=1&year=2025`
+
+**Response - Success (200):**
 ```json
 {
-  "message": "No pending comments found"
+  "message": "Monthly stats retrieved",
+  "data": {
+    "total_posts": 15,
+    "total_comments": 45,
+    "total_likes": 250
+  }
+}
+```
+**Response - Error (400):** `{ "message": "Valid month (1-12) and year are required" }`
+
+---
+
+### 18. Daily Stats History
+
+**Endpoint:** `GET /api/post/daily-stats/history`
+
+**Purpose:** Per-day counts (posts, comments, likes) for the last N days (for charts).
+
+**Authentication Required:** ✅ Yes (Admin)
+
+**Query Parameters:** `days` (optional, default 10, clamped 1–31)
+
+**Response - Success (200):**
+```json
+{
+  "message": "Daily stats history retrieved",
+  "data": [
+    { "date": "2025-01-01", "posts": 2, "comments": 5, "likes": 20 },
+    ...
+  ]
 }
 ```
 
 ---
 
-### 3. Approve Comment
+### 19. Monthly Stats History
 
-**Endpoint:** `POST /api/post/comments/pending`
+**Endpoint:** `GET /api/post/monthly-stats/history`
 
-**Purpose:** Approve a pending comment (change status to 'approved').
+**Purpose:** Per-month counts for the last N months (for charts).
 
 **Authentication Required:** ✅ Yes (Admin)
 
-**Headers:**
-```
-Authorization: Bearer <token>
-```
-
-**Query Parameters:**
-- `postId` (required) - Post ID containing the comment
-- `commentId` (required) - Comment ID to approve
-
-**Example:** `POST /api/post/comments/pending?postId=1&commentId=abc123`
+**Query Parameters:** `months` (optional, default 12, max 24)
 
 **Response - Success (200):**
 ```json
 {
-  "message": "Comment approved"
+  "message": "Monthly stats history retrieved",
+  "data": [
+    { "year": 2025, "month": 1, "total_posts": 15, "total_comments": 45, "total_likes": 250 },
+    ...
+  ]
 }
 ```
 
-**Response - Error (404):**
+---
+
+## 💬 Comment APIs (Dedicated Table)
+
+Comments are also stored in a `comments` table with threading (`parent_id`), `user_identifier`, and status (`pending` | `approved` | `rejected`). These endpoints use that table.
+
+### 1. Add Comment
+
+**Endpoint:** `POST /api/comments`
+
+**Purpose:** Create a comment (or reply). Status defaults to pending.
+
+**Authentication Required:** ❌ No
+
+**Request Body:**
 ```json
 {
-  "message": "Post not found"
+  "post_id": 1,
+  "user_identifier": "device-or-session-id",
+  "message": "Your comment text.",
+  "parent_id": null,
+  "user_name": "Display Name"
+}
+```
+- `post_id`, `user_identifier`, `message` required.  
+- `parent_id` optional (reply to comment ID).  
+- `user_name` optional display name.
+
+**Response - Success (201):**
+```json
+{
+  "success": true,
+  "message": "Comment posted successfully.",
+  "comment": { "id": 1, "post_id": 1, "user_identifier": "...", "message": "...", "status": "pending", ... }
+}
+```
+**Response - Error (404):** `{ "message": "Post not found" }`
+
+---
+
+### 2. Get Post Comments (Public)
+
+**Endpoint:** `GET /api/comments/post/:postId`
+
+**Purpose:** Latest approved comments for a post (threaded).
+
+**Authentication Required:** ❌ No
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "message": "Comments retrieved successfully",
+  "comments": [...],
+  "count": 10
+}
+```
+
+---
+
+### 3. Get All Comments for a Post (Dashboard)
+
+**Endpoint:** `GET /api/comments/post/:postId/all`
+
+**Purpose:** All comments for a post including pending/rejected.
+
+**Authentication Required:** ✅ Yes (Admin or Moderator)
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "message": "Comments retrieved successfully",
+  "comments": [...],
+  "count": 15
+}
+```
+
+---
+
+### 4. Get All Comments (Moderation)
+
+**Endpoint:** `GET /api/comments`
+
+**Purpose:** List comments optionally filtered by status.
+
+**Authentication Required:** ✅ Yes (Admin or Moderator)
+
+**Query Parameters:** `status` (optional): `pending` | `approved` | `rejected`
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "message": "Comments retrieved successfully",
+  "comments": [...],
+  "count": 20
+}
+```
+
+---
+
+### 5. Update Comment
+
+**Endpoint:** `PATCH /api/comments/:id`
+
+**Purpose:** Update status, message, or user_name.
+
+**Authentication Required:** ✅ Yes (Admin or Moderator)
+
+**Request Body:** One or more of:
+```json
+{
+  "status": "approved",
+  "message": "Edited text",
+  "user_name": "New Name"
+}
+```
+`status` must be `pending` | `approved` | `rejected`.
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "message": "Comment updated successfully",
+  "comment": { ... }
+}
+```
+**Response - Error (404):** `{ "message": "Comment not found" }`
+
+---
+
+### 6. Delete Comment
+
+**Endpoint:** `DELETE /api/comments/:id`
+
+**Purpose:** Remove a comment.
+
+**Authentication Required:** ✅ Yes (Admin or Moderator)
+
+**Response - Success (200):** `{ "success": true, "message": "Comment deleted successfully" }`  
+**Response - Error (404):** `{ "message": "Comment not found" }`
+
+---
+
+## 👍 Like APIs (Dedicated Table)
+
+Likes are stored in `post_likes` with `post_id` and `user_identifier`. Use these for like/unlike and count.
+
+### 1. Like Post
+
+**Endpoint:** `POST /api/likes`
+
+**Purpose:** Record a like for a post by user identifier (idempotent if already liked).
+
+**Authentication Required:** ❌ No
+
+**Request Body:**
+```json
+{
+  "post_id": 1,
+  "user_identifier": "device-or-session-id"
+}
+```
+
+**Response - Success (201):**
+```json
+{
+  "success": true,
+  "message": "Post liked successfully",
+  "liked": true,
+  "likeCount": 11
+}
+```
+If already liked: **200** with `"Post already liked"`, `liked: true`.
+
+---
+
+### 2. Unlike Post
+
+**Endpoint:** `DELETE /api/likes`
+
+**Purpose:** Remove like for post + user_identifier.
+
+**Authentication Required:** ❌ No
+
+**Request Body:**
+```json
+{
+  "post_id": 1,
+  "user_identifier": "device-or-session-id"
+}
+```
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "message": "Post unliked successfully",
+  "liked": false,
+  "likeCount": 10
+}
+```
+
+---
+
+### 3. Check Like Status
+
+**Endpoint:** `GET /api/likes/check`
+
+**Query Parameters:** `post_id`, `user_identifier`
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "liked": true
+}
+```
+
+---
+
+### 4. Get Like Count
+
+**Endpoint:** `GET /api/likes/count/:postId`
+
+**Purpose:** Total like count for a post.
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "count": 10
 }
 ```
 
@@ -841,50 +880,19 @@ Authorization: Bearer <token>
 
 **Endpoint:** `POST /api/category/add`
 
-**Purpose:** Create a new blog category.
-
 **Authentication Required:** ✅ Yes (Admin)
-
-**Headers:**
-```
-Authorization: Bearer <token>
-Content-Type: application/json
-```
 
 **Request Body:**
 ```json
 {
   "name": "Technology",
-  "slug": "technology" (optional, auto-generated if not provided)
+  "slug": "technology"
 }
 ```
+`slug` optional (auto-generated from name).
 
-**Response - Success (201):**
-```json
-{
-  "message": "Category created",
-  "category": {
-    "id": 1,
-    "name": "Technology",
-    "slug": "technology",
-    "created_at": "2025-01-15T10:30:00Z"
-  }
-}
-```
-
-**Response - Error (400):**
-```json
-{
-  "message": "Category name is required"
-}
-```
-
-**Response - Error (401):**
-```json
-{
-  "message": "Unauthorized Token"
-}
-```
+**Response - Success (201):** `{ "message": "Category created", "category": { "id": 1, "name": "Technology", "slug": "technology", "created_at": "..." } }`  
+**Response - Error (400):** `{ "message": "Category name is required" }`
 
 ---
 
@@ -892,30 +900,9 @@ Content-Type: application/json
 
 **Endpoint:** `GET /api/category`
 
-**Purpose:** Get list of all categories.
-
 **Authentication Required:** ❌ No
 
-**Response - Success (200):**
-```json
-{
-  "message": "Categories retrieved",
-  "categories": [
-    {
-      "id": 1,
-      "name": "Technology",
-      "slug": "technology",
-      "created_at": "2025-01-15T10:30:00Z"
-    },
-    {
-      "id": 2,
-      "name": "Lifestyle",
-      "slug": "lifestyle",
-      "created_at": "2025-01-16T10:30:00Z"
-    }
-  ]
-}
-```
+**Response - Success (200):** `{ "message": "Categories retrieved", "categories": [ { "id": 1, "name": "Technology", "slug": "technology", "created_at": "..." } ] }`
 
 ---
 
@@ -923,32 +910,10 @@ Content-Type: application/json
 
 **Endpoint:** `GET /api/category/:id`
 
-**Purpose:** Get a single category by its ID.
-
 **Authentication Required:** ❌ No
 
-**URL Parameters:**
-- `id` - Category ID
-
-**Response - Success (200):**
-```json
-{
-  "message": "Category retrieved",
-  "category": {
-    "id": 1,
-    "name": "Technology",
-    "slug": "technology",
-    "created_at": "2025-01-15T10:30:00Z"
-  }
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "Category not found"
-}
-```
+**Response - Success (200):** `{ "message": "Category retrieved", "category": { ... } }`  
+**Response - Error (404):** `{ "message": "Category not found" }`
 
 ---
 
@@ -956,18 +921,7 @@ Content-Type: application/json
 
 **Endpoint:** `PUT /api/category/update/:id`
 
-**Purpose:** Update an existing category.
-
 **Authentication Required:** ✅ Yes (Admin)
-
-**Headers:**
-```
-Authorization: Bearer <token>
-Content-Type: application/json
-```
-
-**URL Parameters:**
-- `id` - Category ID
 
 **Request Body:**
 ```json
@@ -977,25 +931,8 @@ Content-Type: application/json
 }
 ```
 
-**Response - Success (200):**
-```json
-{
-  "message": "Category updated",
-  "category": {
-    "id": 1,
-    "name": "Tech & Innovation",
-    "slug": "tech-innovation",
-    "created_at": "2025-01-15T10:30:00Z"
-  }
-}
-```
-
-**Response - Error (401):**
-```json
-{
-  "message": "Unauthorized Token"
-}
-```
+**Response - Success (200):** `{ "message": "Category updated", "category": { ... } }`  
+**Response - Error (401):** Unauthorized
 
 ---
 
@@ -1003,132 +940,60 @@ Content-Type: application/json
 
 **Endpoint:** `DELETE /api/category/:id`
 
-**Purpose:** Delete a category.
-
 **Authentication Required:** ✅ Yes (Admin)
 
-**Headers:**
-```
-Authorization: Bearer <token>
-```
-
-**URL Parameters:**
-- `id` - Category ID
-
-**Response - Success (200):**
-```json
-{
-  "message": "Category deleted"
-}
-```
-
-**Response - Error (401):**
-```json
-{
-  "message": "Unauthorized Token"
-}
-```
+**Response - Success (200):** `{ "message": "Category deleted" }`  
+**Response - Error (401):** Unauthorized
 
 ---
 
 ## 📧 Newsletter APIs
 
-### 1. Subscribe to Newsletter
+### 1. Subscribe
 
 **Endpoint:** `POST /api/newsletter-subscribe`
 
-**Purpose:** Subscribe an email address to the newsletter.
-
 **Authentication Required:** ❌ No
 
-**Request Body:**
-```json
-{
-  "email": "subscriber@example.com"
-}
-```
+**Request Body:** `{ "email": "subscriber@example.com" }`
 
 **Response - Success (201):**
 ```json
 {
   "message": "Thank you for subscribing! You will receive a confirmation email.",
-  "data": {
-    "id": 1,
-    "email": "subscriber@example.com",
-    "created_at": "2025-01-15T10:30:00Z"
-  }
+  "data": { "id": 1, "email": "subscriber@example.com", "created_at": "..." }
 }
 ```
+**Response - Error (400):** `{ "message": "Email is required" }`  
+**Response - Error (409):** `{ "message": "This Email is already subscribed!" }`
 
-**Response - Error (400):**
-```json
-{
-  "message": "Email is required"
-}
-```
-
-**Response - Error (409):**
-```json
-{
-  "message": "This Email is already subscribed!"
-}
-```
-
-**Note:** A welcome email is automatically sent to the subscriber.
+A welcome email is sent via Nodemailer.
 
 ---
 
-### 2. Unsubscribe from Newsletter
+### 2. Unsubscribe
 
 **Endpoint:** `DELETE /api/newsletter-unsubscribe`
 
-**Purpose:** Remove an email from the newsletter subscription list.
-
 **Authentication Required:** ❌ No
 
-**Request Body:**
-```json
-{
-  "email": "subscriber@example.com"
-}
-```
+**Request Body:** `{ "email": "subscriber@example.com" }`
 
-**Response - Success (200):**
-```json
-{
-  "message": "Unsubscribed successfully"
-}
-```
-
-**Response - Error (400):**
-```json
-{
-  "message": "Email is required"
-}
-```
-
-**Response - Error (404):**
-```json
-{
-  "message": "Email not found"
-}
-```
+**Response - Success (200):** `{ "message": "Unsubscribed successfully" }`  
+**Response - Error (400):** `{ "message": "Email is required" }`  
+**Response - Error (404):** `{ "message": "Email not found" }`
 
 ---
 
-### 3. Get All Newsletter Subscribers
+### 3. Get All Subscribers
 
 **Endpoint:** `GET /api/newsletter-subscribe`
 
-**Purpose:** Get paginated list of all newsletter subscribers (admin use).
+**Purpose:** Paginated list of subscribers (admin).
 
-**Authentication Required:** ❌ No (but should be protected in production)
+**Authentication Required:** ❌ No (consider protecting in production)
 
-**Query Parameters:**
-- `page` (optional) - Page number (default: 1)
-- `limit` (optional) - Items per page (default: 10)
-
-**Example:** `GET /api/newsletter-subscribe?page=1&limit=10`
+**Query Parameters:** `page` (default 1), `limit` (default 10)
 
 **Response - Success (200):**
 ```json
@@ -1136,94 +1001,257 @@ Authorization: Bearer <token>
   "total": 100,
   "currentPage": 1,
   "totalPages": 10,
-  "data": [
-    {
-      "id": 1,
-      "email": "subscriber@example.com",
-      "created_at": "2025-01-15T10:30:00Z"
-    }
-  ]
+  "data": [ { "id": 1, "email": "...", "created_at": "..." } ]
 }
 ```
 
 ---
 
+## 📊 Activity APIs
+
+User activity (e.g. like, comment, view) per post and user_identifier.
+
+### 1. Log Activity
+
+**Endpoint:** `POST /api/activity`
+
+**Authentication Required:** ❌ No
+
+**Request Body:**
+```json
+{
+  "post_id": 1,
+  "user_identifier": "device-or-session-id",
+  "action_type": "view",
+  "device_info": "optional string"
+}
+```
+`action_type` must be `like` | `comment` | `view`.
+
+**Response - Success (201):**
+```json
+{
+  "success": true,
+  "message": "Activity logged successfully",
+  "activity": { ... }
+}
+```
+**Response - Error (404):** `{ "message": "Post not found" }`
+
+---
+
+### 2. Get Post Activity
+
+**Endpoint:** `GET /api/activity/post/:postId`
+
+**Purpose:** List activity records for a post.
+
+**Authentication Required:** ✅ Yes (Admin or Moderator)
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "message": "Activity retrieved successfully",
+  "activities": [...],
+  "count": 25
+}
+```
+
+---
+
+### 3. Get Activity Stats for Post
+
+**Endpoint:** `GET /api/activity/stats/:postId`
+
+**Purpose:** Aggregated counts by action_type (likes, comments, views).
+
+**Authentication Required:** ✅ Yes (Admin or Moderator)
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "message": "Activity statistics retrieved successfully",
+  "stats": {
+    "likes": 10,
+    "comments": 5,
+    "views": 100
+  }
+}
+```
+
+---
+
+## 📄 Site Content APIs
+
+Manage page/section content (e.g. hero, footer) with optional images. Allowed sections per page are defined in the backend (e.g. `home`: latest, hero, footer, newsletter; `about`: hero, author, mission, etc.).
+
+### 1. Get All Contents
+
+**Endpoint:** `GET /api/site-content`
+
+**Purpose:** All site contents (dashboard).
+
+**Authentication Required:** ❌ No
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "contents": [ { "id": 1, "page_key": "home", "section_key": "hero", "content": { ... }, "image_url": "...", ... } ]
+}
+```
+
+---
+
+### 2. Get Content by Page Key
+
+**Endpoint:** `GET /api/site-content/page/:page_key`
+
+**Purpose:** Contents for a single page (public).
+
+**Authentication Required:** ❌ No
+
+**Example:** `GET /api/site-content/page/home`
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "page_key": "home",
+  "contents": [ { "section_key": "hero", "content": { ... }, "image_url": "..." } ]
+}
+```
+
+---
+
+### 3. Create Content
+
+**Endpoint:** `POST /api/site-content`
+
+**Authentication Required:** ✅ Yes (Admin)
+
+**Headers:** `Content-Type: multipart/form-data` (if image used)
+
+**Request Body (JSON or form):**
+- `page_key`, `section_key` (required)
+- `content` (JSON object)
+- `image` (file, optional)
+
+**Response - Success (201):**
+```json
+{
+  "success": true,
+  "message": "Site content created",
+  "content": { "id": 1, "page_key": "home", "section_key": "hero", ... }
+}
+```
+**Response - Error (409):** `{ "message": "That page/section already exists" }`
+
+---
+
+### 4. Update Content
+
+**Endpoint:** `PUT /api/site-content/:id`
+
+**Authentication Required:** ✅ Yes (Admin)
+
+**Request Body:** `content` (JSON object), optional `remove_image` (true to remove image). New image via `upload.single("image")`.
+
+**Response - Success (200):**
+```json
+{
+  "success": true,
+  "message": "Site content updated",
+  "content": { ... }
+}
+```
+**Response - Error (404):** `{ "message": "Site content not found" }`
+
+---
+
+### 5. Delete Content
+
+**Endpoint:** `DELETE /api/site-content/:id`
+
+**Authentication Required:** ✅ Yes (Admin)
+
+**Response - Success (200):** `{ "success": true, "message": "Site content deleted" }`  
+**Response - Error (404):** `{ "message": "Site content not found" }`
+
+---
+
 ## 🔒 Authentication Methods
 
-The API supports two methods for sending authentication tokens:
-
-### Method 1: HTTP-Only Cookie
-Token is automatically sent with requests if using the same domain:
-```
-Cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-### Method 2: Bearer Token (Authorization Header)
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**Priority:** The middleware checks cookies first, then Authorization header.
+- **Cookie:** Login sets HTTP-only cookie `token`. Middleware reads `req.headers.cookie` (e.g. `token=...`).
+- **Header:** `Authorization: Bearer <token>`
+- Middleware checks cookie first, then Authorization header.
 
 ---
 
 ## 📊 Response Status Codes
 
 | Code | Meaning | Usage |
-|------|---------|-------|
-| 200 | OK | Successful GET, PUT, DELETE requests |
-| 201 | Created | Successful POST requests (resource created) |
-| 400 | Bad Request | Invalid request data or missing fields |
-| 401 | Unauthorized | Missing or invalid authentication token |
-| 403 | Forbidden | Valid token but insufficient permissions |
+|------|---------|--------|
+| 200 | OK | Successful GET, PUT, PATCH, DELETE |
+| 201 | Created | Successful POST (resource created) |
+| 400 | Bad Request | Validation, missing/invalid fields |
+| 401 | Unauthorized | Missing or invalid token |
+| 403 | Forbidden | Valid token but role not allowed |
 | 404 | Not Found | Resource not found |
-| 409 | Conflict | Resource already exists (e.g., duplicate email) |
-| 500 | Internal Server Error | Server-side error |
+| 409 | Conflict | Duplicate (e.g. email already subscribed) |
+| 500 | Internal Server Error | Server error |
+| 503 | Service Unavailable | DB connection issues |
+| 504 | Gateway Timeout | Query timeout |
 
 ---
 
 ## 🛠️ Error Response Format
 
-All error responses follow this format:
+From centralized `errorHandler`:
 
 ```json
 {
+  "success": false,
   "message": "Human-readable error message",
-  "error": "Technical error details (optional)"
+  "stack": "..." 
 }
 ```
+`stack` only in development. Some routes still return `{ "message": "..." }` without `success`.
 
 ---
 
 ## 📝 Notes
 
-1. **Image Uploads**: Featured images are uploaded to Cloudinary. The public ID is stored for future deletion.
-
-2. **Comments**: Comments are stored as JSONB arrays within the posts table. Each comment has a unique ID, author, message, status, and timestamp.
-
-3. **Slug Generation**: If a slug is not provided, it's auto-generated from the title by:
-   - Converting to lowercase
-   - Replacing spaces with hyphens
-   - Removing special characters
-
-4. **Password Security**: All passwords are hashed using BCrypt with 10 salt rounds before storage.
-
-5. **Token Expiration**: JWT tokens should include expiration time (configured in `utils/jwt.js`).
-
-6. **Pagination**: List endpoints support pagination via `page` query parameter (default: 10 items per page).
+1. **Two comment systems:** Legacy comments stored in post `comments` JSONB (`POST /api/post/comment/:id`, pending/approve under `/api/post/comments/pending`). New comments in `comments` table with threading (`/api/comments`).
+2. **Two like flows:** Legacy slug-based like/unlike on post (`/api/post/:slug/like`, `/api/post/:slug/unlike`). New like system by `post_id` + `user_identifier` (`/api/likes`).
+3. **Caching:** Redis used for post lists, single post, trending, pinned, comments, site content. Graceful if Redis is down (cache miss).
+4. **Image uploads:** Post featured images and site content images go to Cloudinary; public_id stored for deletion.
+5. **Slug generation:** If slug not provided, generated from title (lowercase, spaces to hyphens, strip non-word chars).
+6. **Passwords:** BCrypt, 10 salt rounds.
+7. **JWT:** Expiration configured in `utils/jwt.js`.
+8. **Pagination:** Many list endpoints use `page` (and sometimes `limit`).
+9. **Roles:** `admin`, `moderator`, `writer`; auth routes use `verifyAdmin`; others use `verifyAuth, allowRoles("admin")` or `allowRoles("admin", "moderator")`.
 
 ---
 
 ## 🚀 Getting Started
 
-See the main [README.md](../README.md) for setup instructions.
+1. Install dependencies: `npm install`
+2. Set environment variables (e.g. `DATABASE_URL`, `JWT_SECRET`, `REDIS_URL`, Cloudinary, Nodemailer).
+3. Run migrations: `npm run migrate`
+4. Seed admin (optional): `npm run seed:admin`
+5. Start server: `npm start` or `npm run dev`
+
+See the main [README.md](../README.md) for full setup.
 
 ---
 
 ## 📚 Additional Resources
 
-- **Main Project README**: [`../README.md`](../README.md)
-- **Postman API Collection**: [Link to Postman documentation](https://documenter.getpostman.com/view/38227871/2sB3dMyWmj)
+- **Main Project README:** [../README.md](../README.md)
+- **Postman API Collection:** [Link to Postman documentation](https://documenter.getpostman.com/view/38227871/2sB3dMyWmj)
 
 ---
 
