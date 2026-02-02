@@ -19,6 +19,9 @@
     "seed": "node src/config/dbinit.js",
     "migrate": "node src/config/migrate.js"
   },
+  "devDependencies": {
+    "@vercel/node": "^5.5.28"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.8.0",

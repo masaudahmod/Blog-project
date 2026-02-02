@@ -1,6 +1,9 @@
 import { createClient } from "redis";
+
 const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 const redisClient = createClient({ url: redisUrl });
+
+let connectPromise = null;
 
 redisClient.on("error", (error) => {
   console.error("Redis connection error:", error?.message || error);
@@ -10,21 +13,30 @@ redisClient.on("reconnecting", () => {
   console.log("Redis reconnecting...");
 });
 
+// Lazy connect: only connect on first use (safe for Vercel serverless cold starts)
+async function ensureConnected() {
+  if (redisClient.isOpen && redisClient.isReady) return true;
+  if (connectPromise) return connectPromise;
+  connectPromise = redisClient.connect().catch((error) => {
+    console.error("Redis connect failed:", error?.message || error);
+    connectPromise = null;
+    return null;
+  });
+  return connectPromise;
+}
 
-redisClient.connect().catch((error) => {
-  console.error("Redis connect failed:", error?.message || error);
-});
-
-process.on("SIGINT", async () => {
-  if (redisClient.isOpen) {
-    await redisClient.quit();
-    console.log("Redis connection closed");
-  }
-  process.exit(0);
-});
+if (typeof process !== "undefined") {
+  process.on("SIGINT", async () => {
+    if (redisClient.isOpen) {
+      await redisClient.quit();
+      console.log("Redis connection closed");
+    }
+    process.exit(0);
+  });
+}
 
 export const getCache = async (key) => {
-  if (!isRedisUsable()) return null;
+  if (!(await ensureConnected())) return null;
   try {
     const value = await redisClient.get(key);
     return value ? JSON.parse(value) : null;
@@ -34,7 +46,7 @@ export const getCache = async (key) => {
   }
 };
 export const setCache = async (key, value, ttlSeconds) => {
-  if (!isRedisUsable()) return false;
+  if (!(await ensureConnected())) return false;
   try {
     await redisClient.set(key, JSON.stringify(value), { EX: ttlSeconds });
     return true;
@@ -44,7 +56,7 @@ export const setCache = async (key, value, ttlSeconds) => {
   }
 };
 export const deleteCache = async (key) => {
-  if (!isRedisUsable()) return false;
+  if (!(await ensureConnected())) return false;
   try {
     await redisClient.del(key);
     return true;
