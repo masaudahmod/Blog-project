@@ -20,11 +20,8 @@
     "migrate": "node src/config/migrate.js",
     "seed:admin": "node src/config/seed/seedAdmin.js"
   },
-   "engines": {
+  "engines": {
     "node": "24.x"
-  },
-  "devDependencies": {
-    "@vercel/node": "^5.5.28"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
