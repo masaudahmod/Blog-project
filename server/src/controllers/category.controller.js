@@ -1,6 +1,6 @@
 import pool from "../config/db.js";
 import { getCache, setCache, deleteCache } from "../config/redis.js";
-import { createCategory, deleteCategoryById, getCategories, deactivateCategory } from "../models/Category.model.js";
+import { createCategory, deleteCategoryById, getCategories, deactivateCategory } from "../models/category.model.js";
 import { asyncHandler, AppError } from "../middlewares/error.middleware.js";
 
 const CACHE_TTL = 300; // 5 minutes

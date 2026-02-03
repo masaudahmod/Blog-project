@@ -1,5 +1,5 @@
 import { createUserTable, alterUserTable } from "../models/user.model.js";
-import { createCategoryTable } from "../models/Category.model.js";
+import { createCategoryTable } from "../models/category.model.js";
 import {
   createPostTable,
   createPostIndexes,
