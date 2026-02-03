@@ -87,4 +87,13 @@ type SiteContentPayload = {
     description: string;
   };
 };
+
+export type MonthlyStatsResponse = {
+  data?: {
+    total_posts?: number;
+    total_comments?: number;
+    total_likes?: number;
+  };
+} | null;
+
 export type { SiteContentPayload };

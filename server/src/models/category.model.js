@@ -14,10 +14,10 @@ export const createCategoryTable = async () => {
   `);
 };
 
-export const createCategory = (name, slug) => {
+export const createCategory = (name, slug, createdBy) => {
   return pool.query(
-    "INSERT INTO categories (name, slug) VALUES ($1,$2) RETURNING *",
-    [name, slug]
+    "INSERT INTO categories (name, slug, created_by) VALUES ($1, $2, $3) RETURNING *",
+    [name, slug, createdBy]
   );
 };
 

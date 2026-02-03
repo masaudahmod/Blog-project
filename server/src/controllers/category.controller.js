@@ -10,6 +10,7 @@ const categoryCacheKey = (id) => `category:id:${id}`;
 export const addCategory = async (req, res) => {
   try {
     const { name, slug } = req.body;
+    console.log(name, slug);
 
     if (!name) {
       return res.status(400).json({ message: "Category name is required" }); // return res.status(400).json({ message: "All fields are required" });
@@ -21,7 +22,11 @@ export const addCategory = async (req, res) => {
     await deleteCache(CACHE_KEYS.ALL);
     await deleteCache(CACHE_KEYS.ALL_ADMIN);
     await deleteCache(CACHE_KEYS.ALL_WITH_COUNT);
-    const result = await createCategory(name, category_slug);
+    const createdBy = req.user?.id;
+    if (!createdBy) {
+      return res.status(401).json({ message: "Authentication required to create category" });
+    }
+    const result = await createCategory(name, category_slug, createdBy);
     res
       .status(201)
       .json({ message: "Category created", category: result.rows[0] });

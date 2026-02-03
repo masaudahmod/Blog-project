@@ -38,7 +38,7 @@ export async function SectionCards() {
         <CardHeader>
           <CardDescription>Posts this month</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {monthlyStats?.data?.total_posts ?? 0}
+            {monthlyStats?.total_posts ?? 0}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -51,7 +51,7 @@ export async function SectionCards() {
         <CardHeader>
           <CardDescription>Comments this month</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {monthlyStats?.data?.total_comments ?? 0}
+            {monthlyStats?.total_comments ?? 0}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -64,7 +64,7 @@ export async function SectionCards() {
         <CardHeader>
           <CardDescription>Likes this month</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {monthlyStats?.data?.total_likes ?? 0}
+            {monthlyStats?.total_likes ?? 0}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">

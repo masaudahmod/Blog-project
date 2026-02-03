@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { SiteContentPayload } from "./type";
+import { MonthlyStatsResponse, SiteContentPayload } from "./type";
 
 async function getCookies() {
   try {
@@ -451,6 +451,8 @@ async function addCategory(formdata: FormData) {
   try {
     const token = await getCookies();
     const jsonFile = JSON.stringify(Object.fromEntries(formdata));
+    console.log(jsonFile);
+    console.log(`${process.env.NEXT_SERVER_API_URL}/category/add`);
     const result = await fetch(
       `${process.env.NEXT_SERVER_API_URL}/category/add`,
       {
@@ -815,8 +817,8 @@ async function getMonthlyPost(month: number, year: number) {
         },
       }
     );
-    const data = await safeParseJson<unknown>(result);
-    return data ?? null;
+    const data = await safeParseJson<MonthlyStatsResponse>(result);
+    return data?.data ?? null;
   } catch (error) {
     console.error("Error getting monthly stats:", error);
     return null;
