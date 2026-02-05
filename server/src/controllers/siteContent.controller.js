@@ -8,7 +8,7 @@ const buildPageCacheKey = (pageKey) => `site:page:${pageKey}`;
 
 /** Allowed section_key values per page_key (must match dashboard SECTION_OPTIONS_BY_PAGE) */
 const ALLOWED_SECTIONS_BY_PAGE = {
-  home: ["latest", "daily-middle-ad", "ad", "ad-2", "ad-3", "trending", "hero", "footer", "newsletter"],
+  home: ["latest", "daily-middle-ad", "ad", "ad-2", "ad-3", "trending", "hero", "footer", "newsletter", "side-article"],
   blog: ["header", "latest", "newsletter", "search"],
   about: ["hero", "author", "explore", "mission", "vision", "cta"],
 };
@@ -57,7 +57,7 @@ export const createContent = async (req, res) => { // Handle create endpoint
   try { // Start safe handler
     // Parse JSON content from body (may be string if sent via FormData)
     let { page_key, section_key, content } = req.body || {}; // Extract payload fields
-    
+
     // If content is a string (from FormData), parse it
     if (typeof content === "string") {
       try {
@@ -66,7 +66,7 @@ export const createContent = async (req, res) => { // Handle create endpoint
         return res.status(400).json({ success: false, message: "Invalid content JSON format" }); // Return parse error
       }
     }
-    
+
     if (!page_key || !section_key) { // Validate required keys
       return res.status(400).json({ success: false, message: "page_key and section_key are required" }); // Return validation error
     } // End validation
@@ -87,7 +87,7 @@ export const createContent = async (req, res) => { // Handle create endpoint
     const imageFile = req.file; // Get uploaded image file from multer
     let image_url = null; // Initialize image URL
     let image_public_id = null; // Initialize image public ID
-    
+
     if (imageFile) { // Check if image was uploaded
       try {
         // Upload image to Cloudinary
@@ -103,13 +103,20 @@ export const createContent = async (req, res) => { // Handle create endpoint
         return res.status(500).json({ success: false, message: "Failed to upload image" }); // Return upload error
       }
     }
-    
+
     const result = await createSiteContent({ page_key, section_key, content, image_url, image_public_id });
     return res.status(201).json({ success: true, message: "Site content created", content: result.rows[0] });
   } catch (error) { // Handle unexpected errors
-    if (error?.code === "23505") { // Handle unique constraint violation
-      return res.status(409).json({ success: false, message: "That page/section already exists" }); // Return conflict response
-    } // End conflict handling
+    // if (error?.code === "SECTION_LIMIT_EXCEEDED") {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "This page already has 2 sections. Cannot add more.",
+    //   });
+    // }
+
+    // if (error?.code === "23505") { // Handle unique constraint violation
+    //   return res.status(409).json({ success: false, message: "That page/section already exists" }); // Return conflict response
+    // } // End conflict handling
     console.error("Error creating site content:", error?.message || error); // Log error for debugging
     return res.status(500).json({ success: false, message: "Failed to create site content" }); // Return error response
   } // End error handling
@@ -117,19 +124,19 @@ export const createContent = async (req, res) => { // Handle create endpoint
 export const updateContent = async (req, res) => { // Handle update endpoint
   try { // Start safe handler
     const { id } = req.params; // Read id from params
-    
+
     // First, get existing site content to check for existing image
     const existingResult = await pool.query("SELECT image_public_id, page_key FROM site_contents WHERE id = $1", [id]); // Query existing record
     if (existingResult.rowCount === 0) { // Check if record exists
       return res.status(404).json({ success: false, message: "Site content not found" }); // Return not found
     } // End existence check
-    
+
     const existingPublicId = existingResult.rows[0].image_public_id; // Get existing image public ID
     const pageKey = existingResult.rows[0].page_key; // Get page key for cache invalidation
-    
+
     // Parse JSON content from body (may be string if sent via FormData)
     let { content, remove_image } = req.body || {}; // Extract updated content and remove_image flag
-    
+
     // If content is a string (from FormData), parse it
     if (typeof content === "string") {
       try {
@@ -138,7 +145,7 @@ export const updateContent = async (req, res) => { // Handle update endpoint
         return res.status(400).json({ success: false, message: "Invalid content JSON format" }); // Return parse error
       }
     }
-    
+
     if (!id || Number.isNaN(Number(id))) { // Validate id
       return res.status(400).json({ success: false, message: "Valid id is required" }); // Return validation error
     } // End validation
@@ -153,7 +160,7 @@ export const updateContent = async (req, res) => { // Handle update endpoint
     const imageFile = req.file; // Get uploaded image file from multer
     let image_url = null; // Initialize image URL
     let image_public_id = null; // Initialize image public ID
-    
+
     if (imageFile) { // Check if new image was uploaded
       // Delete old image from Cloudinary if it exists
       if (existingPublicId) {
@@ -163,7 +170,7 @@ export const updateContent = async (req, res) => { // Handle update endpoint
           console.error("Error deleting old image:", deleteError); // Log deletion error (non-fatal)
         }
       }
-      
+
       // Upload new image to Cloudinary
       try {
         const imageUpload = await cloudinaryUpload(
@@ -195,7 +202,7 @@ export const updateContent = async (req, res) => { // Handle update endpoint
       image_url = undefined;
       image_public_id = undefined;
     }
-    
+
     // Update content (and image if provided)
     const result = await updateSiteContentById(Number(id), content, image_url, image_public_id); // Update content by id (pass undefined to keep existing image, null to remove, or string to update)
     if (result.rowCount === 0) {
@@ -213,13 +220,13 @@ export const deleteContent = async (req, res) => { // Handle delete endpoint
     if (!id || Number.isNaN(Number(id))) { // Validate id
       return res.status(400).json({ success: false, message: "Valid id is required" }); // Return validation error
     } // End validation
-    
+
     // First, get the site content to retrieve image public_id before deletion
     const existingResult = await pool.query("SELECT image_public_id, page_key FROM site_contents WHERE id = $1", [id]); // Query existing record
     if (existingResult.rowCount === 0) { // Check if record exists
       return res.status(404).json({ success: false, message: "Site content not found" }); // Return not found
     } // End existence check
-    
+
     const existingPublicId = existingResult.rows[0].image_public_id;
     const pageKey = existingResult.rows[0].page_key;
 
@@ -234,7 +241,7 @@ export const deleteContent = async (req, res) => { // Handle delete endpoint
         console.error("Error deleting image from Cloudinary:", deleteError); // Log deletion error (non-fatal, continue with DB deletion)
       }
     }
-    
+
     const result = await deleteSiteContentById(Number(id));
     if (result.rowCount === 0) {
       return res.status(404).json({ success: false, message: "Site content not found" });

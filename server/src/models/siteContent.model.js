@@ -9,8 +9,7 @@ export const createSiteContentTable = async () => {
       image_url TEXT,
       image_public_id VARCHAR(255),
       created_at TIMESTAMP DEFAULT NOW(),
-      updated_at TIMESTAMP DEFAULT NOW(),
-      UNIQUE (page_key, section_key)
+      updated_at TIMESTAMP DEFAULT NOW()
     );`
   );
 };
