@@ -39,6 +39,7 @@ const SECTION_OPTIONS_BY_PAGE: Record<string, { value: string; label: string }[]
     { value: "hero", label: "hero" },
     { value: "footer", label: "footer" },
     { value: "newsletter", label: "newsletter" },
+    { value: "side-article", label: "side-article" },
   ],
   blog: [
     { value: "header", label: "header" },
@@ -207,6 +208,7 @@ export default function Page() {
       }
       toast.success(isEditing ? "Site content updated" : "Site content created");
       resetForm();
+      window.location.reload();
       await fetchContents();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to save site content";
