@@ -9,17 +9,20 @@ import {
   registerAdmin,
   registerUser,
 } from "../controllers/auth.controller.js";
-import { verifyAdmin } from "../middlewares/auth.middleware.js";
+import { allowRoles, verifyAuth } from "../middlewares/auth.middleware.js";
+import { loginLimiter } from "../middlewares/security.js";
 
 const router = express.Router();
 
 router.post("/register", registerAdmin);
 router.post("/register-user", registerUser);
-router.post("/login", login);
-router.route("/pending-user").get(verifyAdmin, getPendingUser)
-router.route("/pending-user/:id").post(verifyAdmin, activateUser).delete(verifyAdmin, deleteUser);
+router.post("/login", loginLimiter, login);
+const adminOnly = [verifyAuth, allowRoles("admin")];
 
-router.get("/me", verifyAdmin, currentUser);
-router.post("/logout", verifyAdmin, logout);
+router.route("/pending-user").get(...adminOnly, getPendingUser)
+router.route("/pending-user/:id").post(...adminOnly, activateUser).delete(...adminOnly, deleteUser);
+
+router.get("/me", ...adminOnly, currentUser);
+router.post("/logout", ...adminOnly, logout);
 
 export default router;

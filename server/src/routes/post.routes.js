@@ -22,10 +22,14 @@ import {
 } from "../controllers/post.controller.js";
 import { verifyAuth, allowRoles } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import { body } from "express-validator";
 
 const router = express.Router();
 
-router.post("/add", verifyAuth, allowRoles("admin"), upload.single("featured_image"), addPost);
+router.post("/add",
+  body("title").isLength({ min: 5 }).withMessage("Title too short"),
+  body("content").isLength({ min: 20 }).withMessage("Content too short"),
+  verifyAuth, allowRoles("admin"), upload.single("featured_image"), addPost);
 router.get("/", allPosts);
 router.get("/filter", getPostsByFilter); // Category filtering endpoint
 router.get("/trending", getTrendingPosts); // Trending / recent published posts for sidebar

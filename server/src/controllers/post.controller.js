@@ -108,7 +108,7 @@ export const addPost = asyncHandler(async (req, res) => {
       updated_at || null,
     ]
   );
-  console.log(result.rows[0]);
+  
   return res
     .status(201)
     .json({ success: true, message: "Post created", post: result.rows[0] });

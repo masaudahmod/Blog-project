@@ -1,4 +1,10 @@
 import express from "express";
+
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import hpp from "hpp";
+import cors from "cors";
+
 import AuthRoutes from "./routes/auth.routes.js";
 import CategoryRoutes from "./routes/category.routes.js";
 import PostRoutes from "./routes/post.routes.js";
@@ -10,6 +16,32 @@ import SiteContentRoutes from "./routes/siteContent.routes.js"; // Import site c
 import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
+
+
+// 🛡️ 1. Helmet — secure HTTP headers
+app.use(helmet());
+
+
+// 🛡️ 2. Rate Limiter — too many requests block
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // 200 requests per IP
+  message: "Too many requests from this IP, please try again later."
+});
+app.use(limiter);
+
+
+// 🛡️ 3. Prevent HTTP Parameter Pollution
+app.use(hpp());
+
+
+// 🛡️ 4. CORS Protection
+app.use(cors({
+  origin: [process.env.NEXT_PUBLIC_SITE_URL],
+  credentials: true,
+}));
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
