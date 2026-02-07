@@ -74,6 +74,14 @@ export default function Home() {
         url: `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`,
       },
     },
+    author: {
+      "@type": "Person",
+      name: "Masaud Ahmod",
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/`,
+    },
   };
 
   return (
